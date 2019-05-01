@@ -1,43 +1,48 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger } from "@arkecosystem/core-interfaces";
-import fs from "fs-extra";
+import { copyFileSync, ensureFileSync, existsSync, readJSONSync, writeFileSync } from "fs-extra";
 
-export const getPath = (table, folder, codec) => {
-    const filename = `${table}.${codec}`;
-    return this.getFilePath(filename, folder);
-};
-
-export const writeMetaFile = snapshotInfo => {
-    const path = `${process.env.CORE_PATH_DATA}/snapshots/${snapshotInfo.folder}/meta.json`;
-    fs.writeFileSync(path, JSON.stringify(snapshotInfo), "utf8");
-};
+export const writeMetaFile = snapshotInfo =>
+    writeFileSync(
+        `${process.env.CORE_PATH_DATA}/snapshots/${snapshotInfo.folder}/meta.json`,
+        JSON.stringify(snapshotInfo),
+        "utf8",
+    );
 
 export const getFilePath = (filename, folder) => `${process.env.CORE_PATH_DATA}/snapshots/${folder}/${filename}`;
 
-export const copySnapshot = (sourceFolder, destFolder, codec) => {
+export const copySnapshot = (sourceFolder, destFolder) => {
     const logger = app.resolvePlugin<Logger.ILogger>("logger");
     logger.info(`Copying snapshot from ${sourceFolder} to a new file ${destFolder} for appending of data`);
 
     const paths = {
         source: {
-            blocks: this.getPath("blocks", sourceFolder, codec),
-            transactions: this.getPath("transactions", sourceFolder, codec),
+            blocks: this.getFilePath("blocks", sourceFolder),
+            transactions: this.getFilePath("transactions", sourceFolder),
+            rounds: this.getFilePath("rounds", sourceFolder),
         },
         dest: {
-            blocks: this.getPath("blocks", destFolder, codec),
-            transactions: this.getPath("transactions", destFolder, codec),
+            blocks: this.getFilePath("blocks", destFolder),
+            transactions: this.getFilePath("transactions", destFolder),
+            rounds: this.getFilePath("rounds", destFolder),
         },
     };
 
-    fs.ensureFileSync(paths.dest.blocks);
-    fs.ensureFileSync(paths.dest.transactions);
+    ensureFileSync(paths.dest.blocks);
+    ensureFileSync(paths.dest.transactions);
+    ensureFileSync(paths.dest.rounds);
 
-    if (!fs.existsSync(paths.source.blocks) || !fs.existsSync(paths.source.transactions)) {
-        app.forceExit(`Unable to copy snapshot from ${sourceFolder} as it doesn't exist :bomb:`);
+    if (
+        !existsSync(paths.source.blocks) ||
+        !existsSync(paths.source.transactions) ||
+        !existsSync(paths.source.rounds)
+    ) {
+        app.forceExit(`Unable to copy snapshot from ${sourceFolder} as it doesn't exist`);
     }
 
-    fs.copyFileSync(paths.source.blocks, paths.dest.blocks);
-    fs.copyFileSync(paths.source.transactions, paths.dest.transactions);
+    copyFileSync(paths.source.blocks, paths.dest.blocks);
+    copyFileSync(paths.source.transactions, paths.dest.transactions);
+    copyFileSync(paths.source.rounds, paths.dest.rounds);
 };
 
 export const calcRecordCount = (table, currentCount, sourceFolder) => {
@@ -66,24 +71,25 @@ export const getSnapshotInfo = folder => {
         folder: snapshotInfo.folder,
         blocks: snapshotInfo.blocks,
         transactions: snapshotInfo.transactions,
+        rounds: snapshotInfo.rounds,
         skipCompression: snapshotInfo.skipCompression,
     };
 };
 
 export const readMetaJSON = folder => {
     const metaFileInfo = this.getFilePath("meta.json", folder);
-    if (!fs.existsSync(metaFileInfo)) {
-        app.forceExit("Meta file meta.json not found. Exiting :bomb:");
+
+    if (!existsSync(metaFileInfo)) {
+        app.forceExit("Meta file meta.json not found. Exiting");
     }
 
-    return fs.readJSONSync(metaFileInfo);
+    return readJSONSync(metaFileInfo);
 };
 
 export const setSnapshotInfo = (options, lastBlock) => {
     const meta = {
         startHeight: options.start !== -1 ? options.start : 1,
         endHeight: options.end !== -1 ? options.end : lastBlock.height,
-        codec: options.codec,
         skipCompression: options.skipCompression || false,
         folder: "",
     };
