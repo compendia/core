@@ -4,9 +4,9 @@
 
 ## Introduction
 
-This repository contains all plugins that make up the nOS Core.
+This repository contains all modules that make up the nOS blockchain.
 
-Check our [dedicated documentation site](https://docs.ark.io/guidebook/core/plugins/) for information about all available plugins and [How to write a Core Plugin
+Check ARK's [dedicated documentation site](https://docs.ark.io/guidebook/core/plugins/) for information about all available plugins and [How to write a Core Plugin
 ](https://docs.ark.io/tutorials/core/plugins/how-to-write-a-core-plugin.html) if you want to get started with developing your own plugins.
 
 ## Documentation
@@ -14,11 +14,12 @@ Check our [dedicated documentation site](https://docs.ark.io/guidebook/core/plug
 -   Development : https://docs.nos.io
 
 ## API Documentation
- -
+
+-
 
 ## GitHub Development Bounty
 
-- 
+-
 
 ## Security
 
