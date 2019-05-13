@@ -1,27 +1,28 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, P2P } from "@arkecosystem/core-interfaces";
+import { Peer } from "@arkecosystem/core-p2p";
 import { httpie } from "@arkecosystem/core-utils";
-import { configManager } from "@arkecosystem/crypto";
+import { Interfaces, Managers } from "@arkecosystem/crypto";
 import isReachable from "is-reachable";
 import sample from "lodash.sample";
 
 class Network {
-    private readonly network: any = configManager.all();
+    private readonly network: Interfaces.INetwork = Managers.configManager.get("network");
     private readonly logger: Logger.ILogger = app.resolvePlugin<Logger.ILogger>("logger");
-    private readonly p2p: P2P.IMonitor = app.resolvePlugin<P2P.IMonitor>("p2p");
+    private readonly p2p: P2P.IPeerService = app.resolvePlugin<P2P.IPeerService>("p2p");
 
-    public async sendGET(path, query = {}) {
+    public async sendGET({ path, query = {} }: { path: string; query?: Record<string, any> }) {
         return this.sendRequest("get", path, { query });
     }
 
-    public async sendPOST(path, body) {
+    public async sendPOST({ path, body }: { path: string; body: Record<string, any> }) {
         return this.sendRequest("post", path, { body });
     }
 
-    private async sendRequest(method, url, opts, tries = 0) {
+    private async sendRequest(method: string, path: string, opts, tries: number = 0) {
         try {
-            const peer: { ip: string; port: number } = await this.getPeer();
-            const uri: string = `http://${peer.ip}:${peer.port}/api/${url}`;
+            const peer: P2P.IPeer = await this.getPeer();
+            const uri: string = `http://${peer.ip}:${peer.port}/api/${path}`;
 
             this.logger.info(`Sending request on "${this.network.name}" to "${uri}"`);
 
@@ -46,15 +47,14 @@ class Network {
 
             tries++;
 
-            return this.sendRequest(method, url, opts, tries);
+            return this.sendRequest(method, path, opts, tries);
         }
     }
 
-    private async getPeer(): Promise<{ ip: string; port: number }> {
-        const peer: { ip: string; port: number } = sample(this.getPeers());
-        const reachable: boolean = await isReachable(`${peer.ip}:${peer.port}`);
+    private async getPeer(): Promise<P2P.IPeer> {
+        const peer: P2P.IPeer = sample(this.getPeers());
 
-        if (!reachable) {
+        if (!(await isReachable(`${peer.ip}:${peer.port}`))) {
             this.logger.warn(`${peer} is unresponsive. Choosing new peer.`);
 
             return this.getPeer();
@@ -63,14 +63,15 @@ class Network {
         return peer;
     }
 
-    private getPeers(): Array<{ ip: string; port: number }> {
-        const peers =
-            this.network.name === "testnet"
-                ? [{ ip: "localhost", port: app.resolveOptions("api").port }]
-                : this.p2p.getPeers();
+    private getPeers(): P2P.IPeer[] {
+        let peers: P2P.IPeer[] = this.p2p.getStorage().getPeers();
+
+        if (!peers.length && this.network.name === "testnet") {
+            peers = [new Peer("127.0.0.1", app.resolveOptions("api").port)];
+        }
 
         if (!peers.length) {
-            throw new Error("No peers found. Shutting down...");
+            throw new Error("No peers found.");
         }
 
         for (const peer of peers) {

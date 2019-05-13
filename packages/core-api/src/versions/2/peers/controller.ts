@@ -1,26 +1,14 @@
-import { app } from "@arkecosystem/core-container";
-import { P2P } from "@arkecosystem/core-interfaces";
-import Boom from "boom";
-import Hapi from "hapi";
+import Boom from "@hapi/boom";
+import Hapi from "@hapi/hapi";
 import semver from "semver";
 import { Controller } from "../shared/controller";
 
 export class PeersController extends Controller {
     public async index(request: Hapi.Request, h: Hapi.ResponseToolkit) {
         try {
-            const allPeers = await this.blockchain.p2p.getPeers();
+            const allPeers = await this.blockchain.p2p.getStorage().getPeers();
 
-            let result = allPeers.sort((a, b) => a.delay - b.delay);
-            // @ts-ignore
-            result = request.query.os
-                ? // @ts-ignore
-                  result.filter(peer => peer.os === (request.query as any).os)
-                : result;
-            // @ts-ignore
-            result = request.query.status
-                ? // @ts-ignore
-                  result.filter(peer => peer.status === (request.query as any).status)
-                : result;
+            let result = allPeers.sort((a, b) => a.latency - b.latency);
             // @ts-ignore
             result = request.query.port
                 ? // @ts-ignore
@@ -39,7 +27,7 @@ export class PeersController extends Controller {
                 // @ts-ignore
                 const order = request.query.orderBy.split(":");
 
-                if (["port", "status", "os"].includes(order[0])) {
+                if (["port", "status"].includes(order[0])) {
                     result =
                         order[1].toUpperCase() === "ASC"
                             ? result.sort((a, b) => a[order[0]] - b[order[0]])
@@ -62,7 +50,7 @@ export class PeersController extends Controller {
 
     public async show(request: Hapi.Request, h: Hapi.ResponseToolkit) {
         try {
-            const peers = await this.blockchain.p2p.getPeers();
+            const peers = await this.blockchain.p2p.getStorage().getPeers();
             const peer = peers.find(p => p.ip === request.params.ip);
 
             if (!peer) {
@@ -77,7 +65,7 @@ export class PeersController extends Controller {
 
     public async suspended(request: Hapi.Request, h: Hapi.ResponseToolkit) {
         try {
-            const peers = app.resolvePlugin<P2P.IMonitor>("p2p").getSuspendedPeers();
+            const peers = this.blockchain.p2p.getStorage().getSuspendedPeers();
 
             return super.respondWithCollection(
                 request,

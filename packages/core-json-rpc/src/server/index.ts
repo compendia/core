@@ -1,10 +1,11 @@
 import { app } from "@arkecosystem/core-container";
 import { createServer, mountServer, plugins } from "@arkecosystem/core-http-utils";
 import { Logger } from "@arkecosystem/core-interfaces";
-import { registerMethods } from "./methods";
+import { IRequestParameters } from "../interfaces";
+import * as modules from "./modules";
 import { Processor } from "./services/processor";
 
-export async function startServer(options) {
+export const startServer = async options => {
     if (options.allowRemote) {
         app.resolvePlugin<Logger.ILogger>("logger").warn(
             "JSON-RPC server allows remote connections, this is a potential security risk",
@@ -29,20 +30,28 @@ export async function startServer(options) {
         });
     }
 
-    // @ts-ignore
-    registerMethods(server);
+    for (const module of Object.values(modules)) {
+        for (const method of Object.values(module)) {
+            // @ts-ignore
+            server.app.schemas[method.name] = method.schema;
+
+            delete method.schema;
+
+            server.method(method);
+        }
+    }
 
     server.route({
         method: "POST",
         path: "/",
-        async handler(request, h) {
+        async handler(request) {
             const processor = new Processor();
 
             return Array.isArray(request.payload)
-                ? processor.collection(request.server, request.payload)
-                : processor.resource(request.server, request.payload);
+                ? processor.collection(request.server, request.payload as IRequestParameters[])
+                : processor.resource(request.server, request.payload as IRequestParameters);
         },
     });
 
     return mountServer("JSON-RPC", server);
-}
+};
