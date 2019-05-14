@@ -29,6 +29,7 @@ module.exports = {
                 timelockTransfer: 500,
                 multiPayment: 500,
                 delegateResignation: 100,
+                stakeRegistration: 100
             },
         },
     },
@@ -64,4 +65,5 @@ module.exports = {
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
     "@arkecosystem/core-snapshots": {},
+    "custom-transactions": {},
 };
