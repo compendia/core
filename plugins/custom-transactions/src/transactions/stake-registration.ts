@@ -1,5 +1,5 @@
-import { Transactions, Utils } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
+import { Transactions, Utils } from "../../../../packages/crypto";
 import { IStakeRegistrationAsset } from "../interfaces";
 
 const { schemas } = Transactions;
