@@ -1,9 +1,11 @@
-import { app } from "../../../../packages/core-container";
-import { Database, EventEmitter, State, TransactionPool } from "../../../../packages/core-interfaces";
-import { Handlers } from "../../../../packages/core-transactions";
-import { Interfaces, Transactions } from "../../../../packages/crypto";
+import { app } from "../../../../packages/core-container/dist";
+import { Database, EventEmitter, State, TransactionPool } from "../../../../packages/core-interfaces/dist";
+import { Handlers } from "../../../../packages/core-transactions/dist";
+import { Interfaces, Transactions } from "../../../../packages/crypto/dist";
+import { configManager } from "../../../../packages/crypto/dist/managers";
 import { BigNumber } from "../../../../packages/crypto/dist/utils";
 import { StakeAssetError } from "../errors";
+import { IStakeObject } from "../interfaces";
 import { StakeRegistrationTransaction } from "../transactions";
 
 export class StakeRegistrationTransactionHandler extends Handlers.TransactionHandler {
@@ -18,14 +20,9 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
             .getStore()
             .getLastBlock();
         const timestamp = lastBlock.data.timestamp;
+        const milestone = configManager.getMilestone(lastBlock.data.height);
         for (const t of transactions) {
-            let stakeArray: Array<{
-                start: number;
-                amount: BigNumber;
-                duration: number;
-                weight: BigNumber;
-                renewing: boolean;
-            }>;
+            let stakeArray: IStakeObject[];
             const wallet = walletManager.findByPublicKey(t.senderPublicKey);
 
             // Get wallet stake if it exists
@@ -33,17 +30,27 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
                 stakeArray = (wallet as any).stake;
             }
 
-            // Set initial weight for wallet
-            if (typeof (wallet as any).weight === "undefined") {
-                // TODO: Retrieve balance weight multiplier from milestones
-                (wallet as any).weight = wallet.balance.times(0.1);
-            }
-
             // Get transaction data and build stake object.
             const s = t.asset.stakeRegistration;
 
             // TODO: Calculate weight properly
-            const sWeight = t.amount;
+            let level: string;
+
+            if (s.duration >= 7889400 && s.duration < 15778800) {
+                level = "3m";
+            }
+            if (s.duration >= 15778800 && s.duration < 31557600) {
+                level = "6m";
+            }
+            if (s.duration >= 31557600 && s.duration < 63115200) {
+                level = "1y";
+            }
+            if (s.duration > 63115200) {
+                level = "2y";
+            }
+
+            const multiplier: number = milestone.stakeLevels[level];
+            const sWeight = t.amount.times(multiplier);
 
             const o: { start: number; amount: BigNumber; duration: number; weight: BigNumber; renewing: boolean } = {
                 start: t.timestamp,
@@ -69,7 +76,7 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
                 stakeArray[t.timestamp] = o;
             }
 
-            (wallet as any).weight = (wallet as any).weight.plus(o.weight);
+            (wallet as any).stakeWeight = (wallet as any).stakeWeight.plus(o.weight);
             (wallet as any).stake = stakeArray;
         }
     }
@@ -111,32 +118,33 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
         super.applyToSender(transaction, walletManager);
 
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        const s = transaction.data.asset.stakeRegistration;
         const t = transaction.data;
+        const s = t.asset.stakeRegistration;
 
         // TODO: Calculate weight properly according to respective stake amount and duration
         const sWeight = t.amount;
 
-        const o: { start: number; amount: BigNumber; duration: number; weight: BigNumber; renewing: boolean } = {
+        const o: IStakeObject = {
             start: t.timestamp,
             amount: t.amount,
             duration: s.duration,
             weight: sWeight,
             renewing: true,
         };
+
         sender.balance = sender.balance.minus(t.amount);
         (sender as any).stake[t.timestamp] = o;
-        (sender as any).weight = (sender as any).weight.plus(o.weight);
+        (sender as any).stakeWeight = (sender as any).stakeWeight.plus(o.weight);
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
         super.revertForSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
-        const s = transaction.data.asset.stakeRegistration;
+        const s = t.asset.stakeRegistration;
         sender.balance = sender.balance.plus(t.amount);
         delete (sender as any).stake[t.timestamp];
-        (sender as any).weight = (sender as any).weight.minus(s.weight);
+        (sender as any).stakeWeight = (sender as any).stakeWeight.minus(s.weight);
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

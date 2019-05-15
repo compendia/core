@@ -2,7 +2,7 @@
     {
         "height": 1,
         "reward": 0,
-        "activeDelegates": 51,
+        "activeDelegates": 47,
         "blocktime": 8,
         "block": {
             "version": 0,
@@ -24,21 +24,20 @@
                 "stakeRegistration": 0
             }
         },
-        "vendorFieldLength": 64,
-        "aip11": true
+        "vendorFieldLength": 255,
+        "idFullSha256": true,
+        "aip11": true,
+        "stakeLevels": {
+            "balance": 0.1,
+            "3m": 1,
+            "6m": 1.25,
+            "1y": 1.5,
+            "2y": 2
+        },
+        "minimumStake": 100000000000
     },
     {
         "height": 75600,
-        "reward": 200000000
-    },
-    {
-        "height": 100000,
-        "vendorFieldLength": 255
-    },
-    {
-        "height": 1000000000,
-        "block": {
-            "idFullSha256": true
-        }
+        "reward": 400000000
     }
 ]

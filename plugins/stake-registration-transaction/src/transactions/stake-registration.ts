@@ -1,5 +1,8 @@
 import ByteBuffer from "bytebuffer";
-import { Transactions, Utils } from "../../../../packages/crypto";
+import { app } from "../../../../packages/core-container/dist";
+import { State } from "../../../../packages/core-interfaces/dist";
+import { Transactions, Utils } from "../../../../packages/crypto/dist";
+import { configManager } from "../../../../packages/crypto/dist/managers";
 import { IStakeRegistrationAsset } from "../interfaces";
 
 const { schemas } = Transactions;
@@ -10,13 +13,19 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
     public static type = STAKE_TYPE;
 
     public static getSchema(): Transactions.schemas.TransactionSchema {
+        const lastBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
+        const milestone = configManager.getMilestone(lastBlock.data.height);
+
         return schemas.extend(schemas.transactionBaseSchema, {
             $id: "stakeRegistration",
             required: ["asset"],
             properties: {
                 type: { transactionType: STAKE_TYPE },
                 // TODO: Get minimum stake from config (milestones)
-                amount: { bignumber: { minimum: 100000000000 } },
+                amount: { bignumber: { minimum: milestone.minimumStake } },
                 asset: {
                     type: "object",
                     required: ["stakeRegistration"],
@@ -27,8 +36,8 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
                             properties: {
                                 name: {
                                     type: "integer",
-                                    // TODO: Get minimum from config (milestones)
-                                    minimum: 100,
+                                    // Minimum duration of 3 months
+                                    minimum: 7889400,
                                 },
                             },
                         },
