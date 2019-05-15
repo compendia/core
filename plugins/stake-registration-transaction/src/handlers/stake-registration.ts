@@ -34,7 +34,8 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
             }
 
             // Set initial weight for wallet
-            if (!(wallet as any).weight) {
+            if (typeof (wallet as any).weight === "undefined") {
+                // TODO: Retrieve balance weight multiplier from milestones
                 (wallet as any).weight = wallet.balance.times(0.1);
             }
 

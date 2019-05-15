@@ -15,6 +15,7 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
             required: ["asset"],
             properties: {
                 type: { transactionType: STAKE_TYPE },
+                // TODO: Get minimum stake from config (milestones)
                 amount: { bignumber: { minimum: 100000000000 } },
                 asset: {
                     type: "object",
@@ -26,7 +27,7 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
                             properties: {
                                 name: {
                                     type: "integer",
-                                    // Get minimum from config
+                                    // TODO: Get minimum from config (milestones)
                                     minimum: 100,
                                 },
                             },
@@ -51,7 +52,7 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
         const { data } = this;
         const stakeRegistration = {} as IStakeRegistrationAsset;
 
-        data.amount = Utils.BigNumber.make(buf.readUint64().toString());
+        data.asset.duration = Utils.BigNumber.make(buf.readUint64().toInt());
 
         data.asset = {
             stakeRegistration,

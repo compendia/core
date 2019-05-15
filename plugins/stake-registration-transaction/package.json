@@ -1,5 +1,5 @@
 {
-    "name": "@supaiku0/custom-transactions",
+    "name": "@nos/stake-registration-transaction",
     "description": "Stake registration transaction for nOS",
     "version": "2.2.1",
     "contributors": [
