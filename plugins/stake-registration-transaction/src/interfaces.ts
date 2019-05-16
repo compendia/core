@@ -2,6 +2,7 @@ import { BigNumber } from "../../../packages/crypto/dist/utils";
 
 export interface IStakeRegistrationAsset {
     duration: number;
+    cancel: number;
 }
 
 export interface IStakeObject {

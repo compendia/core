@@ -24,7 +24,6 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
             required: ["asset"],
             properties: {
                 type: { transactionType: STAKE_TYPE },
-                // TODO: Get minimum stake from config (milestones)
                 amount: { bignumber: { minimum: milestone.minimumStake } },
                 asset: {
                     type: "object",
@@ -34,11 +33,13 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
                             type: "object",
                             required: ["duration"],
                             properties: {
-                                name: {
+                                duration: {
                                     type: "integer",
                                     // Minimum duration of 3 months
+                                    // TODO: Don't hardcode this value
                                     minimum: 7889400,
                                 },
+                                cancel: { anyOf: [{ type: "null" }, { type: "integer" }] },
                             },
                         },
                     },
@@ -54,6 +55,7 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
         // TODO: Verify that this works
         const buffer = new ByteBuffer(24, true);
         buffer.writeUint64(+stakeRegistration.duration);
+        buffer.writeUint64(stakeRegistration.cancel || 0);
         return buffer;
     }
 
@@ -61,7 +63,8 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
         const { data } = this;
         const stakeRegistration = {} as IStakeRegistrationAsset;
 
-        data.asset.duration = Utils.BigNumber.make(buf.readUint64().toInt());
+        stakeRegistration.duration = buf.readUint64().toInt();
+        stakeRegistration.cancel = buf.readUint64().toInt();
 
         data.asset = {
             stakeRegistration,

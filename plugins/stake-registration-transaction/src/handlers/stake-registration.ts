@@ -33,51 +33,54 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
             // Get transaction data and build stake object.
             const s = t.asset.stakeRegistration;
 
-            // TODO: Calculate weight properly
-            let level: string;
+            // Check that this is not a renewal cancelation
+            if (!s.cancel) {
+                // Set the staking level
+                let level: string;
 
-            if (s.duration >= 7889400 && s.duration < 15778800) {
-                level = "3m";
+                if (s.duration >= 7889400 && s.duration < 15778800) {
+                    level = "3m";
+                } else if (s.duration >= 15778800 && s.duration < 31557600) {
+                    level = "6m";
+                } else if (s.duration >= 31557600 && s.duration < 63115200) {
+                    level = "1y";
+                } else if (s.duration > 63115200) {
+                    level = "2y";
+                }
+
+                const multiplier: number = milestone.stakeLevels[level];
+                const sWeight: BigNumber = t.amount.times(multiplier);
+
+                const o: IStakeObject = {
+                    start: t.timestamp,
+                    amount: t.amount,
+                    duration: s.duration,
+                    weight: sWeight,
+                    renewing: s.renewing,
+                };
+
+                // In case the stake object already exists (checked by stake timestamp), it should have an index already.
+                // If it's a fresh stake object oIndex will be -1
+                const oIndex = stakeArray.indexOf(t.timestamp);
+
+                // If stake already exists then this must be an updated stake.
+                // If updated stake stake is not renewing and is expired: find previous non-updated stake and remove from stakeArray.
+                if (oIndex >= 0 && !s.renewing && timestamp > t.timestamp + s.duration) {
+                    delete stakeArray[oIndex];
+                } else if (oIndex >= 0) {
+                    // Stake is updated
+                    stakeArray[oIndex] = o;
+                } else {
+                    // Stake is new
+                    stakeArray[t.timestamp] = o;
+                }
+
+                (wallet as any).stakeWeight = (wallet as any).stakeWeight.plus(o.weight);
+                (wallet as any).stake = stakeArray;
+            } else if (stakeArray.indexOf(s.cancel) >= 0) {
+                // Cancel renewal
+                (wallet as any).stake[s.cancel].renewing = false;
             }
-            if (s.duration >= 15778800 && s.duration < 31557600) {
-                level = "6m";
-            }
-            if (s.duration >= 31557600 && s.duration < 63115200) {
-                level = "1y";
-            }
-            if (s.duration > 63115200) {
-                level = "2y";
-            }
-
-            const multiplier: number = milestone.stakeLevels[level];
-            const sWeight = t.amount.times(multiplier);
-
-            const o: { start: number; amount: BigNumber; duration: number; weight: BigNumber; renewing: boolean } = {
-                start: t.timestamp,
-                amount: t.amount,
-                duration: s.duration,
-                weight: sWeight,
-                renewing: s.renewing,
-            };
-
-            // In case the stake object already exists (checked by stake timestamp), it should have an index already.
-            // If it's a fresh stake object oIndex will be -1
-            const oIndex = stakeArray.indexOf(t.timestamp);
-
-            // If stake already exists then this must be an updated stake.
-            // If updated stake stake is not renewing and is expired: find previous non-updated stake and remove from stakeArray.
-            if (oIndex >= 0 && !s.renewing && timestamp > t.timestamp + s.duration) {
-                delete stakeArray[oIndex];
-            } else if (oIndex >= 0) {
-                // Stake is updated
-                stakeArray[oIndex] = o;
-            } else {
-                // Stake is new
-                stakeArray[t.timestamp] = o;
-            }
-
-            (wallet as any).stakeWeight = (wallet as any).stakeWeight.plus(o.weight);
-            (wallet as any).stake = stakeArray;
         }
     }
 
