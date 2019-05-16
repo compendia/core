@@ -4,6 +4,7 @@ import { Handlers } from "@arkecosystem/core-transactions";
 import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
 import cloneDeep from "lodash.clonedeep";
 import pluralize from "pluralize";
+import { IStakeObject } from "stake-registration-transaction/dist/interfaces";
 import { Wallet } from "./wallet";
 
 export class WalletManager implements State.IWalletManager {
@@ -149,7 +150,9 @@ export class WalletManager implements State.IWalletManager {
         for (const voter of Object.values(this.byPublicKey)) {
             if (voter.vote) {
                 const delegate: State.IWallet = this.byPublicKey[voter.vote];
-                delegate.voteBalance = delegate.voteBalance.plus(voter.balance);
+                delegate.voteBalance = delegate.voteBalance.plus(voter.stakeWeight);
+                // TODO: Use milestone for calculation
+                delegate.voteBalance = delegate.voteBalance.plus(voter.balance.times(0.1));
             }
         }
     }
@@ -201,7 +204,8 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (applied && delegate.vote) {
-                const increase: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
+                // TODO: Call milestone config for reward multiplier instead of hardcoding
+                const increase: Utils.BigNumber = block.data.reward.plus(block.data.totalFee.times(0.1));
                 const votedDelegate: State.IWallet = this.byPublicKey[delegate.vote];
                 votedDelegate.voteBalance = votedDelegate.voteBalance.plus(increase);
             }
@@ -240,7 +244,8 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (reverted && delegate.vote) {
-                const decrease: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
+                // TODO: Call milestone config for reward multiplier instead of hardcoding
+                const decrease: Utils.BigNumber = block.data.reward.plus(block.data.totalFee.times(0.1));
                 const votedDelegate: State.IWallet = this.byPublicKey[delegate.vote];
                 votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);
             }
@@ -393,12 +398,19 @@ export class WalletManager implements State.IWalletManager {
         transaction: Interfaces.ITransactionData,
         revert: boolean = false,
     ): void {
-        // TODO: multipayment?
-        if (transaction.type !== Enums.TransactionTypes.Vote) {
+        // If Stake Registration
+        if (transaction.type === 100) {
+            const delegate: State.IWallet = this.findByPublicKey(sender.vote);
+            const o: IStakeObject = Utils.VoteWeight.stakeObject(transaction);
+            delegate.voteBalance = revert
+                ? delegate.voteBalance.minus(transaction.amount.times(0.1)).minus(o.weight)
+                : delegate.voteBalance.plus(transaction.amount.times(0.1)).plus(o.weight);
+        } else if (transaction.type !== Enums.TransactionTypes.Vote) {
             // Update vote balance of the sender's delegate
             if (sender.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(sender.vote);
-                const total: Utils.BigNumber = transaction.amount.plus(transaction.fee);
+                // TODO: Use milestone for times value
+                const total: Utils.BigNumber = transaction.amount.plus(transaction.fee.times(0.1));
                 delegate.voteBalance = revert ? delegate.voteBalance.plus(total) : delegate.voteBalance.minus(total);
             }
 
@@ -406,8 +418,8 @@ export class WalletManager implements State.IWalletManager {
             if (recipient && recipient.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(recipient.vote);
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(transaction.amount)
-                    : delegate.voteBalance.plus(transaction.amount);
+                    ? delegate.voteBalance.minus(transaction.amount.times(0.1))
+                    : delegate.voteBalance.plus(transaction.amount.times(0.1));
             }
         } else {
             const vote: string = transaction.asset.votes[0];
@@ -415,12 +427,12 @@ export class WalletManager implements State.IWalletManager {
 
             if (vote.startsWith("+")) {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(sender.balance.minus(transaction.fee))
-                    : delegate.voteBalance.plus(sender.balance);
+                    ? delegate.voteBalance.minus(sender.balance.minus(transaction.fee.times(0.1)))
+                    : delegate.voteBalance.plus(sender.balance.times(0.1));
             } else {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.plus(sender.balance)
-                    : delegate.voteBalance.minus(sender.balance.plus(transaction.fee));
+                    ? delegate.voteBalance.plus(sender.balance.times(0.1))
+                    : delegate.voteBalance.minus(sender.balance.plus(transaction.fee.times(0.1)));
             }
         }
     }

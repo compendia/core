@@ -1,7 +1,7 @@
-import { app } from "@arkecosystem/core-container/dist";
+import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeAssetError } from "../errors";
 import { IStakeObject } from "../interfaces";
 import { StakeRegistrationTransaction } from "../transactions";
@@ -12,14 +12,12 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
-        const configManager = Managers.configManager;
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         const lastBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();
         const timestamp = lastBlock.data.timestamp;
-        const milestone = configManager.getMilestone(lastBlock.data.height);
         for (const t of transactions) {
             let stakeArray: IStakeObject[];
             const wallet = walletManager.findByPublicKey(t.senderPublicKey);
@@ -34,29 +32,7 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
 
             // Check that this is not a renewal cancelation
             if (!s.cancel) {
-                // Set the staking level
-                let level: string;
-
-                if (s.duration >= 7889400 && s.duration < 15778800) {
-                    level = "3m";
-                } else if (s.duration >= 15778800 && s.duration < 31557600) {
-                    level = "6m";
-                } else if (s.duration >= 31557600 && s.duration < 63115200) {
-                    level = "1y";
-                } else if (s.duration > 63115200) {
-                    level = "2y";
-                }
-
-                const multiplier: number = milestone.stakeLevels[level];
-                const sWeight: Utils.BigNumber = t.amount.times(multiplier);
-
-                const o: IStakeObject = {
-                    start: t.timestamp,
-                    amount: t.amount,
-                    duration: s.duration,
-                    weight: sWeight,
-                    renewing: s.renewing,
-                };
+                const o: IStakeObject = Utils.VoteWeight.stakeObject(t);
 
                 // In case the stake object already exists (checked by stake timestamp), it should have an index already.
                 // If it's a fresh stake object oIndex will be -1

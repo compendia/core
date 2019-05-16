@@ -1,6 +1,7 @@
 import { State } from "@arkecosystem/core-interfaces";
 import { Errors } from "@arkecosystem/core-transactions";
 import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { IStakeObject } from "stake-registration-transaction/dist/interfaces";
 
 export class Wallet implements State.IWallet {
     public address: string;
@@ -19,6 +20,8 @@ export class Wallet implements State.IWallet {
     public producedBlocks: number;
     public forgedFees: Utils.BigNumber;
     public forgedRewards: Utils.BigNumber;
+    public stakeWeight: Utils.BigNumber;
+    public stake: IStakeObject[];
     public rate?: number;
 
     constructor(address: string) {
@@ -37,6 +40,8 @@ export class Wallet implements State.IWallet {
         this.producedBlocks = 0;
         this.forgedFees = Utils.BigNumber.ZERO;
         this.forgedRewards = Utils.BigNumber.ZERO;
+        this.stakeWeight = Utils.BigNumber.ZERO;
+        this.stake = undefined;
     }
 
     /**
