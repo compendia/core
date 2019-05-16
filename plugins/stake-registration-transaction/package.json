@@ -1,0 +1,38 @@
+{
+    "name": "stake-registration-transaction",
+    "description": "Stake registration transaction for nOS",
+    "version": "2.2.1",
+    "contributors": [
+        ""
+    ],
+    "license": "MIT",
+    "main": "dist/index.js",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "prepublishOnly": "yarn build",
+        "compile": "./node_modules/.bin/tsc",
+        "build": "yarn clean && yarn compile",
+        "build:watch": "yarn clean && yarn compile -w",
+        "clean": "rm -rf dist/"
+    },
+    "dependencies": {
+        "@arkecosystem/core-container": "^2.4.0-next.3",
+        "@arkecosystem/core-transactions": "^2.4.0-next.3",
+        "@arkecosystem/core-utils": "^2.4.0-next.3",
+        "@arkecosystem/crypto": "^2.4.0-next.3",
+        "bytebuffer": "^5.0.1"
+    },
+    "devDependencies": {
+        "@types/bytebuffer": "^5.0.40",
+        "tslint": "^5.16.0",
+        "typescript": "^3.4.5"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "engines": {
+        "node": ">=10.x"
+    }
+}
