@@ -1,9 +1,7 @@
 import { app } from "@arkecosystem/core-container/dist";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Interfaces, Transactions } from "@arkecosystem/crypto";
-import { configManager } from "@arkecosystem/crypto/dist/managers";
-import { BigNumber } from "@arkecosystem/crypto/dist/utils";
+import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeAssetError } from "../errors";
 import { IStakeObject } from "../interfaces";
 import { StakeRegistrationTransaction } from "../transactions";
@@ -14,6 +12,7 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
+        const configManager = Managers.configManager;
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         const lastBlock = app
             .resolvePlugin<State.IStateService>("state")
@@ -49,7 +48,7 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
                 }
 
                 const multiplier: number = milestone.stakeLevels[level];
-                const sWeight: BigNumber = t.amount.times(multiplier);
+                const sWeight: Utils.BigNumber = t.amount.times(multiplier);
 
                 const o: IStakeObject = {
                     start: t.timestamp,
@@ -91,7 +90,7 @@ export class StakeRegistrationTransactionHandler extends Handlers.TransactionHan
     ): boolean {
         const { data }: Interfaces.ITransaction = transaction;
 
-        const o: { start: number; amount: BigNumber; duration: number; renewing: boolean } =
+        const o: { start: number; amount: Utils.BigNumber; duration: number; renewing: boolean } =
             data.asset.stakeRegistration;
 
         if (!o.duration || o.duration < 0) {

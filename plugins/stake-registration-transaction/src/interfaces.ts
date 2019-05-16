@@ -1,4 +1,4 @@
-import { BigNumber } from "@arkecosystem/crypto/dist/utils";
+import { Utils } from "@arkecosystem/crypto";
 
 export interface IStakeRegistrationAsset {
     duration: number;
@@ -7,8 +7,8 @@ export interface IStakeRegistrationAsset {
 
 export interface IStakeObject {
     start: number;
-    amount: BigNumber;
+    amount: Utils.BigNumber;
     duration: number;
-    weight: BigNumber;
+    weight: Utils.BigNumber;
     renewing: boolean;
 }

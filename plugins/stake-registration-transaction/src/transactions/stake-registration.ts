@@ -1,7 +1,6 @@
-import { app } from "@arkecosystem/core-container/dist";
-import { State } from "@arkecosystem/core-interfaces/dist";
-import { Transactions } from "@arkecosystem/crypto/dist";
-import { configManager } from "@arkecosystem/crypto/dist/managers";
+import { app } from "@arkecosystem/core-container";
+import { State } from "@arkecosystem/core-interfaces";
+import { Managers, Transactions } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 import { IStakeRegistrationAsset } from "../interfaces";
 
@@ -13,6 +12,7 @@ export class StakeRegistrationTransaction extends Transactions.Transaction {
     public static type = STAKE_TYPE;
 
     public static getSchema(): Transactions.schemas.TransactionSchema {
+        const configManager = Managers.configManager;
         const lastBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
