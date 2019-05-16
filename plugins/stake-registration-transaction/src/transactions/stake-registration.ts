@@ -1,8 +1,8 @@
+import { app } from "@arkecosystem/core-container/dist";
+import { State } from "@arkecosystem/core-interfaces/dist";
+import { Transactions, Utils } from "@arkecosystem/crypto/dist";
+import { configManager } from "@arkecosystem/crypto/dist/managers";
 import ByteBuffer from "bytebuffer";
-import { app } from "../../../../packages/core-container/dist";
-import { State } from "../../../../packages/core-interfaces/dist";
-import { Transactions, Utils } from "../../../../packages/crypto/dist";
-import { configManager } from "../../../../packages/crypto/dist/managers";
 import { IStakeRegistrationAsset } from "../interfaces";
 
 const { schemas } = Transactions;

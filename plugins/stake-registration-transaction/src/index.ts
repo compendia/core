@@ -1,5 +1,5 @@
-import { Container, Logger } from "../../../packages/core-interfaces";
-import { Handlers } from "../../../packages/core-transactions";
+import { Container, Logger } from "@arkecosystem/core-interfaces";
+import { Handlers } from "@arkecosystem/core-transactions";
 import { defaults } from "./defaults";
 import { StakeRegistrationTransactionHandler } from "./handlers";
 

@@ -1,9 +1,9 @@
-import { app } from "../../../../packages/core-container/dist";
-import { Database, EventEmitter, State, TransactionPool } from "../../../../packages/core-interfaces/dist";
-import { Handlers } from "../../../../packages/core-transactions/dist";
-import { Interfaces, Transactions } from "../../../../packages/crypto/dist";
-import { configManager } from "../../../../packages/crypto/dist/managers";
-import { BigNumber } from "../../../../packages/crypto/dist/utils";
+import { app } from "@arkecosystem/core-container/dist";
+import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { Handlers } from "@arkecosystem/core-transactions";
+import { Interfaces, Transactions } from "@arkecosystem/crypto";
+import { configManager } from "@arkecosystem/crypto/dist/managers";
+import { BigNumber } from "@arkecosystem/crypto/dist/utils";
 import { StakeAssetError } from "../errors";
 import { IStakeObject } from "../interfaces";
 import { StakeRegistrationTransaction } from "../transactions";
