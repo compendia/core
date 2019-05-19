@@ -24,11 +24,11 @@ class VoteWeight {
             }
 
             const multiplier: number = milestone.stakeLevels[level];
-            const sWeight: Utils.BigNumber = t.amount.times(multiplier);
+            const sWeight: Utils.BigNumber = s.amount.times(multiplier);
 
             const o: StakeInterfaces.IStakeObject = {
                 start: t.timestamp,
-                amount: t.amount,
+                amount: s.amount,
                 duration: s.duration,
                 weight: sWeight,
                 claimableTimestamp: s.claimableTimestamp,

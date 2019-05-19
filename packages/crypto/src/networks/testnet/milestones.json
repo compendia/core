@@ -33,7 +33,7 @@
             "1y": 1.5,
             "2y": 2
         },
-        "minimumStake": 100000000000,
+        "minimumStake": 1000,
         "vendorFieldLength": 64,
         "aip11": true
     },

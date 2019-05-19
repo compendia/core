@@ -22,4 +22,4 @@ export const plugin: Container.IPluginDescriptor = {
     },
 };
 
-export { StakeHelpers };
+export { StakeHelpers, StakeCreateTransactionHandler };

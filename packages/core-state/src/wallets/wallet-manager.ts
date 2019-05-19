@@ -280,7 +280,7 @@ export class WalletManager implements State.IWalletManager {
                     `Can't apply transaction id:${data.id} from sender:${sender.address} due to ${error.message}`,
                 );
                 this.logger.debug(`Audit: ${JSON.stringify(sender.auditApply(data), undefined, 2)}`);
-                throw new Error(`Can't apply transaction ${data.id}`);
+                throw new Error(`Can't apply transaction ${data.id}: ${error.message}`);
             }
         }
 
@@ -400,44 +400,80 @@ export class WalletManager implements State.IWalletManager {
         revert: boolean = false,
     ): void {
         // TODO: multipayment?
-        if (transaction.type !== Enums.TransactionTypes.Vote) {
+        const milestone = Managers.configManager.getMilestone();
+        const balanceMulitiplier = milestone.stakeLevels.balance;
+
+        if (transaction.type === 100) {
+            // Use transaction stakeCreate.amount if the transaction type is of StakeCreate
+            if (sender.vote) {
+                const delegate: State.IWallet = this.findByPublicKey(sender.vote);
+
+                const s = transaction.asset.stakeCreate;
+
+                let level: string;
+                if (s.duration >= 7889400 && s.duration < 15778800) {
+                    level = "3m";
+                } else if (s.duration >= 15778800 && s.duration < 31557600) {
+                    level = "6m";
+                } else if (s.duration >= 31557600 && s.duration < 63115200) {
+                    level = "1y";
+                } else if (s.duration > 63115200) {
+                    level = "2y";
+                }
+
+                const multiplier: number = milestone.stakeLevels[level];
+                const sWeight: Utils.BigNumber = s.amount.times(multiplier);
+                const mFee = transaction.fee.times(balanceMulitiplier);
+
+                console.log("Sender before stake: " + sender.balance);
+                console.log("Delegate before stake: " + delegate.voteBalance + " + " + sWeight + " - " + mFee);
+
+                delegate.voteBalance = revert
+                    ? delegate.voteBalance
+                          .minus(sWeight)
+                          .plus(s.amount.times(0.1))
+                          .plus(mFee)
+                    : delegate.voteBalance
+                          .minus(s.amount.times(0.1))
+                          .plus(sWeight)
+                          .minus(mFee);
+            }
+        } else if (transaction.type !== Enums.TransactionTypes.Vote) {
             // Update vote balance of the sender's delegate
             if (sender.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(sender.vote);
-                const total: Utils.BigNumber = transaction.amount
-                    .plus(transaction.fee)
-                    .times(Managers.configManager.getMilestone().stakeLevels.balance)
-                    .plus(sender.stakeWeight);
+                const total: Utils.BigNumber = transaction.amount.plus(transaction.fee).times(balanceMulitiplier);
                 delegate.voteBalance = revert ? delegate.voteBalance.plus(total) : delegate.voteBalance.minus(total);
             }
 
             // Update vote balance of recipient's delegate
             if (recipient && recipient.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(recipient.vote);
-                const total: Utils.BigNumber = transaction.amount.times(
-                    Managers.configManager.getMilestone().stakeLevels.balance,
-                );
+                const total: Utils.BigNumber = transaction.amount.times(balanceMulitiplier);
                 delegate.voteBalance = revert ? delegate.voteBalance.minus(total) : delegate.voteBalance.plus(total);
             }
         } else {
             const vote: string = transaction.asset.votes[0];
             const delegate: State.IWallet = this.findByPublicKey(vote.substr(1));
-            const totalToSubtract: Utils.BigNumber = sender.balance
-                .minus(transaction.fee)
-                .times(Managers.configManager.getMilestone().stakeLevels.balance)
-                .plus(sender.stakeWeight);
-            const totalToAdd: Utils.BigNumber = sender.balance
-                .times(Managers.configManager.getMilestone().stakeLevels.balance)
-                .plus(sender.stakeWeight);
 
             if (vote.startsWith("+")) {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(totalToSubtract)
-                    : delegate.voteBalance.plus(totalToAdd);
+                    ? delegate.voteBalance.minus(
+                          sender.balance
+                              .minus(transaction.fee)
+                              .times(balanceMulitiplier)
+                              .plus(sender.stakeWeight),
+                      )
+                    : delegate.voteBalance.plus(sender.balance.times(0.1).plus(sender.stakeWeight));
             } else {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.plus(totalToAdd)
-                    : delegate.voteBalance.minus(totalToSubtract);
+                    ? delegate.voteBalance.plus(sender.balance.times(balanceMulitiplier).plus(sender.stakeWeight))
+                    : delegate.voteBalance.minus(
+                          sender.balance
+                              .plus(transaction.fee)
+                              .times(balanceMulitiplier)
+                              .plus(sender.stakeWeight),
+                      );
             }
         }
     }

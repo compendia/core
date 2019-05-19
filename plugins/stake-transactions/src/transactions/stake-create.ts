@@ -1,5 +1,3 @@
-import { app } from "@arkecosystem/core-container";
-import { State } from "@arkecosystem/core-interfaces";
 import { Managers, Transactions } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nos/stake-interfaces";
 import ByteBuffer from "bytebuffer";
@@ -14,31 +12,32 @@ export class StakeCreateTransaction extends Transactions.Transaction {
 
     public static getSchema(): Transactions.schemas.TransactionSchema {
         const configManager = Managers.configManager;
-        const lastBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
-        const milestone = configManager.getMilestone(lastBlock.data.height);
+        const milestone = configManager.getMilestone();
 
         return schemas.extend(schemas.transactionBaseSchema, {
             $id: "stakeCreate",
             required: ["asset"],
             properties: {
                 type: { transactionType: STAKE_TYPE },
-                amount: { bignumber: { minimum: milestone.minimumStake } },
+                amount: { bignumber: { minimum: 0, maximum: 0 } },
                 asset: {
                     type: "object",
                     required: ["stakeCreate"],
                     properties: {
                         stakeCreate: {
                             type: "object",
-                            required: ["duration"],
+                            required: ["duration", "amount"],
                             properties: {
                                 duration: {
                                     type: "integer",
                                     // Minimum duration of 3 months
-                                    // TODO: Don't hardcode this value. Use milestone config.
+                                    // TODO: Don't hardcode this value. Use env.
                                     minimum: 7889400,
+                                },
+                                amount: {
+                                    bignumber: {
+                                        minimum: milestone.minimumStake,
+                                    },
                                 },
                             },
                         },
@@ -55,6 +54,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         // TODO: Verify that this works
         const buffer = new ByteBuffer(24, true);
         buffer.writeUint64(+stakeCreate.duration);
+        buffer.writeUint64(+stakeCreate.amount);
         return buffer;
     }
 
@@ -63,6 +63,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         const stakeCreate = {} as IStakeCreateAsset;
 
         stakeCreate.duration = buf.readUint64().toInt();
+        stakeCreate.amount = buf.readUint64().toInt();
 
         data.asset = {
             stakeCreate,

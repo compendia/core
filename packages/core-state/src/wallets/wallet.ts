@@ -41,7 +41,7 @@ export class Wallet implements State.IWallet {
         this.forgedFees = Utils.BigNumber.ZERO;
         this.forgedRewards = Utils.BigNumber.ZERO;
         this.stakeWeight = Utils.BigNumber.ZERO;
-        this.stake = undefined;
+        this.stake = [];
     }
 
     /**
