@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import cloneDeep from "lodash.clonedeep";
 import pluralize from "pluralize";
 import { Wallet } from "./wallet";
@@ -149,7 +149,9 @@ export class WalletManager implements State.IWalletManager {
         for (const voter of Object.values(this.byPublicKey)) {
             if (voter.vote) {
                 const delegate: State.IWallet = this.byPublicKey[voter.vote];
-                delegate.voteBalance = delegate.voteBalance.plus(voter.balance);
+                delegate.voteBalance = delegate.voteBalance
+                    .plus(voter.stakeWeight)
+                    .plus(voter.balance.times(Managers.configManager.getMilestone().stakeLevels.balance));
             }
         }
     }
@@ -201,7 +203,9 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (applied && delegate.vote) {
-                const increase: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
+                const increase: Utils.BigNumber = block.data.reward
+                    .plus(block.data.totalFee)
+                    .times(Managers.configManager.getMilestone().stakeLevels.balance);
                 const votedDelegate: State.IWallet = this.byPublicKey[delegate.vote];
                 votedDelegate.voteBalance = votedDelegate.voteBalance.plus(increase);
             }
@@ -240,7 +244,9 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (reverted && delegate.vote) {
-                const decrease: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
+                const decrease: Utils.BigNumber = block.data.reward
+                    .plus(block.data.totalFee)
+                    .times(Managers.configManager.getMilestone().stakeLevels.balance);
                 const votedDelegate: State.IWallet = this.byPublicKey[delegate.vote];
                 votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);
             }
@@ -398,29 +404,40 @@ export class WalletManager implements State.IWalletManager {
             // Update vote balance of the sender's delegate
             if (sender.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(sender.vote);
-                const total: Utils.BigNumber = transaction.amount.plus(transaction.fee);
+                const total: Utils.BigNumber = transaction.amount
+                    .plus(transaction.fee)
+                    .times(Managers.configManager.getMilestone().stakeLevels.balance)
+                    .plus(sender.stakeWeight);
                 delegate.voteBalance = revert ? delegate.voteBalance.plus(total) : delegate.voteBalance.minus(total);
             }
 
             // Update vote balance of recipient's delegate
             if (recipient && recipient.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(recipient.vote);
-                delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(transaction.amount)
-                    : delegate.voteBalance.plus(transaction.amount);
+                const total: Utils.BigNumber = transaction.amount.times(
+                    Managers.configManager.getMilestone().stakeLevels.balance,
+                );
+                delegate.voteBalance = revert ? delegate.voteBalance.minus(total) : delegate.voteBalance.plus(total);
             }
         } else {
             const vote: string = transaction.asset.votes[0];
             const delegate: State.IWallet = this.findByPublicKey(vote.substr(1));
+            const totalToSubtract: Utils.BigNumber = sender.balance
+                .minus(transaction.fee)
+                .times(Managers.configManager.getMilestone().stakeLevels.balance)
+                .plus(sender.stakeWeight);
+            const totalToAdd: Utils.BigNumber = sender.balance
+                .times(Managers.configManager.getMilestone().stakeLevels.balance)
+                .plus(sender.stakeWeight);
 
             if (vote.startsWith("+")) {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(sender.balance.minus(transaction.fee))
-                    : delegate.voteBalance.plus(sender.balance);
+                    ? delegate.voteBalance.minus(totalToSubtract)
+                    : delegate.voteBalance.plus(totalToAdd);
             } else {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.plus(sender.balance)
-                    : delegate.voteBalance.minus(sender.balance.plus(transaction.fee));
+                    ? delegate.voteBalance.plus(totalToAdd)
+                    : delegate.voteBalance.minus(totalToSubtract);
             }
         }
     }
