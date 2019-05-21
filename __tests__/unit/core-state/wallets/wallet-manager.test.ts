@@ -1,6 +1,5 @@
 /* tslint:disable:max-line-length no-empty */
-import "../../core-database/mocks/core-container";
-
+import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { InsufficientBalanceError } from "@arkecosystem/core-transactions/src/errors";
@@ -10,11 +9,9 @@ import { StakeCreateTransactionHandler } from "@nos/stake-transactions";
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { fixtures } from "../../../utils";
+import "../../core-database/mocks/core-container";
 // @ts-ignore
 import wallets from "../__fixtures__/wallets.json";
-
-import { Blockchain } from "../../../../packages/core-blockchain/src/blockchain";
-const blockchain = new Blockchain({});
 
 const { BlockFactory } = Blocks;
 const { SATOSHI } = Constants;
@@ -385,20 +382,19 @@ describe("Wallet Manager", () => {
         });
 
         it("should create, cancel, and claim a stake", async () => {
-            jest.spyOn(blockchain, "getLastBlock").mockReturnValue({
+            const store = app.resolvePlugin<State.IStateService>("state").getStore();
+            jest.spyOn(store, "getLastBlock").mockReturnValue({
                 // @ts-ignore
-                data: {
-                    timestamp: 1558453095,
-                    height: 10,
-                },
+                timestamp: 100,
             });
-            console.log(blockchain.getLastBlock());
 
             const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
                 .stakeAsset(7889400, Utils.BigNumber.make(1000))
                 .fee("50")
                 .sign("secret")
                 .build();
+
+            console.log(stakeTransaction);
         });
 
         it("should revert unvote transaction and correctly update vote balances", async () => {
