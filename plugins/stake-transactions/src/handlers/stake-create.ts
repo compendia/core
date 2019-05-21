@@ -14,7 +14,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         for (const t of transactions) {
-            let stakeArray: StakeInterfaces.IStakeObject[];
+            let stakeArray: StakeInterfaces.IStakeArray;
             const wallet = walletManager.findByPublicKey(t.senderPublicKey);
 
             // Get wallet stake if it exists

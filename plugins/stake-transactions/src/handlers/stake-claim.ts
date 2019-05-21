@@ -29,7 +29,7 @@ export class StakeClaimHandler extends Handlers.TransactionHandler {
         wallet: State.IWallet,
         databaseWalletManager: State.IWalletManager,
     ): boolean {
-        let stakeArray: StakeInterfaces.IStakeObject[];
+        let stakeArray: StakeInterfaces.IStakeArray;
 
         // Get wallet stake if it exists
         if (!(wallet as any).stake.length) {
@@ -40,7 +40,7 @@ export class StakeClaimHandler extends Handlers.TransactionHandler {
         const { data }: Interfaces.ITransaction = transaction;
         const blockTime = data.asset.stakeClaim.blockTime;
 
-        if (stakeArray.indexOf(blockTime) < 0) {
+        if (!(blockTime in stakeArray)) {
             throw new StakeNotFoundError();
         }
 

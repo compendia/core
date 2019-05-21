@@ -22,7 +22,7 @@ export interface IWallet {
     forgedRewards: Utils.BigNumber;
     rate?: number;
     stakeWeight: Utils.BigNumber;
-    stake: StakeInterfaces.IStakeObject[];
+    stake: StakeInterfaces.IStakeArray;
 
     applyBlock(block: Interfaces.IBlockData): boolean;
     revertBlock(block: Interfaces.IBlockData): boolean;

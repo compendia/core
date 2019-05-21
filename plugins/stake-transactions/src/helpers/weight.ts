@@ -27,7 +27,6 @@ class VoteWeight {
             const sWeight: Utils.BigNumber = s.amount.times(multiplier);
 
             const o: StakeInterfaces.IStakeObject = {
-                start: t.timestamp,
                 amount: s.amount,
                 duration: s.duration,
                 weight: sWeight,

@@ -425,9 +425,6 @@ export class WalletManager implements State.IWalletManager {
                 const sWeight: Utils.BigNumber = s.amount.times(multiplier);
                 const mFee = transaction.fee.times(balanceMulitiplier);
 
-                console.log("Sender before stake: " + sender.balance);
-                console.log("Delegate before stake: " + delegate.voteBalance + " + " + sWeight + " - " + mFee);
-
                 delegate.voteBalance = revert
                     ? delegate.voteBalance
                           .minus(sWeight)

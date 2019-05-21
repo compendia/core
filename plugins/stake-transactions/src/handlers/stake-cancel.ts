@@ -20,7 +20,7 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
             const blockTime = s.blockTime;
             const sender = wallet;
             const stake = (sender as any).stake[blockTime];
-            let x = stake.start;
+            let x = blockTime;
             while (x < 315576000) {
                 // Remove stake weight
                 (sender as any).stakeWeight = (sender as any).stakeWeight.minus(stake.weight);
@@ -36,7 +36,7 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
         wallet: State.IWallet,
         databaseWalletManager: State.IWalletManager,
     ): boolean {
-        let stakeArray: StakeInterfaces.IStakeObject[];
+        let stakeArray: StakeInterfaces.IStakeArray;
 
         // Get wallet stake if it exists
         if (!(wallet as any).stake.length) {
@@ -47,7 +47,7 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
         const { data }: Interfaces.ITransaction = transaction;
         const blockTime = data.asset.stakeCancel.blockTime;
 
-        if (stakeArray.indexOf(blockTime) < 0) {
+        if (!(blockTime in stakeArray)) {
             throw new StakeNotFoundError();
         }
 
@@ -84,7 +84,7 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = (sender as any).stake[blockTime];
-        let x = stake.start;
+        let x = blockTime;
         while (x < 315576000) {
             if (x > timestamp) {
                 // Remove stake weight
@@ -107,7 +107,7 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = (sender as any).stake[blockTime];
-        let x = stake.start;
+        let x = blockTime;
         while (x < 315576000) {
             if (x > timestamp) {
                 // Revert remove stake weight

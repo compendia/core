@@ -22,7 +22,7 @@ export class Wallet implements State.IWallet {
     public forgedRewards: Utils.BigNumber;
     public rate?: number;
     public stakeWeight: Utils.BigNumber;
-    public stake: StakeInterfaces.IStakeObject[];
+    public stake: StakeInterfaces.IStakeArray;
 
     constructor(address: string) {
         this.address = address;
@@ -41,7 +41,7 @@ export class Wallet implements State.IWallet {
         this.forgedFees = Utils.BigNumber.ZERO;
         this.forgedRewards = Utils.BigNumber.ZERO;
         this.stakeWeight = Utils.BigNumber.ZERO;
-        this.stake = [];
+        this.stake = {};
     }
 
     /**

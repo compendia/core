@@ -65,5 +65,4 @@ module.exports = {
     },
     "@arkecosystem/core-snapshots": {},
     "@nos/stake-transactions": {},
-    "@nos/stake-interfaces": {},
 };
