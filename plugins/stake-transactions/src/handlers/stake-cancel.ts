@@ -98,25 +98,12 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
         super.revertForSender(transaction, walletManager);
-        const lastBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
-        const timestamp = lastBlock.data.timestamp;
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = (sender as any).stake[blockTime];
-        let x = blockTime;
-        while (x < 315576000) {
-            if (x > timestamp) {
-                // Revert remove stake weight
-                (sender as any).stakeWeight = (sender as any).stakeWeight.plus(stake.weight);
-                (sender as any).stake[blockTime].claimableTimestamp = 0;
-                break;
-            }
-            x += stake.duration;
-        }
+        (sender as any).stakeWeight = (sender as any).stakeWeight.plus(stake.weight);
+        (sender as any).stake[blockTime].claimableTimestamp = 0;
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

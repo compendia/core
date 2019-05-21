@@ -1,8 +1,14 @@
+import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Interfaces, Transactions } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nos/stake-interfaces";
-import { StakeAlreadyClaimedError, StakeNotFoundError, WalletHasNoStakeError } from "../errors";
+import {
+    StakeAlreadyClaimedError,
+    StakeNotFoundError,
+    StakeNotYetClaimableError,
+    WalletHasNoStakeError,
+} from "../errors";
 import { StakeClaimTransaction } from "../transactions";
 
 export class StakeClaimHandler extends Handlers.TransactionHandler {
@@ -46,6 +52,15 @@ export class StakeClaimHandler extends Handlers.TransactionHandler {
 
         if (stakeArray[blockTime].claimed) {
             throw new StakeAlreadyClaimedError();
+        }
+
+        const lastBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
+
+        if (stakeArray[blockTime].claimableTimestamp < lastBlock.data.timestamp) {
+            throw new StakeNotYetClaimableError();
         }
 
         return super.canBeApplied(transaction, wallet, databaseWalletManager);

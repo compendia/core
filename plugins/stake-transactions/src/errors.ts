@@ -31,6 +31,12 @@ export class StakeAlreadyClaimedError extends Errors.TransactionError {
     }
 }
 
+export class StakeNotYetClaimableError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake not yet claimable.`);
+    }
+}
+
 export class StakeDurationError extends Errors.TransactionError {
     constructor() {
         super(`Incorrect stake duration.`);
