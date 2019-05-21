@@ -10,7 +10,11 @@ import { StakeCreateTransactionHandler } from "@nos/stake-transactions";
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { fixtures } from "../../../utils";
+// @ts-ignore
 import wallets from "../__fixtures__/wallets.json";
+
+import { Blockchain } from "../../../../packages/core-blockchain/src/blockchain";
+const blockchain = new Blockchain({});
 
 const { BlockFactory } = Blocks;
 const { SATOSHI } = Constants;
@@ -378,6 +382,23 @@ describe("Wallet Manager", () => {
             walletManager.revertTransaction(voteTransaction);
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000));
             expect(delegate.voteBalance).toEqual(delegate.balance.times(0.1));
+        });
+
+        it("should create, cancel, and claim a stake", async () => {
+            jest.spyOn(blockchain, "getLastBlock").mockReturnValue({
+                // @ts-ignore
+                data: {
+                    timestamp: 1558453095,
+                    height: 10,
+                },
+            });
+            console.log(blockchain.getLastBlock());
+
+            const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
+                .stakeAsset(7889400, Utils.BigNumber.make(1000))
+                .fee("50")
+                .sign("secret")
+                .build();
         });
 
         it("should revert unvote transaction and correctly update vote balances", async () => {

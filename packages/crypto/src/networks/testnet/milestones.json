@@ -7,7 +7,8 @@
         "block": {
             "version": 0,
             "maxTransactions": 150,
-            "maxPayload": 2097152
+            "maxPayload": 2097152,
+            "idFullSha256": true
         },
         "epoch": "2017-03-21T13:00:00.000Z",
         "fees": {
@@ -34,21 +35,11 @@
             "2y": 2
         },
         "minimumStake": 1000,
-        "vendorFieldLength": 64,
+        "vendorFieldLength": 255,
         "aip11": true
     },
     {
         "height": 75600,
-        "reward": 200000000
-    },
-    {
-        "height": 100000,
-        "vendorFieldLength": 255
-    },
-    {
-        "height": 1000000000,
-        "block": {
-            "idFullSha256": true
-        }
+        "reward": 400000000
     }
 ]
