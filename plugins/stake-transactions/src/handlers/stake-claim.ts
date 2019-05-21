@@ -67,7 +67,7 @@ export class StakeClaimHandler extends Handlers.TransactionHandler {
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("stake.canceled", transaction.data);
+        emitter.emit("stake.claimed", transaction.data);
     }
 
     public canEnterTransactionPool(
