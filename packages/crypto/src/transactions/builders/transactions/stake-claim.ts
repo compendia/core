@@ -3,21 +3,20 @@ import { feeManager } from "../../../managers";
 import { BigNumber } from "../../../utils";
 import { TransactionBuilder } from "./transaction";
 
-export class StakeCreateBuilder extends TransactionBuilder<StakeCreateBuilder> {
+export class StakeClaimBuilder extends TransactionBuilder<StakeClaimBuilder> {
     constructor() {
         super();
-        this.data.type = 100;
+        this.data.type = 102;
         this.data.fee = feeManager.get(100);
         this.data.amount = BigNumber.ZERO;
         this.data.recipientId = undefined;
         this.data.senderPublicKey = undefined;
-        this.data.asset = { stakeCreate: { duration: 0, amount: BigNumber.ZERO } };
+        this.data.asset = { stakeClaim: { blockTime: 0 } };
         this.signWithSenderAsRecipient = true;
     }
 
-    public stakeAsset(duration: number, amount: BigNumber): StakeCreateBuilder {
-        this.data.asset.stakeCreate.duration = duration;
-        this.data.asset.stakeCreate.amount = amount;
+    public stakeAsset(blockTime: number): StakeClaimBuilder {
+        this.data.asset.stakeClaim.blockTime = blockTime;
         return this;
     }
 
@@ -28,7 +27,7 @@ export class StakeCreateBuilder extends TransactionBuilder<StakeCreateBuilder> {
         return struct;
     }
 
-    protected instance(): StakeCreateBuilder {
+    protected instance(): StakeClaimBuilder {
         return this;
     }
 }

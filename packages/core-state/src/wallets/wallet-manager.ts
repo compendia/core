@@ -428,10 +428,10 @@ export class WalletManager implements State.IWalletManager {
                 delegate.voteBalance = revert
                     ? delegate.voteBalance
                           .minus(sWeight)
-                          .plus(s.amount.times(0.1))
+                          .plus(s.amount.times(Managers.configManager.getMilestone().stakeLevels.balance))
                           .plus(mFee)
                     : delegate.voteBalance
-                          .minus(s.amount.times(0.1))
+                          .minus(s.amount.times(Managers.configManager.getMilestone().stakeLevels.balance))
                           .plus(sWeight)
                           .minus(mFee);
             }
@@ -461,7 +461,11 @@ export class WalletManager implements State.IWalletManager {
                               .times(balanceMulitiplier)
                               .plus(sender.stakeWeight),
                       )
-                    : delegate.voteBalance.plus(sender.balance.times(0.1).plus(sender.stakeWeight));
+                    : delegate.voteBalance.plus(
+                          sender.balance
+                              .times(Managers.configManager.getMilestone().stakeLevels.balance)
+                              .plus(sender.stakeWeight),
+                      );
             } else {
                 delegate.voteBalance = revert
                     ? delegate.voteBalance.plus(sender.balance.times(balanceMulitiplier).plus(sender.stakeWeight))

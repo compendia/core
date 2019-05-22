@@ -1,4 +1,3 @@
-import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Interfaces, Transactions } from "@arkecosystem/crypto";
@@ -6,12 +5,13 @@ import { StakeInterfaces } from "@nos/stake-interfaces";
 import {
     StakeAlreadyClaimedError,
     StakeNotFoundError,
+    StakeNotYetCanceledError,
     StakeNotYetClaimableError,
     WalletHasNoStakeError,
 } from "../errors";
 import { StakeClaimTransaction } from "../transactions";
 
-export class StakeClaimHandler extends Handlers.TransactionHandler {
+export class StakeClaimTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return StakeClaimTransaction;
     }
@@ -38,7 +38,7 @@ export class StakeClaimHandler extends Handlers.TransactionHandler {
         let stakeArray: StakeInterfaces.IStakeArray;
 
         // Get wallet stake if it exists
-        if (!(wallet as any).stake.length) {
+        if ((wallet as any).stake === undefined) {
             throw new WalletHasNoStakeError();
         }
 
@@ -54,12 +54,11 @@ export class StakeClaimHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyClaimedError();
         }
 
-        const lastBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
+        if (stakeArray[blockTime].claimableTimestamp === undefined) {
+            throw new StakeNotYetCanceledError();
+        }
 
-        if (stakeArray[blockTime].claimableTimestamp < lastBlock.data.timestamp) {
+        if (stakeArray[blockTime].claimableTimestamp > transaction.data.timestamp) {
             throw new StakeNotYetClaimableError();
         }
 

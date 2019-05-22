@@ -1,5 +1,3 @@
-import { app } from "@arkecosystem/core-container";
-import { State } from "@arkecosystem/core-interfaces";
 import { Transactions } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 import { IBlockTimeAsset } from "../interfaces";
@@ -10,11 +8,6 @@ const STAKE_CANCEL_TYPE = 101;
 export class StakeCancelTransaction extends Transactions.Transaction {
     public static type = STAKE_CANCEL_TYPE;
     public static getSchema(): Transactions.schemas.TransactionSchema {
-        const lastBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
-        const timestamp = lastBlock.data.timestamp;
         return schemas.extend(schemas.transactionBaseSchema, {
             $id: "stakeCancel",
             required: ["asset"],
@@ -32,7 +25,6 @@ export class StakeCancelTransaction extends Transactions.Transaction {
                                 duration: {
                                     type: "number",
                                     minimum: 1,
-                                    maximum: timestamp,
                                 },
                             },
                         },

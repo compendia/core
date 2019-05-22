@@ -42,3 +42,9 @@ export class StakeDurationError extends Errors.TransactionError {
         super(`Incorrect stake duration.`);
     }
 }
+
+export class StakeNotYetCanceledError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake not yet canceled.`);
+    }
+}

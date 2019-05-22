@@ -1,7 +1,7 @@
 import { Container, Logger } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { defaults } from "./defaults";
-import { StakeCancelHandler, StakeClaimHandler, StakeCreateTransactionHandler } from "./handlers";
+import { StakeCancelTransactionHandler, StakeClaimTransactionHandler, StakeCreateTransactionHandler } from "./handlers";
 import * as StakeHelpers from "./helpers";
 
 export const plugin: Container.IPluginDescriptor = {
@@ -9,17 +9,21 @@ export const plugin: Container.IPluginDescriptor = {
     defaults,
     alias: "stake-transactions",
     async register(container: Container.IContainer, options) {
-        container.resolvePlugin<Logger.ILogger>("logger").info("Registering custom transactions");
+        container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Create Transaction");
         Handlers.Registry.registerCustomTransactionHandler(StakeCreateTransactionHandler);
-        Handlers.Registry.registerCustomTransactionHandler(StakeCancelHandler);
-        Handlers.Registry.registerCustomTransactionHandler(StakeClaimHandler);
+        container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Cancel Transaction");
+        Handlers.Registry.registerCustomTransactionHandler(StakeCancelTransactionHandler);
+        container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Claim Transaction");
+        Handlers.Registry.registerCustomTransactionHandler(StakeClaimTransactionHandler);
     },
     async deregister(container: Container.IContainer, options) {
-        container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering custom transactions");
+        container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering Stake Create Transaction");
         Handlers.Registry.deregisterCustomTransactionHandler(StakeCreateTransactionHandler);
-        Handlers.Registry.deregisterCustomTransactionHandler(StakeCancelHandler);
-        Handlers.Registry.deregisterCustomTransactionHandler(StakeClaimHandler);
+        container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering Stake Cancel Transaction");
+        Handlers.Registry.deregisterCustomTransactionHandler(StakeCancelTransactionHandler);
+        container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering Stake Claim Transaction");
+        Handlers.Registry.deregisterCustomTransactionHandler(StakeClaimTransactionHandler);
     },
 };
 
-export { StakeHelpers, StakeCreateTransactionHandler };
+export { StakeHelpers, StakeCreateTransactionHandler, StakeCancelTransactionHandler, StakeClaimTransactionHandler };

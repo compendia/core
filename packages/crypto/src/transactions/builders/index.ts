@@ -4,6 +4,8 @@ import { IPFSBuilder } from "./transactions/ipfs";
 import { MultiPaymentBuilder } from "./transactions/multi-payment";
 import { MultiSignatureBuilder } from "./transactions/multi-signature";
 import { SecondSignatureBuilder } from "./transactions/second-signature";
+import { StakeCancelBuilder } from "./transactions/stake-cancel";
+import { StakeClaimBuilder } from "./transactions/stake-claim";
 import { StakeCreateBuilder } from "./transactions/stake-create";
 import { TimelockTransferBuilder } from "./transactions/timelock-transfer";
 import { TransferBuilder } from "./transactions/transfer";
@@ -48,5 +50,13 @@ export class BuilderFactory {
 
     public static stakeCreate(): StakeCreateBuilder {
         return new StakeCreateBuilder();
+    }
+
+    public static stakeCancel(): StakeCancelBuilder {
+        return new StakeCancelBuilder();
+    }
+
+    public static stakeClaim(): StakeClaimBuilder {
+        return new StakeClaimBuilder();
     }
 }

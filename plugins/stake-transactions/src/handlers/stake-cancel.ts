@@ -1,4 +1,3 @@
-import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Interfaces, Transactions } from "@arkecosystem/crypto";
@@ -6,7 +5,7 @@ import { StakeInterfaces } from "@nos/stake-interfaces";
 import { StakeAlreadyCanceledError, StakeNotFoundError, WalletHasNoStakeError } from "../errors";
 import { StakeCancelTransaction } from "../transactions";
 
-export class StakeCancelHandler extends Handlers.TransactionHandler {
+export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return StakeCancelTransaction;
     }
@@ -38,8 +37,7 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
     ): boolean {
         let stakeArray: StakeInterfaces.IStakeArray;
 
-        // Get wallet stake if it exists
-        if (!(wallet as any).stake.length) {
+        if ((wallet as any).stake === undefined) {
             throw new WalletHasNoStakeError();
         }
 
@@ -75,20 +73,16 @@ export class StakeCancelHandler extends Handlers.TransactionHandler {
 
     protected applyToSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
         super.applyToSender(transaction, walletManager);
-        const lastBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
-        const timestamp = lastBlock.data.timestamp;
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = (sender as any).stake[blockTime];
         let x = blockTime;
-        while (x < 315576000) {
-            if (x > timestamp) {
-                // Remove stake weight
-                (sender as any).stakeWeight = (sender as any).stakeWeight.minus(stake.weight);
+        // Remove stake weight
+        (sender as any).stakeWeight = (sender as any).stakeWeight.minus(stake.weight);
+
+        while (x < blockTime + 315576000) {
+            if (x > transaction.data.timestamp) {
                 (sender as any).stake[blockTime].claimableTimestamp = x;
                 break;
             }
