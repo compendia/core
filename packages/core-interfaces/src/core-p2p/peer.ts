@@ -1,4 +1,4 @@
-import { Dato } from "@faustbrian/dato";
+import { Dayjs } from "dayjs";
 import { IPeerVerificationResult } from "./peer-verifier";
 
 export interface IPeerPorts {
@@ -7,7 +7,7 @@ export interface IPeerPorts {
 }
 
 export interface IPeerPlugins {
-    [name: string]: { port: number };
+    [name: string]: { enabled: boolean; port: number };
 }
 
 export interface IPeer {
@@ -21,7 +21,7 @@ export interface IPeer {
 
     latency: number;
     state: IPeerState;
-    lastPinged: Dato | undefined;
+    lastPinged: Dayjs | undefined;
     verificationResult: IPeerVerificationResult | undefined;
 
     isVerified(): boolean;

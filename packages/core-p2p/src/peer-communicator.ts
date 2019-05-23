@@ -2,8 +2,8 @@ import { app } from "@arkecosystem/core-container";
 import { EventEmitter, Logger, P2P } from "@arkecosystem/core-interfaces";
 import { httpie } from "@arkecosystem/core-utils";
 import { Interfaces } from "@arkecosystem/crypto";
-import { dato } from "@faustbrian/dato";
 import AJV from "ajv";
+import dayjs from "dayjs";
 import { SCClientSocket } from "socketcluster-client";
 import { SocketErrors } from "./enums";
 import { PeerPingTimeoutError, PeerStatusResponseError, PeerVerificationFailedError } from "./errors";
@@ -20,7 +20,7 @@ export class PeerCommunicator implements P2P.IPeerCommunicator {
 
     public async downloadBlocks(peer: P2P.IPeer, fromBlockHeight: number): Promise<Interfaces.IBlockData[]> {
         try {
-            this.logger.info(`Downloading blocks from height ${fromBlockHeight.toLocaleString()} via ${peer.ip}`);
+            this.logger.debug(`Downloading blocks from height ${fromBlockHeight.toLocaleString()} via ${peer.ip}`);
 
             return await this.getPeerBlocks(peer, fromBlockHeight);
         } catch (error) {
@@ -69,22 +69,25 @@ export class PeerCommunicator implements P2P.IPeerCommunicator {
             if (!peer.isVerified()) {
                 throw new PeerVerificationFailedError();
             }
-
             const { config } = pingResponse;
-            for (const [name, plugin] of Object.entries(config.plugins)) {
-                try {
-                    const { status } = await httpie.get(`http://${peer.ip}:${plugin.port}/`);
+            Promise.all(
+                Object.entries(config.plugins).map(async ([name, plugin]) => {
+                    try {
+                        if (peer.ports[name] === undefined) {
+                            const { status } = await httpie.get(`http://${peer.ip}:${plugin.port}/`);
 
-                    if (status === 200) {
-                        peer.ports[name] = plugin.port;
+                            if (status === 200) {
+                                peer.ports[name] = plugin.port;
+                            }
+                        }
+                    } catch (error) {
+                        peer.ports[name] = undefined;
                     }
-                } catch (error) {
-                    peer.ports[name] = undefined;
-                }
-            }
+                }),
+            );
         }
 
-        peer.lastPinged = dato();
+        peer.lastPinged = dayjs();
         peer.state = pingResponse.state;
         return pingResponse.state;
     }
@@ -214,7 +217,6 @@ export class PeerCommunicator implements P2P.IPeerCommunicator {
                 break;
             case "TimeoutError": // socketcluster timeout error
             case SocketErrors.Timeout:
-                peer.latency = -1;
                 this.emitter.emit("internal.p2p.suspendPeer", { peer });
                 break;
             case "Error":

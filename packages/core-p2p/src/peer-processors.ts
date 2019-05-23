@@ -3,10 +3,9 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { EventEmitter, Logger, P2P } from "@arkecosystem/core-interfaces";
-import { dato } from "@faustbrian/dato";
+import dayjs from "dayjs";
 import prettyMs from "pretty-ms";
 import { SCClientSocket } from "socketcluster-client";
-import { PeerPingTimeoutError } from "./errors";
 import { Peer } from "./peer";
 import { PeerSuspension } from "./peer-suspension";
 import { isValidPeer } from "./utils";
@@ -101,7 +100,7 @@ export class PeerProcessor implements P2P.IPeerProcessor {
         this.connector.disconnect(peer);
 
         if (!punishment) {
-            this.logger.debug(`Disconnecting from ${peer.ip}:${peer.port} without punishment.`);
+            this.logger.debug(`Disconnecting from ${peer.ip}:${peer.port}.`);
             return;
         }
 
@@ -109,7 +108,7 @@ export class PeerProcessor implements P2P.IPeerProcessor {
         this.storage.forgetPeer(peer);
 
         this.logger.debug(
-            `Suspended ${peer.ip} for ${prettyMs(punishment.until.diff(dato()), {
+            `Suspended ${peer.ip} for ${prettyMs(punishment.until.diff(dayjs(), "millisecond"), {
                 verbose: true,
             })} because of "${punishment.reason}"`,
         );
@@ -159,10 +158,6 @@ export class PeerProcessor implements P2P.IPeerProcessor {
 
             this.emitter.emit(ApplicationEvents.PeerAdded, newPeer);
         } catch (error) {
-            if (error instanceof PeerPingTimeoutError) {
-                newPeer.latency = -1;
-            }
-
             this.suspend(newPeer);
         } finally {
             this.storage.forgetPendingPeer(peer);
@@ -184,8 +179,8 @@ export class PeerProcessor implements P2P.IPeerProcessor {
             return false;
         }
 
-        if (!suspension.nextReminder || dato().isAfter(suspension.nextReminder)) {
-            const untilDiff = suspension.punishment.until.diff(dato());
+        if (!suspension.nextReminder || dayjs().isAfter(suspension.nextReminder)) {
+            const untilDiff: number = suspension.punishment.until.diff(dayjs(), "millisecond");
 
             this.logger.debug(
                 `${peer.ip} still suspended for ${prettyMs(untilDiff, {
@@ -193,7 +188,7 @@ export class PeerProcessor implements P2P.IPeerProcessor {
                 })} because of "${suspension.punishment.reason}".`,
             );
 
-            suspension.nextReminder = dato().addMinutes(5);
+            suspension.nextReminder = dayjs().add(5, "minute");
         }
 
         return true;

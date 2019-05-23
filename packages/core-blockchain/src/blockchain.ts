@@ -95,7 +95,8 @@ export class Blockchain implements blockchain.IBlockchain {
             }
         }, 1);
 
-        this.queue.drain = () => this.dispatch("PROCESSFINISHED");
+        // @ts-ignore
+        this.queue.drain(() => this.dispatch("PROCESSFINISHED"));
     }
 
     /**
@@ -229,16 +230,8 @@ export class Blockchain implements blockchain.IBlockchain {
     /**
      * Push a block to the process queue.
      */
-    public handleIncomingBlock(block: Interfaces.IBlockData, remoteAddress: string, fromForger: boolean = false): void {
+    public handleIncomingBlock(block: Interfaces.IBlockData, fromForger: boolean = false): void {
         this.pushPingBlock(block, fromForger);
-
-        logger.info(
-            `Received new block at height ${block.height.toLocaleString()} with ${pluralize(
-                "transaction",
-                block.numberOfTransactions,
-                true,
-            )} from ${remoteAddress}`,
-        );
 
         const currentSlot: number = Crypto.Slots.getSlotNumber();
         const receivedSlot: number = Crypto.Slots.getSlotNumber(block.timestamp);
@@ -268,7 +261,22 @@ export class Blockchain implements blockchain.IBlockchain {
             return;
         }
 
-        this.queue.push({ blocks });
+        // divide blocks received into chunks depending on number of transactions
+        // this is to avoid blocking the application when processing "heavy" blocks
+        let currentBlocksChunk = [];
+        let currentTransactionsCount = 0;
+        for (const block of blocks) {
+            currentBlocksChunk.push(block);
+            currentTransactionsCount += block.numberOfTransactions;
+
+            if (currentTransactionsCount >= 150 || currentBlocksChunk.length > 100) {
+                this.queue.push({ blocks: currentBlocksChunk });
+                currentBlocksChunk = [];
+                currentTransactionsCount = 0;
+            }
+        }
+        this.queue.push({ blocks: currentBlocksChunk });
+
         this.state.lastDownloadedBlock = BlockFactory.fromData(blocks.slice(-1)[0]);
     }
 
@@ -372,6 +380,31 @@ export class Blockchain implements blockchain.IBlockchain {
 
             if (lastProcessResult === BlockProcessorResult.Accepted) {
                 acceptedBlocks.push(block);
+            } else {
+                break; // if one block is not accepted, the other ones won't be chained anyway
+            }
+        }
+
+        if (acceptedBlocks.length > 0) {
+            try {
+                await this.database.saveBlocks(acceptedBlocks);
+            } catch (exceptionSaveBlocks) {
+                logger.error(
+                    `Could not save ${acceptedBlocks.length} blocks to database : ${exceptionSaveBlocks.stack}`,
+                );
+
+                const resetToHeight = async height => {
+                    try {
+                        return await this.removeTopBlocks((await this.database.getLastBlock()).data.height - height);
+                    } catch (e) {
+                        logger.error(`Could not remove top blocks from database : ${e.stack}`);
+
+                        return resetToHeight(height); // keep trying, we can't do anything while this fails
+                    }
+                };
+                await resetToHeight(acceptedBlocks[0].data.height - 1);
+
+                return this.processBlocks(blocks, callback); // keep trying, we can't do anything while this fails
             }
         }
 
@@ -379,36 +412,12 @@ export class Blockchain implements blockchain.IBlockchain {
             lastProcessResult === BlockProcessorResult.Accepted ||
             lastProcessResult === BlockProcessorResult.DiscardedButCanBeBroadcasted
         ) {
-            // broadcast only current block
             const currentBlock: Interfaces.IBlock = blocks[blocks.length - 1];
             const blocktime: number = config.getMilestone(currentBlock.data.height).blocktime;
 
             if (this.state.started && Crypto.Slots.getSlotNumber() * blocktime <= currentBlock.data.timestamp) {
                 this.p2p.getMonitor().broadcastBlock(currentBlock);
             }
-        }
-
-        if (acceptedBlocks.length === 0) {
-            return callback([]);
-        }
-
-        try {
-            await this.database.saveBlocks(acceptedBlocks);
-        } catch (exceptionSaveBlocks) {
-            logger.error(`Could not save ${acceptedBlocks.length} blocks to database : ${exceptionSaveBlocks.stack}`);
-
-            const resetToHeight = async height => {
-                try {
-                    return await this.removeTopBlocks((await this.database.getLastBlock()).data.height - height);
-                } catch (e) {
-                    logger.error(`Could not remove top blocks from database : ${e.stack}`);
-
-                    return resetToHeight(height); // keep trying, we can't do anything while this fails
-                }
-            };
-            await resetToHeight(acceptedBlocks[0].data.height - 1);
-
-            return this.processBlocks(blocks, callback); // keep trying, we can't do anything while this fails
         }
 
         return callback(acceptedBlocks);
