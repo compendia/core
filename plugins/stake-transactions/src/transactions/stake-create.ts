@@ -1,4 +1,4 @@
-import { Managers, Transactions } from "@arkecosystem/crypto";
+import { Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import ByteBuffer from "bytebuffer";
 import { IStakeCreateAsset } from "../interfaces";
@@ -63,7 +63,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         const stakeCreate = {} as IStakeCreateAsset;
 
         stakeCreate.duration = buf.readUint64().toInt();
-        stakeCreate.amount = buf.readUint64().toNumber();
+        stakeCreate.amount = Utils.BigNumber.make(buf.readUint64().toString());
 
         data.asset = {
             stakeCreate,
