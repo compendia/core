@@ -1,6 +1,8 @@
+import { Utils } from "@arkecosystem/crypto";
+
 export interface IStakeCreateAsset {
     duration: number;
-    amount: number;
+    amount: Utils.BigNumber;
 }
 
 export interface IBlockTimeAsset {
