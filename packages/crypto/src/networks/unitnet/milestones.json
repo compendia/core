@@ -20,9 +20,21 @@
                 "ipfs": 500000000,
                 "timelockTransfer": 0,
                 "multiPayment": 0,
-                "delegateResignation": 2500000000
+                "delegateResignation": 2500000000,
+                "stakeCreate": 100000000,
+                "stakeCancel": 100000000,
+                "stakeRedeem": 100000000,
+                "stakeUndoCancel": 100000000
             }
         },
+        "stakeLevels": {
+            "balance": 0.1,
+            "3m": 1,
+            "6m": 1.25,
+            "1y": 1.5,
+            "2y": 2
+        },
+        "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
         "aip11": true
     },
