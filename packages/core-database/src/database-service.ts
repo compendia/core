@@ -507,6 +507,8 @@ export class DatabaseService implements Database.IDatabaseService {
             }
         }
 
+        // TODO Fee
+
         const blockStats: {
             numberOfTransactions: number;
             totalFee: Utils.BigNumber;
@@ -530,6 +532,7 @@ export class DatabaseService implements Database.IDatabaseService {
         }
 
         // Sum of all tx fees equals the sum of block.totalFee
+        // TODO Fee
         if (blockStats.totalFee !== transactionStats.totalFee) {
             errors.push(
                 `Total transaction fees: ${transactionStats.totalFee}, total of block.totalFee : ${

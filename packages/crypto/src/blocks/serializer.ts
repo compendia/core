@@ -50,6 +50,7 @@ export class Serializer {
             block.previousBlockHex = Block.toBytesHex(block.previousBlock);
         }
 
+        // TODO Fee: Add removedFee
         buffer.writeUint32(block.version);
         buffer.writeUint32(block.timestamp);
         buffer.writeUint32(block.height);

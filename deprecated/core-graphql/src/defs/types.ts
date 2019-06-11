@@ -1,3 +1,4 @@
+// TODO Fee
 export const types = `
   type Block {
     id: String

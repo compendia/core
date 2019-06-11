@@ -61,6 +61,7 @@ export class TransactionsRepository extends Repository implements Database.ITran
         return this.db.manyOrNone(queries.transactions.forged, { ids });
     }
 
+    // TODO Fee
     public async statistics(): Promise<{
         count: number;
         totalFee: Utils.BigNumber;
@@ -73,6 +74,7 @@ export class TransactionsRepository extends Repository implements Database.ITran
         return this.db.none(queries.transactions.deleteByBlock, { id });
     }
 
+    // TODO Fee
     public async getFeeStatistics(
         days: number,
         minFeeBroadcast?: number,

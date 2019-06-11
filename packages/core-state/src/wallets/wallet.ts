@@ -47,6 +47,7 @@ export class Wallet implements State.IWallet {
             block.generatorPublicKey === this.publicKey ||
             Identities.Address.fromPublicKey(block.generatorPublicKey) === this.address
         ) {
+            // TODO Fee
             this.balance = this.balance.plus(block.reward).plus(block.totalFee);
 
             // update stats
@@ -68,6 +69,7 @@ export class Wallet implements State.IWallet {
             block.generatorPublicKey === this.publicKey ||
             Identities.Address.fromPublicKey(block.generatorPublicKey) === this.address
         ) {
+            // TODO Fee
             this.balance = this.balance.minus(block.reward).minus(block.totalFee);
 
             this.forgedFees = this.forgedFees.minus(block.totalFee);

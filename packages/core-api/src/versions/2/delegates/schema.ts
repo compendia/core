@@ -101,6 +101,7 @@ export const search: object = {
     },
 };
 
+// TODO Fee
 export const blocks: object = {
     params: {
         id: schemaIdentifier,

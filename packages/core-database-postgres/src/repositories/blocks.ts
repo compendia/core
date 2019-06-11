@@ -63,6 +63,7 @@ export class BlocksRepository extends Repository implements Database.IBlocksRepo
         return this.db.many(queries.blocks.recent);
     }
 
+    // TODO Fee
     public async statistics(): Promise<{
         numberOfTransactions: number;
         totalFee: Utils.BigNumber;

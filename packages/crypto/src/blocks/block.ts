@@ -117,6 +117,7 @@ export class Block implements IBlock {
         return Hash.verifyECDSA(hash, this.data.blockSignature, this.data.generatorPublicKey);
     }
 
+    // TODO Fee
     public toJson(): IBlockJson {
         const data: IBlockJson = JSON.parse(JSON.stringify(this.data));
         data.reward = this.data.reward.toFixed();
@@ -187,6 +188,7 @@ export class Block implements IBlock {
             // Checking if transactions of the block adds up to block values.
             const appliedTransactions: Record<string, ITransactionData> = {};
 
+            // TODO Fee
             let totalAmount: BigNumber = BigNumber.ZERO;
             let totalFee: BigNumber = BigNumber.ZERO;
 
@@ -209,6 +211,7 @@ export class Block implements IBlock {
 
                 appliedTransactions[transaction.data.id] = transaction.data;
 
+                // TODO Fee
                 totalAmount = totalAmount.plus(transaction.data.amount);
                 totalFee = totalFee.plus(transaction.data.fee);
                 size += bytes.length;
@@ -220,6 +223,7 @@ export class Block implements IBlock {
                 result.errors.push("Invalid total amount");
             }
 
+            // TODO Fee
             if (!totalFee.isEqualTo(block.totalFee)) {
                 result.errors.push("Invalid total fee");
             }

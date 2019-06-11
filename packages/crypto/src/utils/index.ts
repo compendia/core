@@ -2,6 +2,7 @@ import { SATOSHI } from "../constants";
 import { IBlockData, ITransactionData } from "../interfaces";
 import { configManager } from "../managers";
 import { BigNumber } from "./bignum";
+import { FeeHelper } from "./fee";
 
 /**
  * Get human readable string from satoshis
@@ -75,4 +76,4 @@ export const numberToHex = (num: number, padding = 2): string => {
 
 export const maxVendorFieldLength = (height?: number): number => configManager.getMilestone(height).vendorFieldLength;
 
-export { BigNumber };
+export { BigNumber, FeeHelper };

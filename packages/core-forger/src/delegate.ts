@@ -99,6 +99,7 @@ export class Delegate {
                 this.decryptKeysWithOtp();
             }
 
+            // TODO Fee
             const block: Interfaces.IBlock = Blocks.BlockFactory.make(
                 {
                     version: 0,

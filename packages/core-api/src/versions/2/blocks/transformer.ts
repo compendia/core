@@ -3,6 +3,7 @@ import { Blockchain, Database } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Utils } from "@arkecosystem/crypto";
 
+// TODO Fee
 export const transformBlock = model => {
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     const generator = databaseService.walletManager.findByPublicKey(model.generatorPublicKey);

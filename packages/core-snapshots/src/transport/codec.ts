@@ -8,6 +8,8 @@ const encodeBlock = block => {
     blockCamelized.totalFee = Utils.BigNumber.make(blockCamelized.totalFee);
     blockCamelized.reward = Utils.BigNumber.make(blockCamelized.reward);
 
+    // TODO Fee
+
     return Blocks.Block.serialize(blockCamelized, true);
 };
 
@@ -19,6 +21,8 @@ const decodeBlock = (buffer: Buffer) => {
     block.totalFee = block.totalFee.toFixed();
     // @ts-ignore - @TODO: remove ts-ignore
     block.reward = block.reward.toFixed();
+
+    // TODO Fee
 
     return decamelizeKeys(block);
 };

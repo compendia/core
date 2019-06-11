@@ -14,6 +14,7 @@ declare global {
 }
 
 const isValidBlock = block => {
+    // TODO Fee
     const allowedKeys = sortBy([
         "blockSignature",
         "createdAt",

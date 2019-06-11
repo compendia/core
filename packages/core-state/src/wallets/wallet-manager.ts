@@ -240,6 +240,7 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (reverted && delegate.vote) {
+                // TODO Fee
                 const decrease: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
                 const votedDelegate: State.IWallet = this.byPublicKey[delegate.vote];
                 votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);

@@ -5,6 +5,7 @@ import { Utils } from "@arkecosystem/crypto";
 export const transformBlockLegacy = model => {
     const lastBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
 
+    // TODO Fee
     return {
         id: model.id,
         version: model.version,

@@ -51,6 +51,7 @@ export const schemas = {
         ],
     },
 
+    // TODO Fee: removedFee to block schema
     block: {
         $id: "block",
         type: "object",
@@ -66,6 +67,7 @@ export const schemas = {
             "blockSignature",
         ],
         additionalProperties: false,
+
         properties: {
             id: { blockId: {} },
             idHex: { blockId: {} },

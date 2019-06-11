@@ -26,6 +26,7 @@ export class BlockFactory {
         return this.fromSerialized(buffer ? buffer.toString("hex") : undefined);
     }
 
+    // TODO Fee: add removedFee, awardedFee
     public static fromJson(json: IBlockJson): IBlock {
         // @ts-ignore
         const data: IBlockData = { ...json };

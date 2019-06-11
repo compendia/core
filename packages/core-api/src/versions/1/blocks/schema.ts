@@ -9,6 +9,7 @@ export const getBlock: object = {
     required: ["id"],
 };
 
+// TODO Fee
 export const getBlocks: object = {
     type: "object",
     properties: {

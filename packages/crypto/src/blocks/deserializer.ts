@@ -45,6 +45,7 @@ class Deserializer {
         return { data: block, transactions };
     }
 
+    // TODO Fee
     private deserializeHeader(block: IBlockData, buf: ByteBuffer): void {
         block.version = buf.readUint32();
         block.timestamp = buf.readUint32();

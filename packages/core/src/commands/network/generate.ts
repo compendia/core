@@ -326,6 +326,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         });
 
         let payloadLength = 0;
+        // TODO Fee
         let totalFee = 0;
         let totalAmount = Utils.BigNumber.ZERO;
         const allBytes = [];
@@ -340,6 +341,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
         const payloadHash = Crypto.HashAlgorithms.sha256(Buffer.concat(allBytes));
 
+        // TODO Fee
         const block = {
             version: 0,
             totalAmount: totalAmount.toString(),
@@ -397,6 +399,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
         byteBuffer.writeInt(genesisBlock.numberOfTransactions);
         byteBuffer.writeLong(genesisBlock.totalAmount);
+        // TODO Fee
         byteBuffer.writeLong(genesisBlock.totalFee);
         byteBuffer.writeLong(genesisBlock.reward);
 
