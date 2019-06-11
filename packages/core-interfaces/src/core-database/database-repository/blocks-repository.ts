@@ -16,10 +16,11 @@ export interface IBlocksRepository extends IRepository {
     latest(): Promise<Interfaces.IBlockData>;
     recent(count: number): Promise<Interfaces.IBlockData[]>;
 
-    // TODO Fee
+    // TODO Fee Done
     statistics(): Promise<{
         numberOfTransactions: number;
         totalFee: Utils.BigNumber;
+        removedFee: Utils.BigNumber;
         totalAmount: Utils.BigNumber;
         count: number;
     }>;

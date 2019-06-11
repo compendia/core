@@ -9,7 +9,7 @@ export const getBlock: object = {
     required: ["id"],
 };
 
-// TODO Fee
+// TODO Fee Done
 export const getBlocks: object = {
     type: "object",
     properties: {
@@ -34,6 +34,10 @@ export const getBlocks: object = {
             minimum: 0,
         },
         totalFee: {
+            type: "integer",
+            minimum: 0,
+        },
+        removedFee: {
             type: "integer",
             minimum: 0,
         },

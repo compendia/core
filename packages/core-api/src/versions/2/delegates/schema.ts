@@ -72,6 +72,7 @@ export const show: object = {
     },
 };
 
+// TODO Fee Done wallet
 export const search: object = {
     query: {
         ...pagination,
@@ -94,6 +95,7 @@ export const search: object = {
             .items(schemaUsername),
         approval: schemaPercentage,
         forgedFees: schemaIntegerBetween,
+        removedFees: schemaIntegerBetween,
         forgedRewards: schemaIntegerBetween,
         forgedTotal: schemaIntegerBetween,
         producedBlocks: schemaIntegerBetween,
@@ -128,6 +130,9 @@ export const blocks: object = {
                 .integer()
                 .min(0),
             totalFee: Joi.number()
+                .integer()
+                .min(0),
+            removedFee: Joi.number()
                 .integer()
                 .min(0),
             reward: Joi.number()

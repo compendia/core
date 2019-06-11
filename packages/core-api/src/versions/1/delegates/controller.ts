@@ -70,6 +70,7 @@ export class DelegatesController extends Controller {
         }
     }
 
+    // TODO Fee ? wallet
     public async forged(request: Hapi.Request, h: Hapi.ResponseToolkit) {
         try {
             const wallet = this.databaseService.walletManager.findByPublicKey(

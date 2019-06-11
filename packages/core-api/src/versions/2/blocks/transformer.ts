@@ -3,7 +3,7 @@ import { Blockchain, Database } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Utils } from "@arkecosystem/crypto";
 
-// TODO Fee
+// TODO
 export const transformBlock = model => {
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     const generator = databaseService.walletManager.findByPublicKey(model.generatorPublicKey);
@@ -20,6 +20,7 @@ export const transformBlock = model => {
         forged: {
             reward: +model.reward.toFixed(),
             fee: +model.totalFee.toFixed(),
+            removed: +model.removedFee.toFixed(),
             total: +model.reward.plus(model.totalFee).toFixed(),
             amount: +Utils.BigNumber.make(model.totalAmount).toFixed(),
         },

@@ -24,8 +24,11 @@ export const index: object = {
             totalAmount: Joi.number()
                 .integer()
                 .min(0),
-            // TODO Fee
             totalFee: Joi.number()
+                .integer()
+                .min(0),
+            // TODO Fee Done
+            removedFee: Joi.number()
                 .integer()
                 .min(0),
             reward: Joi.number()
@@ -135,8 +138,15 @@ export const search: object = {
                 .integer()
                 .min(0),
         }),
-        // TODO Fee
         totalFee: Joi.object().keys({
+            from: Joi.number()
+                .integer()
+                .min(0),
+            to: Joi.number()
+                .integer()
+                .min(0),
+        }),
+        removedFee: Joi.object().keys({
             from: Joi.number()
                 .integer()
                 .min(0),

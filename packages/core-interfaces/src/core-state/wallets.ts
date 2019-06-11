@@ -2,6 +2,7 @@ import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Logger, Shared } from "../index";
 import { IRoundInfo } from "../shared";
 
+// TODO Fee Done
 export interface IWallet {
     address: string;
     publicKey: string | undefined;
@@ -18,6 +19,7 @@ export interface IWallet {
     dirty: boolean;
     producedBlocks: number;
     forgedFees: Utils.BigNumber;
+    removedFees: Utils.BigNumber;
     forgedRewards: Utils.BigNumber;
     rate?: number;
 

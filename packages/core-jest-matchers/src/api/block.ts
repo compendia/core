@@ -14,7 +14,7 @@ declare global {
 }
 
 const isValidBlock = block => {
-    // TODO Fee
+    // TODO Fee Done
     const allowedKeys = sortBy([
         "blockSignature",
         "createdAt",
@@ -29,6 +29,7 @@ const isValidBlock = block => {
         "timestamp",
         "totalAmount",
         "totalFee",
+        "removedFee",
         "transactions",
         "updatedAt",
         "version",

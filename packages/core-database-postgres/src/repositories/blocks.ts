@@ -63,10 +63,11 @@ export class BlocksRepository extends Repository implements Database.IBlocksRepo
         return this.db.many(queries.blocks.recent);
     }
 
-    // TODO Fee
+    // TODO Fee ?
     public async statistics(): Promise<{
         numberOfTransactions: number;
         totalFee: Utils.BigNumber;
+        removedFee: Utils.BigNumber;
         totalAmount: Utils.BigNumber;
         count: number;
     }> {

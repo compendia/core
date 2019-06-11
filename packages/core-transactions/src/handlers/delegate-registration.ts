@@ -27,10 +27,11 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             walletManager.reindex(wallet);
         }
 
-        // TODO Fee
+        // TODO Fee Done
         for (const block of forgedBlocks) {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
             wallet.forgedFees = wallet.forgedFees.plus(block.totalFees);
+            wallet.removedFees = wallet.forgedFees.plus(block.removedFees);
             wallet.forgedRewards = wallet.forgedRewards.plus(block.totalRewards);
             wallet.producedBlocks = +block.totalProduced;
         }

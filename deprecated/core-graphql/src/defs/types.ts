@@ -1,4 +1,4 @@
-// TODO Fee
+// TODO Fee Done
 export const types = `
   type Block {
     id: String
@@ -9,6 +9,7 @@ export const types = `
     numberOfTransactions: Int!
     totalAmount: Float
     totalFee: Float
+    removedFee: Float
     reward: Float
     payloadLength: Int!
     payloadHash: String

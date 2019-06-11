@@ -1,4 +1,4 @@
-import { Interfaces, Utils } from "../";
+import { Managers, Utils } from "../";
 
 export interface IFeeObject {
     toReward: Utils.BigNumber;
@@ -6,23 +6,24 @@ export interface IFeeObject {
 }
 
 class FeeHelper {
-    public static getFeeObject(block: Interfaces.IBlockData): IFeeObject {
+    public static getFeeObject(totalFee: Utils.BigNumber): IFeeObject {
+        const blockReward = Managers.configManager.getMilestone().reward;
         let rewardedFees = Utils.BigNumber.ZERO;
-        let removedFees = block.totalFee;
+        let removedFees = totalFee;
         let equalizer = Utils.BigNumber.ZERO;
-        if (block.totalFee.isGreaterThan(block.reward)) {
+        if (totalFee.isGreaterThan(blockReward)) {
             // If fee is odd number or one nostoshi, set equalizer to deduct remaining .5 nostoshi from removal and add to reward
-            const deductedFee = block.totalFee.minus(block.reward);
+            const deductedFee = totalFee.minus(blockReward);
             if (deductedFee.toNumber() % 2 || deductedFee.isEqualTo(Utils.BigNumber.ONE)) {
                 equalizer = Utils.BigNumber.make(0.5);
             }
-            rewardedFees = block.totalFee
-                .minus(block.reward)
+            rewardedFees = totalFee
+                .minus(blockReward)
                 .times(0.5) // Relative fee reward and removal factors are hard-coded since it only when split 50/50 (due to odd/even number equalizing)
                 .plus(equalizer);
-            removedFees = block.reward.plus(
-                block.totalFee
-                    .minus(block.reward)
+            removedFees = blockReward.plus(
+                totalFee
+                    .minus(blockReward)
                     .times(0.5)
                     .minus(equalizer),
             );

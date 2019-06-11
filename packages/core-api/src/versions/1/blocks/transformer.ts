@@ -5,7 +5,7 @@ import { Utils } from "@arkecosystem/crypto";
 export const transformBlockLegacy = model => {
     const lastBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
 
-    // TODO Fee
+    // TODO Fee Done
     return {
         id: model.id,
         version: model.version,
@@ -18,6 +18,7 @@ export const transformBlockLegacy = model => {
             .plus(model.totalFee)
             .toString(),
         totalFee: +Utils.BigNumber.make(model.totalFee).toFixed(),
+        removedFee: +Utils.BigNumber.make(model.removedFee).toFixed(),
         reward: +Utils.BigNumber.make(model.reward).toFixed(),
         payloadLength: model.payloadLength,
         payloadHash: model.payloadHash,

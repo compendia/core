@@ -280,7 +280,6 @@ export class Connection implements TransactionPool.IConnection {
         if (this.walletManager.has(block.data.generatorPublicKey)) {
             const delegateWallet: State.IWallet = this.walletManager.findByPublicKey(block.data.generatorPublicKey);
 
-            // TODO Fee
             delegateWallet.balance = delegateWallet.balance.plus(block.data.reward.plus(block.data.totalFee));
         }
 
