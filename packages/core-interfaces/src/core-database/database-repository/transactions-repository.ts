@@ -47,7 +47,6 @@ export interface ITransactionsRepository extends IRepository {
     statistics(): Promise<{
         count: number;
         totalFee: Utils.BigNumber;
-        removedFee: Utils.BigNumber;
         totalAmount: Utils.BigNumber;
     }>;
 

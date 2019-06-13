@@ -32,6 +32,7 @@ describe("Block", () => {
         reward: Utils.BigNumber.ONE,
         totalAmount: Utils.BigNumber.make(10),
         totalFee: Utils.BigNumber.ONE,
+        removedFee: Utils.BigNumber.ONE,
         transactions: [],
         version: 6,
     };
@@ -48,6 +49,7 @@ describe("Block", () => {
             expect(block.data.reward).toEqual(dummyBlock.reward);
             expect(block.data.timestamp).toBe(dummyBlock.timestamp);
             expect(block.data.totalFee).toEqual(dummyBlock.totalFee);
+            expect(block.data.removedFee).toEqual(dummyBlock.removedFee);
             expect(block.data.version).toBe(dummyBlock.version);
         });
 
@@ -215,6 +217,7 @@ describe("Block", () => {
             expect(actual.numberOfTransactions).toBe(dummyBlock2.data.numberOfTransactions);
             expect(actual.totalAmount).toBe(dummyBlock2.data.totalAmount.toFixed());
             expect(actual.totalFee).toBe(dummyBlock2.data.totalFee.toFixed());
+            expect(actual.removedFee).toBe(dummyBlock2.data.removedFee.toFixed());
             expect(actual.reward).toBe(dummyBlock2.data.reward.toFixed());
             expect(actual.payloadLength).toBe(dummyBlock2.data.payloadLength);
             expect(actual.payloadHash).toBe(dummyBlock2.data.payloadHash);
@@ -234,6 +237,7 @@ describe("Block", () => {
             expect(actual.numberOfTransactions).toBe(dummyBlock2.data.numberOfTransactions);
             expect(actual.totalAmount).toBe(dummyBlock2.data.totalAmount.toFixed());
             expect(actual.totalFee).toBe(dummyBlock2.data.totalFee.toFixed());
+            expect(actual.removedFee).toBe(dummyBlock2.data.removedFee.toFixed());
             expect(actual.reward).toBe(dummyBlock2.data.reward.toFixed());
             expect(actual.payloadLength).toBe(dummyBlock2.data.payloadLength);
             expect(actual.payloadHash).toBe(dummyBlock2.data.payloadHash);
@@ -334,22 +338,30 @@ describe("Block", () => {
             ).toEqual(+data.totalFee);
         });
 
-        it("`reward` of transactions is serialized as a UInt64", () => {
+        it("`removedFee` of transactions is serialized as a UInt64", () => {
             expect(
                 serialize(data)
                     .readUint64(40)
+                    .toNumber(),
+            ).toEqual(+data.totalFee);
+        });
+
+        it("`reward` of transactions is serialized as a UInt64", () => {
+            expect(
+                serialize(data)
+                    .readUint64(48)
                     .toNumber(),
             ).toEqual(+data.reward);
         });
 
         it("`payloadLength` of transactions is serialized as a UInt32", () => {
-            expect(serialize(data).readUint32(48)).toEqual(data.payloadLength);
+            expect(serialize(data).readUint32(56)).toEqual(data.payloadLength);
         });
 
         it("`payloadHash` of transactions is appended, using 32 bytes, as hexadecimal", () => {
             expect(
                 serialize(data)
-                    .slice(52, 52 + 32)
+                    .slice(60, 60 + 32)
                     .toString("hex"),
             ).toEqual(data.payloadHash);
         });
@@ -357,7 +369,7 @@ describe("Block", () => {
         it("`generatorPublicKey` of transactions is appended, using 33 bytes, as hexadecimal", () => {
             expect(
                 serialize(data)
-                    .slice(84, 84 + 33)
+                    .slice(92, 92 + 33)
                     .toString("hex"),
             ).toEqual(data.generatorPublicKey);
         });
@@ -366,17 +378,18 @@ describe("Block", () => {
             it("is not serialized", () => {
                 const data2 = { ...data };
                 delete data2.blockSignature;
-                expect(serialize(data2).limit).toEqual(117);
+                expect(serialize(data2).limit).toEqual(125);
             });
 
             it("is not serialized, even when the `includeSignature` parameter is true", () => {
                 const data2 = { ...data };
                 delete data2.blockSignature;
-                expect(serialize(data2, true).limit).toEqual(117);
+                expect(serialize(data2, true).limit).toEqual(125);
             });
         });
 
         describe("if the `blockSignature` is included", () => {
+            // TODO Fee: Fix for removedFee (need new serialized block)
             it("is serialized", () => {
                 expect(
                     serialize(data)
@@ -386,14 +399,14 @@ describe("Block", () => {
             });
 
             it("is serialized unless the `includeSignature` parameter is false", () => {
-                expect(serialize(data, false).limit).toEqual(117);
+                expect(serialize(data, false).limit).toEqual(125);
             });
         });
     });
 
     describe("serializeWithTransactions", () => {
         describe("genesis block", () => {
-            it.each([["mainnet", 468048], ["devnet", 14492], ["testnet", 46488]])(
+            it.each([["mainnet", 468064], ["devnet", 14508], ["testnet", 46504]])(
                 "%s",
                 (network: NetworkName, length: number) => {
                     configManager.setFromPreset(network);
@@ -401,6 +414,7 @@ describe("Block", () => {
                     const block: Interfaces.IBlock = BlockFactory.fromJson(networks[network].genesisBlock);
 
                     expect(block.serialized).toHaveLength(length);
+
                     expect(block.verifySignature()).toBeTrue();
                 },
             );
@@ -432,13 +446,14 @@ describe("Block", () => {
             numberOfTransactions: 2,
             totalAmount: Utils.BigNumber.make(0),
             totalFee: Utils.BigNumber.make(600000000),
+            removedFee: Utils.BigNumber.make(600000000),
             reward: Utils.BigNumber.make(200000000),
             payloadLength: 64,
             payloadHash: "c2fa2d400b4c823873d476f6e0c9e423cf925e9b48f1b5706c7e2771d4095538",
             generatorPublicKey: "02fa6902e91e127d6d3410f6abc271a79ae24029079caa0db5819757e3c1c1c5a4",
             blockSignature:
                 "30440220543f71d6f6445b703459b4f91d2c6f2446cbe6669e9c9008b1c77cc57073af2402206036fee3b434ffd5a31a579dd5b514a1c6384962291fda27b2463de903422834",
-            id: "11773170219525190460",
+            id: "16554961956575740259",
             transactions: [
                 {
                     id: "7a1a43098cd253db395514220f69e3b99afaabb2bfcf5ecfa3b99727b367344b",
@@ -530,7 +545,7 @@ describe("Block", () => {
         describe("apply v1 fix", () => {
             it("should not process a common block", () => {
                 const mock = {
-                    id: "187940162505562345",
+                    id: "17950523739709211625",
                     blockSignature:
                         "3045022100a6605198e0f590c88798405bc76748d84e280d179bcefed2c993e70cded2a5dd022008c7f915b89fc4f3250fc4b481abb753c68f30ac351871c50bd6cfaf151370e8",
                     generatorPublicKey: "024c8247388a02ecd1de2a3e3fd5b7c61ecc2797fa3776599d558333ef1802d231",
@@ -543,6 +558,7 @@ describe("Block", () => {
                     reward: Utils.BigNumber.ONE,
                     totalAmount: Utils.BigNumber.make(10),
                     totalFee: Utils.BigNumber.ONE,
+                    removedFee: Utils.BigNumber.ONE,
                     transactions: [],
                     version: 6,
                 };
@@ -565,6 +581,7 @@ describe("Block", () => {
                     reward: Utils.BigNumber.ONE,
                     totalAmount: Utils.BigNumber.make(10),
                     totalFee: Utils.BigNumber.ONE,
+                    removedFee: Utils.BigNumber.ONE,
                     transactions: [],
                     version: 6,
                 };

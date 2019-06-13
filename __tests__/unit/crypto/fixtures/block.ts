@@ -9,6 +9,7 @@ export const dummyBlock = {
     numberOfTransactions: 7,
     totalAmount: Utils.BigNumber.make("10500000000"),
     totalFee: Utils.BigNumber.make("70000000"),
+    removedFee: Utils.BigNumber.make("70000000"),
     reward: Utils.BigNumber.make("200000000"),
     payloadLength: 224,
     payloadHash: "de56269cae3ab156f6979b94a04c30b82ed7d6f9a97d162583c98215c18c65db",
