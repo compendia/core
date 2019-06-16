@@ -15,12 +15,18 @@ import { database } from "./mocks/database";
 import { logger } from "./mocks/logger";
 import { getMonitor } from "./mocks/p2p/network-monitor";
 import { getStorage } from "./mocks/p2p/peer-storage";
-
 const { BlockFactory } = Blocks;
-
 let genesisBlock;
 
 const blockchain = new Blockchain({});
+
+//      block processor
+// import { Identities } from "../../../packages/crypto/src";
+// beforeAll(() => {
+//     blocks101to155.forEach(block => {
+//         console.dir(Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")).data);
+//     });
+// });
 
 describe("Blockchain", () => {
     beforeAll(async () => {
@@ -159,8 +165,12 @@ describe("Blockchain", () => {
             blockchain.state.started = true;
 
             const mockCallback = jest.fn(() => true);
-            const lastBlock = blockchain.getLastBlock();
+            let lastBlock = blockchain.getLastBlock();
+            lastBlock = Blocks.BlockFactory.fromData(lastBlock.data);
+
             lastBlock.data.timestamp = Crypto.Slots.getSlotNumber() * 8000;
+
+            console.log(lastBlock.data.timestamp);
 
             const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
 

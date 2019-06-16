@@ -14,9 +14,14 @@ import { genesisBlock } from "../../utils/config/testnet/genesisBlock";
 
 const { BlockFactory } = Blocks;
 
+// import { Identities } from "../../../packages/crypto/src";
+// console.dir(Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")));
+
 let stateMachine;
 
 beforeAll(async () => {
+    // console.dir(BlockFactory.make(genesisBlock, Identities.Keys.fromPassphrase("passphrase")));
+
     ({ stateMachine } = require("../../../packages/core-blockchain/src/state-machine"));
 
     process.env.CORE_ENV = "";

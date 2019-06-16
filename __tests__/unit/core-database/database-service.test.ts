@@ -65,6 +65,7 @@ describe("Database Service", () => {
 
             expect(walletManager.applyBlock).toHaveBeenCalledWith(genesisBlock);
             expect(emitter.emit).toHaveBeenCalledWith(ApplicationEvents.BlockApplied, genesisBlock.data);
+            // tslint:disable-next-line
             genesisBlock.transactions.forEach(tx =>
                 expect(emitter.emit).toHaveBeenCalledWith(ApplicationEvents.TransactionApplied, tx.data),
             );
@@ -249,6 +250,7 @@ describe("Database Service", () => {
                         numberOfTransactions: 1,
                         totalAmount: transfer.data.amount,
                         totalFee: Utils.BigNumber.make(1),
+                        removedFee: Utils.BigNumber.ZERO,
                         reward: Utils.BigNumber.make(2),
                         payloadLength: 0,
                         payloadHash: "a".repeat(64),

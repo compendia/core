@@ -6,11 +6,11 @@ export const genesisBlock = {
     totalFee: Utils.BigNumber.make(0),
     removedFee: Utils.BigNumber.make(0),
     reward: Utils.BigNumber.make(0),
+    payloadLength: 35960,
     payloadHash: "d9acd04bde4234a81addb8482333b4ac906bed7be5a9970ce8ada428bd083192",
-    generatorPublicKey: "03287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37",
+    generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
     timestamp: 0,
     numberOfTransactions: 153,
-    payloadLength: 35960,
     // tslint:disable-next-line: no-null-keyword
     previousBlock: null,
     transactions: [
@@ -2211,5 +2211,5 @@ export const genesisBlock = {
     height: 1,
     id: "17299880052629251007",
     blockSignature:
-        "3045022100a9e357e132ad4c16c5a8286a9b18d2a2d0d0d35e8d0586095ed879ed08c671e8022033865d7bc0d790639c0fabeb219682817d148fba361dd089fc17a769481a3e4f",
+        "3045022100bbe22d7ec235a26a499321a8457b9679f3d0d405a1b6d858f9896f5b0e05759802204dddfd2f9cec3440b786100cfe9078de23ef223da007f079eedc5146cb574d8a",
 };

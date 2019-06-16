@@ -18,7 +18,8 @@ export const block2 = {
     timestamp: 1,
     reward: Utils.BigNumber.make(0),
     totalAmount: Utils.BigNumber.make(20),
-    totalFee: Utils.BigNumber.make(100000000),
+    totalFee: Utils.BigNumber.make(50000000),
+    removedFee: Utils.BigNumber.make(50000000),
     transactions: [
         {
             amount: Utils.BigNumber.make(2),

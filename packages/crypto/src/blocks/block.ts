@@ -230,11 +230,11 @@ export class Block implements IBlock {
 
             // TODO Fee Done
             if (!totalFee.isEqualTo(block.totalFee)) {
-                result.errors.push("Invalid total fee");
+                result.errors.push("Invalid total fee: expected " + totalFee + " got " + block.totalFee);
             }
 
             if (!removedFee.isEqualTo(block.removedFee)) {
-                result.errors.push("Invalid removed fee");
+                result.errors.push("Invalid removed fee: expected " + removedFee + " got " + block.removedFee);
             }
 
             if (size > constants.block.maxPayload) {
