@@ -7,7 +7,7 @@ export interface IFeeObject {
 
 class FeeHelper {
     public static getFeeObject(totalFee: Utils.BigNumber): IFeeObject {
-        const blockReward = Managers.configManager.getMilestone().reward;
+        const blockReward = Utils.BigNumber.make(Managers.configManager.getMilestone().reward);
         let rewardedFees = Utils.BigNumber.ZERO;
         let removedFees = totalFee;
         let equalizer = Utils.BigNumber.ZERO;
