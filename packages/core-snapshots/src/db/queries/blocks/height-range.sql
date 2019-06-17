@@ -7,6 +7,7 @@ SELECT
   number_of_transactions,
   total_amount,
   total_fee,
+  removed_fee,
   reward,
   payload_length,
   payload_hash,

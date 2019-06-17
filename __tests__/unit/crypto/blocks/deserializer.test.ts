@@ -3,6 +3,16 @@ import { Serializer } from "../../../../packages/crypto/src/blocks/serializer";
 import { configManager } from "../../../../packages/crypto/src/managers";
 import { dummyBlock2, dummyBlock3 } from "../fixtures/block";
 
+//      block processor
+// import { Identities, Blocks } from "../../../../packages/crypto/src";
+// import { Utils } from "@arkecosystem/crypto";
+// beforeAll(() => {
+//        console.dir(Blocks.BlockFactory.make(dummyBlock, Identities.Keys.fromPassphrase("passphrase")));
+//        const feeObj = Utils.FeeHelper.getFeeObject(dummyBlock.removedFee);
+//        console.log(feeObj);
+//        // console.dir(Blocks.BlockFactory.make(dummyBlock3, Identities.Keys.fromPassphrase("passphrase")).data);
+// });
+
 describe("block deserializer", () => {
     describe("deserialize", () => {
         it("should get block id from outlook table", () => {
@@ -19,6 +29,10 @@ describe("block deserializer", () => {
         it("should correctly deserialize a block", () => {
             const deserialized = deserializer.deserialize(dummyBlock2.serializedFull).data;
 
+            // Serializers
+            // console.log(Serializer.serialize(dummyBlock).toString("hex"));
+            // console.log(Serializer.serializeWithTransactions(dummyBlock).toString("hex"));
+
             const blockFields = [
                 "id",
                 "timestamp",
@@ -28,12 +42,14 @@ describe("block deserializer", () => {
                 "numberOfTransactions",
                 "totalAmount",
                 "totalFee",
+                "removedFee",
                 "reward",
                 "payloadLength",
                 "payloadHash",
                 "generatorPublicKey",
                 "blockSignature",
             ];
+            // tslint:disable-next-line
             blockFields.forEach(field => {
                 expect(deserialized[field].toString()).toEqual(dummyBlock2.data[field].toString());
             });
@@ -50,9 +66,11 @@ describe("block deserializer", () => {
                 "recipientId",
                 "signature",
             ];
+            // tslint:disable-next-line
             deserialized.transactions.forEach(tx => {
                 const dummyBlockTx = dummyBlock2.data.transactions.find(dummyTx => dummyTx.id === tx.id);
                 expect(dummyBlockTx).toBeDefined();
+                // tslint:disable-next-line
                 transactionFields.forEach(field => {
                     expect(tx[field].toString()).toEqual(dummyBlockTx[field].toString());
                 });

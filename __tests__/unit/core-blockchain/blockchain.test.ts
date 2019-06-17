@@ -22,6 +22,14 @@ let genesisBlock;
 
 const blockchain = new Blockchain({});
 
+//      block processor
+// import { Identities } from "../../../packages/crypto/src";
+// beforeAll(() => {
+//     blocks101to155.forEach(block => {
+//         console.dir(Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")).data);
+//     });
+// });
+
 describe("Blockchain", () => {
     beforeAll(async () => {
         // Create the genesis block after the setup has finished or else it uses a potentially
@@ -160,8 +168,11 @@ describe("Blockchain", () => {
             blockchain.state.started = true;
 
             const mockCallback = jest.fn(() => true);
-            const lastBlock = blockchain.getLastBlock();
+            const lastBlock = Blocks.BlockFactory.fromData(lastBlock.data);
+
             lastBlock.data.timestamp = Crypto.Slots.getSlotNumber() * 8000;
+
+            console.log(lastBlock.data.timestamp);
 
             const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
 

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS ${schema~}.blocks (
     "number_of_transactions" INTEGER NOT NULL,
     "total_amount" BIGINT NOT NULL,
     "total_fee" BIGINT NOT NULL,
+    "removed_fee" BIGINT NOT NULL,
     "reward" BIGINT NOT NULL,
     "payload_length" INTEGER NOT NULL,
     "payload_hash" VARCHAR(64) NOT NULL,

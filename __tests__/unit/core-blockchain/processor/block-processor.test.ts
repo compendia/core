@@ -18,29 +18,52 @@ const { delegates } = fixtures;
 
 let blockProcessor: BlockProcessor;
 
-beforeAll(async () => {
-    blockProcessor = new BlockProcessor(blockchain as any);
-});
+// Generate block template:
+//  import { Identities } from "../../../../packages/crypto/src";
+// beforeAll(async () => {
+//     const blockTemplate = {
+//         id: "17882607875259085966",
+//         version: 0,
+//         timestamp: 46583330,
+//         height: 2,
+//         reward: Utils.BigNumber.make(0),
+//         previousBlock: genesisBlock.id,
+//         numberOfTransactions: 0,
+//         transactions: [],
+//         totalAmount: Utils.BigNumber.make(0),
+//         totalFee: Utils.BigNumber.make(0),
+//         removedFee: Utils.BigNumber.make(0),
+//         payloadLength: 0,
+//         payloadHash: genesisBlock.payloadHash,
+//         generatorPublicKey: delegates[0].publicKey,
+//         blockSignature:
+//             "3045022100e7385c6ea42bd950f7f6ab8c8619cf2f66a41d8f8f185b0bc99af032cb25f30d02200b6210176a6cedfdcbe483167fd91c21d740e0e4011d24d679c601fdd46b0de9",
+//         createdAt: "2019-07-11T16:48:50.550Z",
+//     };
+//     console.dir(Blocks.BlockFactory.make(blockTemplate, Identities.Keys.fromPassphrase("passphrase")));
+// });
 
 describe("Block processor", () => {
     const blockTemplate = {
-        id: "17882607875259085966",
         version: 0,
         timestamp: 46583330,
         height: 2,
-        reward: Utils.BigNumber.make(0),
+        previousBlockHex: "f015853fc9d523bf",
         previousBlock: genesisBlock.id,
         numberOfTransactions: 0,
-        transactions: [],
         totalAmount: Utils.BigNumber.make(0),
         totalFee: Utils.BigNumber.make(0),
+        removedFee: Utils.BigNumber.make(0),
+        reward: Utils.BigNumber.make(0),
         payloadLength: 0,
+        transactions: [],
         payloadHash: genesisBlock.payloadHash,
-        generatorPublicKey: delegates[0].publicKey,
+        generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
         blockSignature:
-            "3045022100e7385c6ea42bd950f7f6ab8c8619cf2f66a41d8f8f185b0bc99af032cb25f30d02200b6210176a6cedfdcbe483167fd91c21d740e0e4011d24d679c601fdd46b0de9",
-        createdAt: "2019-07-11T16:48:50.550Z",
+            "304402206b3700a3ec963f008cb7d96b82067b4c44a1d4c476a703511ed241b7549f983702203c689ab701261a2579e2b3d80128aeeaaeb0037aa9147945836705f76a1a10d3",
+        id: "8757283497005334135",
     };
+    blockProcessor = new BlockProcessor(blockchain as any);
 
     describe("getHandler", () => {
         it("should return ExceptionHandler if block is an exception", async () => {

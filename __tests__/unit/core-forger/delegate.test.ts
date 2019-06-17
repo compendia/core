@@ -154,11 +154,14 @@ describe("Delegate", () => {
                 idHex: "11111111",
                 height: 1,
             },
-            reward: Utils.BigNumber.ZERO,
+            reward: Utils.BigNumber.make("400000000"),
         };
         const transactions = TransactionFactory.secondSignature(dummy.plainPassphrase)
             .withPassphrase(dummy.plainPassphrase)
             .create();
+
+        const feeObj = Utils.FeeHelper.getFeeObject(transactions[0].fee);
+
         const expectedBlockData = {
             generatorPublicKey: dummy.publicKey,
             timestamp: optionsDefault.timestamp,
@@ -166,7 +169,8 @@ describe("Delegate", () => {
             height: optionsDefault.previousBlock.height + 1,
             numberOfTransactions: 1,
             totalAmount: transactions[0].amount,
-            totalFee: transactions[0].fee,
+            totalFee: feeObj.toReward,
+            removedFee: feeObj.toRemove,
             reward: optionsDefault.reward,
         };
 
@@ -174,7 +178,7 @@ describe("Delegate", () => {
             const delegate = new Delegate(dummy.plainPassphrase, testnet.network);
 
             const block = delegate.forge(transactions, optionsDefault);
-
+            // tslint:disable-next-line
             Object.keys(expectedBlockData).forEach(key => {
                 expect(block.data[key]).toEqual(expectedBlockData[key]);
             });
@@ -197,7 +201,7 @@ describe("Delegate", () => {
 
             expect(spyDecryptKeys).toHaveBeenCalledTimes(1);
             expect(spyEncryptKeys).toHaveBeenCalledTimes(1);
-
+            // tslint:disable-next-line
             Object.keys(expectedBlockData).forEach(key => {
                 expect(block.data[key]).toEqual(expectedBlockData[key]);
             });

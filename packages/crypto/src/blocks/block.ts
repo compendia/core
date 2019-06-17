@@ -2,7 +2,7 @@ import { Hash, HashAlgorithms, Slots } from "../crypto";
 import { BlockSchemaError } from "../errors";
 import { IBlock, IBlockData, IBlockJson, IBlockVerification, ITransaction, ITransactionData } from "../interfaces";
 import { configManager } from "../managers/config";
-import { BigNumber, isException } from "../utils";
+import { BigNumber, FeeHelper, isException } from "../utils";
 import { validator } from "../validation";
 import { deserializer } from "./deserializer";
 import { Serializer } from "./serializer";
@@ -117,11 +117,13 @@ export class Block implements IBlock {
         return Hash.verifyECDSA(hash, this.data.blockSignature, this.data.generatorPublicKey);
     }
 
+    // TODO Fee Done
     public toJson(): IBlockJson {
         const data: IBlockJson = JSON.parse(JSON.stringify(this.data));
         data.reward = this.data.reward.toFixed();
         data.totalAmount = this.data.totalAmount.toFixed();
         data.totalFee = this.data.totalFee.toFixed();
+        data.removedFee = this.data.removedFee.toFixed();
         data.transactions = this.transactions.map(transaction => transaction.toJson());
 
         return data;
@@ -187,8 +189,10 @@ export class Block implements IBlock {
             // Checking if transactions of the block adds up to block values.
             const appliedTransactions: Record<string, ITransactionData> = {};
 
+            // TODO Fee Done
             let totalAmount: BigNumber = BigNumber.ZERO;
             let totalFee: BigNumber = BigNumber.ZERO;
+            let removedFee: BigNumber = BigNumber.ZERO;
 
             const payloadBuffers: Buffer[] = [];
             for (const transaction of this.transactions) {
@@ -216,12 +220,21 @@ export class Block implements IBlock {
                 payloadBuffers.push(bytes);
             }
 
+            const feeObj = FeeHelper.getFeeObject(BigNumber.make(totalFee));
+            totalFee = feeObj.toReward;
+            removedFee = feeObj.toRemove;
+
             if (!totalAmount.isEqualTo(block.totalAmount)) {
                 result.errors.push("Invalid total amount");
             }
 
+            // TODO Fee Done
             if (!totalFee.isEqualTo(block.totalFee)) {
-                result.errors.push("Invalid total fee");
+                result.errors.push("Invalid total fee: expected " + totalFee + " got " + block.totalFee);
+            }
+
+            if (!removedFee.isEqualTo(block.removedFee)) {
+                result.errors.push("Invalid removed fee: expected " + removedFee + " got " + block.removedFee);
             }
 
             if (size > constants.block.maxPayload) {

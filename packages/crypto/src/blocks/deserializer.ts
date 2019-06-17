@@ -45,6 +45,7 @@ class Deserializer {
         return { data: block, transactions };
     }
 
+    // TODO Fee Done
     private deserializeHeader(block: IBlockData, buf: ByteBuffer): void {
         block.version = buf.readUint32();
         block.timestamp = buf.readUint32();
@@ -63,6 +64,7 @@ class Deserializer {
         block.numberOfTransactions = buf.readUint32();
         block.totalAmount = BigNumber.make(buf.readUint64().toString());
         block.totalFee = BigNumber.make(buf.readUint64().toString());
+        block.removedFee = BigNumber.make(buf.readUint64().toString());
         block.reward = BigNumber.make(buf.readUint64().toString());
         block.payloadLength = buf.readUint32();
         block.payloadHash = buf.readBytes(32).toString("hex");

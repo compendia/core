@@ -4,6 +4,7 @@ import { Utils } from "@arkecosystem/crypto";
 
 const BignumMod = Utils.BigNumber.clone({ DECIMAL_PLACES: 2 });
 
+// TODO Fee: Deduct all removed fees from totalSupply calculation
 export const calculateApproval = (delegate, height?: number): number => {
     const config = app.getConfig();
 

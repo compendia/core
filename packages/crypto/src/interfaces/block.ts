@@ -22,6 +22,8 @@ export interface IBlock {
     toJson(): IBlockJson;
 }
 
+// TODO Fee Done
+
 export interface IBlockData {
     id?: string;
     idHex?: string;
@@ -34,6 +36,7 @@ export interface IBlockData {
     numberOfTransactions: number;
     totalAmount: BigNumber;
     totalFee: BigNumber;
+    removedFee?: BigNumber;
     reward: BigNumber;
     payloadLength: number;
     payloadHash: string;
@@ -56,6 +59,7 @@ export interface IBlockJson {
     numberOfTransactions: number;
     totalAmount: string;
     totalFee: string;
+    removedFee?: string;
     reward: string;
     payloadLength: number;
     payloadHash: string;

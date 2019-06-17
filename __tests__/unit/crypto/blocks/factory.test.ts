@@ -5,6 +5,7 @@ import { IBlockData } from "../../../../packages/crypto/src/interfaces";
 import { configManager } from "../../../../packages/crypto/src/managers";
 import { dummyBlock } from "../fixtures/block";
 
+// tslint:disable-next-line
 function expectBlock({ data }: { data: IBlockData }) {
     delete data.idHex;
 
@@ -12,6 +13,7 @@ function expectBlock({ data }: { data: IBlockData }) {
     blockWithoutTransactions.reward = blockWithoutTransactions.reward;
     blockWithoutTransactions.totalAmount = blockWithoutTransactions.totalAmount;
     blockWithoutTransactions.totalFee = blockWithoutTransactions.totalFee;
+    blockWithoutTransactions.removedFee = blockWithoutTransactions.removedFee;
     delete blockWithoutTransactions.transactions;
 
     expect(data).toEqual(blockWithoutTransactions);

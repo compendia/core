@@ -17,6 +17,7 @@ beforeEach(() => {
         timestamp: "",
         totalAmount: "",
         totalFee: "",
+        removedFee: "",
         transactions: "",
         updatedAt: "",
         version: "",

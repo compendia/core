@@ -1,6 +1,7 @@
 import { delegateCalculator, formatTimestamp } from "@arkecosystem/core-utils";
 import { Utils } from "@arkecosystem/crypto";
 
+// TODO Fee ? Wallet
 export const transformDelegate = delegate => {
     const data = {
         username: delegate.username,
@@ -16,6 +17,7 @@ export const transformDelegate = delegate => {
         },
         forged: {
             fees: +delegate.forgedFees.toFixed(),
+            removed: +delegate.removedFees.toFixed(),
             rewards: +delegate.forgedRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
