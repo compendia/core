@@ -93,8 +93,9 @@ describe("Blockchain", () => {
         });
 
         it("should enqueue the blocks provided", async () => {
-            const processQueuePush = jest.spyOn(blockchain.queue, "push");
+            blockchain.state.lastDownloadedBlock = blocks101to155[54];
 
+            const processQueuePush = jest.spyOn(blockchain.queue, "push");
             const blocksToEnqueue = [blocks101to155[54]];
             blockchain.enqueueBlocks(blocksToEnqueue);
             expect(processQueuePush).toHaveBeenCalledWith({ blocks: blocksToEnqueue });
@@ -190,9 +191,10 @@ describe("Blockchain", () => {
                 state: { maxLastBlocks: 50 },
             });
 
-            blockchain.state.setLastBlock(genesisBlock);
+            const block = Blocks.BlockFactory.fromData(blocks2to100[0]);
+            blockchain.state.setLastBlock(block);
 
-            expect(blockchain.getLastBlock()).toEqual(genesisBlock);
+            expect(blockchain.getLastBlock()).toEqual(block);
         });
     });
 
@@ -280,11 +282,9 @@ describe("Blockchain", () => {
             it("should be ok", () => {
                 expect(
                     blockchain.isSynced({
-                        data: {
-                            timestamp: Crypto.Slots.getTime(),
-                            height: genesisBlock.height,
-                        },
-                    } as Interfaces.IBlock),
+                        timestamp: Crypto.Slots.getTime(),
+                        height: genesisBlock.height,
+                    } as Interfaces.IBlockData),
                 ).toBeTrue();
             });
         });
