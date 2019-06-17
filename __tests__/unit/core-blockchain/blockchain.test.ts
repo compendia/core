@@ -15,7 +15,9 @@ import { database } from "./mocks/database";
 import { logger } from "./mocks/logger";
 import { getMonitor } from "./mocks/p2p/network-monitor";
 import { getStorage } from "./mocks/p2p/peer-storage";
+
 const { BlockFactory } = Blocks;
+
 let genesisBlock;
 
 const blockchain = new Blockchain({});
@@ -165,8 +167,7 @@ describe("Blockchain", () => {
             blockchain.state.started = true;
 
             const mockCallback = jest.fn(() => true);
-            let lastBlock = blockchain.getLastBlock();
-            lastBlock = Blocks.BlockFactory.fromData(lastBlock.data);
+            const lastBlock = Blocks.BlockFactory.fromData(lastBlock.data);
 
             lastBlock.data.timestamp = Crypto.Slots.getSlotNumber() * 8000;
 
