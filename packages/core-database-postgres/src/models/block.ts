@@ -49,7 +49,6 @@ export class Block extends Model {
             init: col => Utils.BigNumber.make(col.value).toFixed(),
             supportedOperators: [Database.SearchOperator.OP_LTE, Database.SearchOperator.OP_GTE],
         },
-        // Fee Update:
         {
             name: "removed_fee",
             prop: "removedFee",
@@ -58,6 +57,12 @@ export class Block extends Model {
         },
         {
             name: "reward",
+            init: col => Utils.BigNumber.make(col.value).toFixed(),
+            supportedOperators: [Database.SearchOperator.OP_LTE, Database.SearchOperator.OP_GTE],
+        },
+        {
+            name: "top_reward",
+            prop: "topReward",
             init: col => Utils.BigNumber.make(col.value).toFixed(),
             supportedOperators: [Database.SearchOperator.OP_LTE, Database.SearchOperator.OP_GTE],
         },

@@ -97,6 +97,7 @@ export const search: object = {
         forgedFees: schemaIntegerBetween,
         removedFees: schemaIntegerBetween,
         forgedRewards: schemaIntegerBetween,
+        forgedTopRewards: schemaIntegerBetween,
         forgedTotal: schemaIntegerBetween,
         producedBlocks: schemaIntegerBetween,
         voteBalance: schemaIntegerBetween,
@@ -136,6 +137,9 @@ export const blocks: object = {
                 .integer()
                 .min(0),
             reward: Joi.number()
+                .integer()
+                .min(0),
+            topReward: Joi.number()
                 .integer()
                 .min(0),
             payloadLength: Joi.number()

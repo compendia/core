@@ -10,7 +10,9 @@ export const transformBlock = model => {
     const lastBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
 
     model.reward = Utils.BigNumber.make(model.reward);
+    model.topReward = Utils.BigNumber.make(model.topReward);
     model.totalFee = Utils.BigNumber.make(model.totalFee);
+    model.removedFee = Utils.BigNumber.make(model.removedFee);
 
     return {
         id: model.id,
@@ -19,6 +21,7 @@ export const transformBlock = model => {
         previous: model.previousBlock,
         forged: {
             reward: +model.reward.toFixed(),
+            topReward: +model.topReward.toFixed(),
             fee: +model.totalFee.toFixed(),
             removed: +model.removedFee.toFixed(),
             total: +model.reward.plus(model.totalFee).toFixed(),

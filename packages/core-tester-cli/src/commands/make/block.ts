@@ -76,6 +76,7 @@ export class BlockCommand extends BaseCommand {
                 previousBlock,
                 timestamp: Crypto.Slots.getSlotNumber(Crypto.Slots.getTime()) * milestone.blocktime,
                 reward: milestone.reward,
+                topReward: milestone.topReward,
             });
 
             const blockPayload: Interfaces.IBlockJson = newBlock.toJson();

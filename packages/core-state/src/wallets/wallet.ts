@@ -2,6 +2,7 @@ import { State } from "@arkecosystem/core-interfaces";
 import { Errors } from "@arkecosystem/core-transactions";
 import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
+import { TopRewards } from "@nosplatform/top-rewards";
 
 // Fee Update: wallet
 export class Wallet implements State.IWallet {
@@ -22,6 +23,7 @@ export class Wallet implements State.IWallet {
     public forgedFees: Utils.BigNumber;
     public removedFees: Utils.BigNumber;
     public forgedRewards: Utils.BigNumber;
+    public forgedTopRewards: Utils.BigNumber;
     public rate?: number;
     public stakeWeight: Utils.BigNumber;
     public stake: StakeInterfaces.IStakeArray;
@@ -43,6 +45,7 @@ export class Wallet implements State.IWallet {
         this.forgedFees = Utils.BigNumber.ZERO;
         this.removedFees = Utils.BigNumber.ZERO;
         this.forgedRewards = Utils.BigNumber.ZERO;
+        this.forgedTopRewards = Utils.BigNumber.ZERO;
         this.stakeWeight = Utils.BigNumber.ZERO;
         this.stake = {};
     }
@@ -63,6 +66,8 @@ export class Wallet implements State.IWallet {
             this.forgedFees = this.forgedFees.plus(block.totalFee);
             this.forgedRewards = this.forgedRewards.plus(block.reward);
             this.removedFees = this.removedFees.plus(block.removedFee);
+            TopRewards.apply(block, true);
+
             this.lastBlock = block;
             return true;
         }
@@ -78,12 +83,13 @@ export class Wallet implements State.IWallet {
             block.generatorPublicKey === this.publicKey ||
             Identities.Address.fromPublicKey(block.generatorPublicKey) === this.address
         ) {
-            // TODO Fee
             this.balance = this.balance.minus(block.reward).minus(block.totalFee);
 
             this.forgedFees = this.forgedFees.minus(block.totalFee);
             this.forgedRewards = this.forgedRewards.minus(block.reward);
             this.removedFees = this.removedFees.minus(block.removedFee);
+            TopRewards.revert(block, true);
+
             this.producedBlocks--;
 
             // TODO: get it back from database?

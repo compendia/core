@@ -11,6 +11,7 @@ export const types = `
     totalFee: Float
     removedFee: Float
     reward: Float
+    topReward: Float
     payloadLength: Int!
     payloadHash: String
     generatorPublicKey: String

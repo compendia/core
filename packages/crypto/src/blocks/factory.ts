@@ -26,13 +26,13 @@ export class BlockFactory {
         return this.fromSerialized(buffer ? buffer.toString("hex") : undefined);
     }
 
-    // Fee Update: add removedFee
     public static fromJson(json: IBlockJson): IBlock {
         // @ts-ignore
         const data: IBlockData = { ...json };
         data.totalAmount = BigNumber.make(data.totalAmount);
         data.totalFee = BigNumber.make(data.totalFee);
         data.removedFee = BigNumber.make(data.removedFee);
+        data.topReward = BigNumber.make(data.topReward);
         data.reward = BigNumber.make(data.reward);
 
         for (const transaction of data.transactions) {

@@ -26,6 +26,7 @@ const isValidBlock = block => {
         "payloadLength",
         "previousBlock",
         "reward",
+        "topReward",
         "timestamp",
         "totalAmount",
         "totalFee",

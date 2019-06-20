@@ -51,7 +51,6 @@ export const schemas = {
         ],
     },
 
-    // Fee Update: removedFee to block schema
     block: {
         $id: "block",
         type: "object",
@@ -64,6 +63,7 @@ export const schemas = {
             "totalFee",
             "removedFee",
             "reward",
+            "topReward",
             "generatorPublicKey",
             "blockSignature",
         ],
@@ -82,6 +82,7 @@ export const schemas = {
             totalFee: { bignumber: { minimum: 0, bypassGenesis: true, block: true } },
             removedFee: { bignumber: { minimum: 0, bypassGenesis: true, block: true } },
             reward: { bignumber: { minimum: 0 } },
+            topReward: { bignumber: { minimum: 0 } },
             payloadLength: { type: "integer", minimum: 0 },
             payloadHash: { $ref: "hex" },
             generatorPublicKey: { $ref: "publicKey" },

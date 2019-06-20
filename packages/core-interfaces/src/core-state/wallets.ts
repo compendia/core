@@ -22,6 +22,7 @@ export interface IWallet {
     forgedFees: Utils.BigNumber;
     removedFees: Utils.BigNumber;
     forgedRewards: Utils.BigNumber;
+    forgedTopRewards: Utils.BigNumber;
     rate?: number;
     stakeWeight: Utils.BigNumber;
     stake: StakeInterfaces.IStakeArray;

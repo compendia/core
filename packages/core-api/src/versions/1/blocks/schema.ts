@@ -45,6 +45,10 @@ export const getBlocks: object = {
             type: "integer",
             minimum: 0,
         },
+        topReward: {
+            type: "integer",
+            minimum: 0,
+        },
         previousBlock: {
             type: "string",
         },

@@ -50,7 +50,6 @@ export class Serializer {
             block.previousBlockHex = Block.toBytesHex(block.previousBlock);
         }
 
-        // Fee Update: Add removedFee
         buffer.writeUint32(block.version);
         buffer.writeUint32(block.timestamp);
         buffer.writeUint32(block.height);
@@ -60,6 +59,7 @@ export class Serializer {
         buffer.writeUint64(+block.totalFee.toFixed());
         buffer.writeUint64(+block.removedFee.toFixed());
         buffer.writeUint64(+block.reward.toFixed());
+        buffer.writeUint64(+block.topReward.toFixed());
         buffer.writeUint32(block.payloadLength);
         buffer.append(block.payloadHash, "hex");
         buffer.append(block.generatorPublicKey, "hex");

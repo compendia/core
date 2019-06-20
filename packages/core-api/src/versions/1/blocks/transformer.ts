@@ -16,10 +16,12 @@ export const transformBlockLegacy = model => {
         totalAmount: +Utils.BigNumber.make(model.totalAmount).toFixed(),
         totalForged: +Utils.BigNumber.make(model.reward)
             .plus(model.totalFee)
+            .plus(model.topReward)
             .toString(),
         totalFee: +Utils.BigNumber.make(model.totalFee).toFixed(),
         removedFee: +Utils.BigNumber.make(model.removedFee).toFixed(),
         reward: +Utils.BigNumber.make(model.reward).toFixed(),
+        topReward: +Utils.BigNumber.make(model.topReward).toFixed(),
         payloadLength: model.payloadLength,
         payloadHash: model.payloadHash,
         generatorPublicKey: model.generatorPublicKey,

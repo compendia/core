@@ -2,6 +2,8 @@
     {
         "height": 1,
         "reward": 400000000,
+        "topReward": 15000000,
+        "topDelegates": 5,
         "activeDelegates": 47,
         "blocktime": 6,
         "block": {

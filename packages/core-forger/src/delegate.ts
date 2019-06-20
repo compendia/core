@@ -115,6 +115,7 @@ export class Delegate {
                     totalFee: feeObj.toReward,
                     removedFee: feeObj.toRemove,
                     reward: options.reward,
+                    topReward: options.topReward,
                     payloadLength: 32 * sortedTransactions.length,
                     payloadHash: Crypto.HashAlgorithms.sha256(payloadBuffers).toString("hex"),
                     transactions: sortedTransactions,

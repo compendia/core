@@ -38,6 +38,7 @@ export interface IBlockData {
     totalFee: BigNumber;
     removedFee?: BigNumber;
     reward: BigNumber;
+    topReward?: BigNumber;
     payloadLength: number;
     payloadHash: string;
     generatorPublicKey: string;
@@ -61,6 +62,7 @@ export interface IBlockJson {
     totalFee: string;
     removedFee?: string;
     reward: string;
+    topReward?: string;
     payloadLength: number;
     payloadHash: string;
     generatorPublicKey: string;
