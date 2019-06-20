@@ -7,7 +7,7 @@ export class StakeUndoCancelBuilder extends TransactionBuilder<StakeUndoCancelBu
     constructor() {
         super();
         this.data.type = 104;
-        this.data.fee = feeManager.get(100);
+        this.data.fee = feeManager.get(this.data.type);
         this.data.amount = BigNumber.ZERO;
         this.data.recipientId = undefined;
         this.data.senderPublicKey = undefined;

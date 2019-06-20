@@ -19,14 +19,13 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         for (const t of transactions) {
-            const wallet = walletManager.findByPublicKey(t.senderPublicKey);
+            const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const s = t.asset.stakeUndoCancel;
             const blockTime = s.blockTime;
-            const sender = wallet;
-            const stake = (sender as any).stake[blockTime];
+            const stake = wallet.stake[blockTime];
             // Undo cancel stake
-            (sender as any).stake[blockTime].redeemableTimestamp = undefined;
-            (sender as any).stakeWeight = (sender as any).stakeWeight.plus(stake.weight);
+            wallet.stake[blockTime].redeemableTimestamp = undefined;
+            wallet.stakeWeight = wallet.stakeWeight.plus(stake.weight);
         }
     }
 
@@ -85,10 +84,10 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeUndoCancel.blockTime;
-        const stake = (sender as any).stake[blockTime];
+        const stake = sender.stake[blockTime];
         // Undo cancel stake
-        (sender as any).stake[blockTime].redeemableTimestamp = undefined;
-        (sender as any).stakeWeight = (sender as any).stakeWeight.plus(stake.weight);
+        sender.stake[blockTime].redeemableTimestamp = undefined;
+        sender.stakeWeight = sender.stakeWeight.plus(stake.weight);
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -96,13 +95,13 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeUndoCancel.blockTime;
-        const stake = (sender as any).stake[blockTime];
+        const stake = sender.stake[blockTime];
         // Remove stake weight
         let x = blockTime;
-        (sender as any).stakeWeight = (sender as any).stakeWeight.minus(stake.weight);
+        sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
         while (x < blockTime + 315576000) {
             if (x > transaction.data.timestamp) {
-                (sender as any).stake[blockTime].redeemableTimestamp = x;
+                sender.stake[blockTime].redeemableTimestamp = x;
                 break;
             }
             x += stake.duration;

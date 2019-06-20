@@ -19,13 +19,13 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         for (const t of transactions) {
-            const sender = walletManager.findByPublicKey(t.senderPublicKey);
+            const sender: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const s = t.asset.stakeRedeem;
             const blockTime = s.blockTime;
-            const stake = (sender as any).stake[blockTime];
+            const stake = sender.stake[blockTime];
             // Refund stake
-            (sender as any).balance = (sender as any).balance.plus(stake.amount);
-            (sender as any).stake[blockTime].redeemed = true;
+            sender.balance = sender.balance.plus(stake.amount);
+            sender.stake[blockTime].redeemed = true;
         }
     }
 
@@ -84,10 +84,10 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeRedeem.blockTime;
-        const stake = (sender as any).stake[blockTime];
+        const stake = sender.stake[blockTime];
         // Refund stake
-        (sender as any).balance = (sender as any).balance.plus(stake.amount);
-        (sender as any).stake[blockTime].redeemed = true;
+        sender.balance = sender.balance.plus(stake.amount);
+        sender.stake[blockTime].redeemed = true;
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -96,10 +96,10 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeRedeem.blockTime;
-        const stake = (sender as any).stake[blockTime];
+        const stake = sender.stake[blockTime];
         // Revert refund stake
-        (sender as any).balance = (sender as any).balance.minus(stake.amount);
-        (sender as any).stake[blockTime].redeemed = false;
+        sender.balance = sender.balance.minus(stake.amount);
+        sender.stake[blockTime].redeemed = false;
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

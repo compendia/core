@@ -15,19 +15,19 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         for (const t of transactions) {
             let stakeArray: StakeInterfaces.IStakeArray;
-            const wallet = walletManager.findByPublicKey(t.senderPublicKey);
+            const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
 
             // Get wallet stake if it exists
-            if ((wallet as any).stake.length) {
-                stakeArray = (wallet as any).stake;
+            if (Object.keys(wallet.stake).length > 0) {
+                stakeArray = wallet.stake;
             }
 
             // Set stake data
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
             stakeArray[t.data.timestamp] = o;
-            (wallet as any).stakeWeight = (wallet as any).stakeWeight.plus(o.weight);
-            (wallet as any).stake = stakeArray;
-            (wallet as any).balance = (wallet as any).balance.minus(o.amount);
+            wallet.stakeWeight = wallet.stakeWeight.plus(o.weight);
+            wallet.stake = stakeArray;
+            wallet.balance = wallet.balance.minus(o.amount);
         }
     }
 
@@ -76,9 +76,9 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-        (sender as any).stake[transaction.data.timestamp] = o;
+        sender.stake[transaction.data.timestamp] = o;
         sender.balance = sender.balance.minus(o.amount);
-        (sender as any).stakeWeight = (sender as any).stakeWeight.plus(o.weight);
+        sender.stakeWeight = sender.stakeWeight.plus(o.weight);
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -87,8 +87,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
         sender.balance = sender.balance.plus(o.amount);
-        delete (sender as any).stake[transaction.data.timestamp];
-        (sender as any).stakeWeight = (sender as any).stakeWeight.minus(o.weight);
+        delete sender.stake[transaction.data.timestamp];
+        sender.stakeWeight = sender.stakeWeight.minus(o.weight);
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

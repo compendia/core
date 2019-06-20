@@ -13,16 +13,16 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
         for (const t of transactions) {
-            const sender = walletManager.findByPublicKey(t.senderPublicKey);
+            const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             // Get wallet stake if it exists
             const s = t.asset.stakeCancel;
             const blockTime = s.blockTime;
-            const stake = (sender as any).stake[blockTime];
+            const stake = wallet.stake[blockTime];
             let x = blockTime;
-            (sender as any).stakeWeight = (sender as any).stakeWeight.minus(stake.weight);
+            wallet.stakeWeight = wallet.stakeWeight.minus(stake.weight);
             while (x < blockTime + 315576000) {
                 if (x > t.data.timestamp) {
-                    (sender as any).stake[blockTime].redeemableTimestamp = x;
+                    wallet.stake[blockTime].redeemableTimestamp = x;
                     break;
                 }
                 x += stake.duration;
@@ -76,13 +76,13 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
-        const stake = (sender as any).stake[blockTime];
+        const stake = sender.stake[blockTime];
         let x = blockTime;
         // Remove stake weight
-        (sender as any).stakeWeight = (sender as any).stakeWeight.minus(stake.weight);
+        sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
         while (x < blockTime + 315576000) {
             if (x > transaction.data.timestamp) {
-                (sender as any).stake[blockTime].redeemableTimestamp = x;
+                sender.stake[blockTime].redeemableTimestamp = x;
                 break;
             }
             x += stake.duration;
@@ -94,9 +94,9 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
-        const stake = (sender as any).stake[blockTime];
-        (sender as any).stakeWeight = (sender as any).stakeWeight.plus(stake.weight);
-        (sender as any).stake[blockTime].redeemableTimestamp = 0;
+        const stake = sender.stake[blockTime];
+        sender.stakeWeight = sender.stakeWeight.plus(stake.weight);
+        sender.stake[blockTime].redeemableTimestamp = 0;
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
