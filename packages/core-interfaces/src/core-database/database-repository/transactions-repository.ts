@@ -43,7 +43,7 @@ export interface ITransactionsRepository extends IRepository {
 
     forged(ids: string[]): Promise<Interfaces.ITransactionData[]>;
 
-    // TODO Fee Done
+    // Fee Update:
     statistics(): Promise<{
         count: number;
         totalFee: Utils.BigNumber;

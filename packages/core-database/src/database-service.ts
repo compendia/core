@@ -507,7 +507,7 @@ export class DatabaseService implements Database.IDatabaseService {
             }
         }
 
-        // TODO Fee Done: since transactionStats totalFee and blockStats totalFee are inherently different, we should change the verification
+        // Fee Update:: since transactionStats totalFee and blockStats totalFee are inherently different, we should change the verification
         const blockStats: {
             numberOfTransactions: number;
             totalFee: Utils.BigNumber;

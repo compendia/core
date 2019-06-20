@@ -3,7 +3,7 @@ import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { Logger, Shared } from "../index";
 import { IRoundInfo } from "../shared";
 
-// TODO Fee Done
+// Fee Update:
 export interface IWallet {
     address: string;
     publicKey: string | undefined;

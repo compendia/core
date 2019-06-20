@@ -72,7 +72,7 @@ export const show: object = {
     },
 };
 
-// TODO Fee Done wallet
+// Fee Update: wallet
 export const search: object = {
     query: {
         ...pagination,

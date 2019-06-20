@@ -27,7 +27,7 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             walletManager.reindex(wallet);
         }
 
-        // TODO Fee Done
+        // Fee Update:
         for (const block of forgedBlocks) {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
             wallet.forgedFees = wallet.forgedFees.plus(block.totalFees);

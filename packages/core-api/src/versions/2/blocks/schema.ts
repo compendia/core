@@ -27,7 +27,7 @@ export const index: object = {
             totalFee: Joi.number()
                 .integer()
                 .min(0),
-            // TODO Fee Done
+            // Fee Update:
             removedFee: Joi.number()
                 .integer()
                 .min(0),

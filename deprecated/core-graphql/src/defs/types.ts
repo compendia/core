@@ -1,4 +1,4 @@
-// TODO Fee Done
+// Fee Update:
 export const types = `
   type Block {
     id: String

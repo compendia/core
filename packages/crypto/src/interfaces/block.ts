@@ -22,7 +22,7 @@ export interface IBlock {
     toJson(): IBlockJson;
 }
 
-// TODO Fee Done
+// Fee Update:
 
 export interface IBlockData {
     id?: string;

@@ -99,7 +99,7 @@ export class Delegate {
                 this.decryptKeysWithOtp();
             }
 
-            // TODO Fee Done
+            // Fee Update:
             const feeObj = Utils.FeeHelper.getFeeObject(transactionData.fee);
 
             const block: Interfaces.IBlock = Blocks.BlockFactory.make(

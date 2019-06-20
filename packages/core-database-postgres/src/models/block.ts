@@ -49,7 +49,7 @@ export class Block extends Model {
             init: col => Utils.BigNumber.make(col.value).toFixed(),
             supportedOperators: [Database.SearchOperator.OP_LTE, Database.SearchOperator.OP_GTE],
         },
-        // TODO Fee Done
+        // Fee Update:
         {
             name: "removed_fee",
             prop: "removedFee",

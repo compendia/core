@@ -3,7 +3,7 @@ import { Errors } from "@arkecosystem/core-transactions";
 import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 
-// TODO Fee Done wallet
+// Fee Update: wallet
 export class Wallet implements State.IWallet {
     public address: string;
     public publicKey: string | undefined;
