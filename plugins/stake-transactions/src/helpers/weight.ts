@@ -11,7 +11,7 @@ class VoteWeight {
             const s = t.asset.stakeCreate;
 
             // Check that this is not a renewal cancelation
-            let level: string;
+            let level: StakeInterfaces.StakeLevel;
 
             if (s.duration >= 7889400 && s.duration < 15778800) {
                 level = "3m";
