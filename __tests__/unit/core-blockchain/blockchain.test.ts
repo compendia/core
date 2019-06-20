@@ -168,7 +168,7 @@ describe("Blockchain", () => {
             blockchain.state.started = true;
 
             const mockCallback = jest.fn(() => true);
-            const lastBlock = Blocks.BlockFactory.fromData(lastBlock.data);
+            const lastBlock = Blocks.BlockFactory.fromData(blockchain.getLastBlock().data);
 
             lastBlock.data.timestamp = Crypto.Slots.getSlotNumber() * 8000;
 
