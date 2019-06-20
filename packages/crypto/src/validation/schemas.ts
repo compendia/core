@@ -51,7 +51,7 @@ export const schemas = {
         ],
     },
 
-    // Fee Update:: removedFee to block schema
+    // Fee Update: removedFee to block schema
     block: {
         $id: "block",
         type: "object",
