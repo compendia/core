@@ -271,7 +271,7 @@ describe("Wallet Manager", () => {
             delegate.username = "unittest";
             delegate.balance = Utils.BigNumber.make(100_000_000);
             delegate.vote = delegate.publicKey;
-            delegate.voteBalance = delegate.balance;
+            delegate.voteBalance = delegate.balance.times(0.1);
             walletManager.reindex(delegate);
 
             const voter = walletManager.findByPublicKey(voterKeys.publicKey);
@@ -284,18 +284,25 @@ describe("Wallet Manager", () => {
                 .build();
 
             expect(delegate.balance).toEqual(Utils.BigNumber.make(100_000_000));
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000));
+            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).times(0.1));
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000));
 
             walletManager.applyTransaction(voteTransaction);
 
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000).minus(voteTransaction.data.fee));
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).plus(voter.balance));
+            expect(delegate.voteBalance).toEqual(
+                Utils.BigNumber.make(
+                    Utils.BigNumber.make(100_000_000)
+                        .plus(voter.balance)
+                        .times(0.1)
+                        .toFixed(0, 1),
+                ),
+            );
 
             walletManager.revertTransaction(voteTransaction);
 
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000));
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000));
+            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).times(0.1));
         });
 
         it("should revert unvote transaction and correctly update vote balances", async () => {
@@ -306,7 +313,7 @@ describe("Wallet Manager", () => {
             delegate.username = "unittest";
             delegate.balance = Utils.BigNumber.make(100_000_000);
             delegate.vote = delegate.publicKey;
-            delegate.voteBalance = delegate.balance;
+            delegate.voteBalance = delegate.balance.times(0.1);
             walletManager.reindex(delegate);
 
             const voter = walletManager.findByPublicKey(voterKeys.publicKey);
@@ -319,13 +326,20 @@ describe("Wallet Manager", () => {
                 .build();
 
             expect(delegate.balance).toEqual(Utils.BigNumber.make(100_000_000));
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000));
+            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).times(0.1));
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000));
 
             walletManager.applyTransaction(voteTransaction);
 
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000).minus(voteTransaction.data.fee));
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).plus(voter.balance));
+            expect(delegate.voteBalance).toEqual(
+                Utils.BigNumber.make(
+                    Utils.BigNumber.make(100_000_000)
+                        .plus(voter.balance)
+                        .times(0.1)
+                        .toFixed(0, 1),
+                ),
+            );
 
             const unvoteTransaction = Transactions.BuilderFactory.vote()
                 .votesAsset([`-${delegateKeys.publicKey}`])
@@ -340,12 +354,19 @@ describe("Wallet Manager", () => {
                     .minus(voteTransaction.data.fee)
                     .minus(unvoteTransaction.data.fee),
             );
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000));
+            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).times(0.1));
 
             walletManager.revertTransaction(unvoteTransaction);
 
             expect(voter.balance).toEqual(Utils.BigNumber.make(100_000).minus(voteTransaction.data.fee));
-            expect(delegate.voteBalance).toEqual(Utils.BigNumber.make(100_000_000).plus(voter.balance));
+            expect(delegate.voteBalance).toEqual(
+                Utils.BigNumber.make(
+                    Utils.BigNumber.make(100_000_000)
+                        .plus(voter.balance)
+                        .times(0.1)
+                        .toFixed(0, 1),
+                ),
+            );
         });
     });
 
@@ -514,7 +535,8 @@ describe("Wallet Manager", () => {
                 expect(delegate.voteBalance).toEqual(
                     Utils.BigNumber.make(5 - i)
                         .times(1000)
-                        .times(SATOSHI),
+                        .times(SATOSHI)
+                        .times(0.1),
                 );
             }
         });
@@ -544,7 +566,7 @@ describe("Wallet Manager", () => {
             for (let i = 0; i < 5; i++) {
                 const delegate = delegates[i];
                 expect(delegate.rate).toEqual(i + 1);
-                expect(delegate.voteBalance).toEqual(Utils.BigNumber.make((5 - i) * 1000 * SATOSHI));
+                expect(delegate.voteBalance).toEqual(Utils.BigNumber.make((5 - i) * 1000 * SATOSHI).times(0.1));
             }
         });
     });
