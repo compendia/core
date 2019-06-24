@@ -19,8 +19,12 @@ const { outlookTable } = configManager.getPreset("mainnet").exceptions;
 
 beforeEach(() => configManager.setFromPreset("devnet"));
 
-// For creating new block signature data:
+//      block processor
 // import { Identities, Blocks } from "../../../../packages/crypto/src";
+// import { Utils } from "@arkecosystem/crypto";
+// beforeAll(() => {
+//        console.dir(Blocks.BlockFactory.make(dummyBlock, Identities.Keys.fromPassphrase("passphrase")));
+// });
 
 describe("Block", () => {
     const data = {

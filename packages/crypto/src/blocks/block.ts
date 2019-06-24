@@ -123,6 +123,7 @@ export class Block implements IBlock {
         data.reward = this.data.reward.toFixed();
         data.totalAmount = this.data.totalAmount.toFixed();
         data.totalFee = this.data.totalFee.toFixed();
+        data.topReward = this.data.topReward.toFixed();
         data.removedFee = this.data.removedFee.toFixed();
         data.transactions = this.transactions.map(transaction => transaction.toJson());
 
@@ -147,6 +148,12 @@ export class Block implements IBlock {
             }
 
             if (!(block.reward as BigNumber).isEqualTo(constants.reward)) {
+                result.errors.push(
+                    ["Invalid block top reward:", block.topReward, "expected:", constants.topReward].join(" "),
+                );
+            }
+
+            if (!(block.topReward as BigNumber).isEqualTo(constants.topReward)) {
                 result.errors.push(["Invalid block reward:", block.reward, "expected:", constants.reward].join(" "));
             }
 

@@ -2,7 +2,6 @@ import { State } from "@arkecosystem/core-interfaces";
 import { Errors } from "@arkecosystem/core-transactions";
 import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
-import { TopRewards } from "@nosplatform/top-rewards";
 
 // Fee Update: wallet
 export class Wallet implements State.IWallet {
@@ -66,12 +65,9 @@ export class Wallet implements State.IWallet {
             this.forgedFees = this.forgedFees.plus(block.totalFee);
             this.forgedRewards = this.forgedRewards.plus(block.reward);
             this.removedFees = this.removedFees.plus(block.removedFee);
-            TopRewards.apply(block, true);
-
             this.lastBlock = block;
             return true;
         }
-
         return false;
     }
 
@@ -88,10 +84,7 @@ export class Wallet implements State.IWallet {
             this.forgedFees = this.forgedFees.minus(block.totalFee);
             this.forgedRewards = this.forgedRewards.minus(block.reward);
             this.removedFees = this.removedFees.minus(block.removedFee);
-            TopRewards.revert(block, true);
-
             this.producedBlocks--;
-
             // TODO: get it back from database?
             this.lastBlock = undefined;
             return true;
