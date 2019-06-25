@@ -16,6 +16,8 @@ function jsonBlock(block) {
     block.total_fee = block.total_fee.toFixed();
     // @ts-ignore
     block.removed_fee = block.removed_fee.toFixed();
+    // @ts-ignore
+    block.top_reward = block.top_reward.toFixed();
 
     return block;
 }

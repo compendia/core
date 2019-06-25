@@ -15,6 +15,19 @@ let processor: P2P.IPeerProcessor;
 let storage: P2P.IPeerStorage;
 let communicator: P2P.IPeerCommunicator;
 
+// //      block processor
+// import { Identities } from "../../../packages/crypto/src";
+// beforeAll(() => {
+// //     let blocks = [];
+// //     let i = 0;
+// //     blocks2to100.forEach(block => {
+// //         blocks[i] = Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")).data;
+// //         i++;
+// //     });
+// //     console.dir(blocks);
+//     console.dir(Blocks.BlockFactory.make(genesisBlock, Identities.Keys.fromPassphrase("passphrase")).data);
+// });
+
 beforeEach(() => {
     jest.resetAllMocks();
 

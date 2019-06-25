@@ -739,6 +739,8 @@ describe("Transaction Guard", () => {
                     timestamp: 46583330,
                     height: 2,
                     reward: Utils.BigNumber.make(0),
+                    topReward: Utils.BigNumber.make(0),
+                    removedFee: Utils.BigNumber.make(0),
                     previousBlock: genesisBlock.id,
                     numberOfTransactions: 1,
                     transactions,

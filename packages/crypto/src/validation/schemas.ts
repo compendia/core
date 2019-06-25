@@ -82,7 +82,7 @@ export const schemas = {
             totalFee: { bignumber: { minimum: 0, bypassGenesis: true, block: true } },
             removedFee: { bignumber: { minimum: 0, bypassGenesis: true, block: true } },
             reward: { bignumber: { minimum: 0 } },
-            topReward: { bignumber: { minimum: 0 } },
+            topReward: { bignumber: { minimum: 0, bypassGenesis: true, block: true } },
             payloadLength: { type: "integer", minimum: 0 },
             payloadHash: { $ref: "hex" },
             generatorPublicKey: { $ref: "publicKey" },

@@ -46,7 +46,7 @@ describe("Top Rewards", () => {
     const data = {
         version: 0,
         timestamp: 111150,
-        height: 10,
+        height: 1000,
         previousBlockHex: "0000000000002f5b",
         previousBlock: "12123",
         numberOfTransactions: 0,
@@ -83,6 +83,8 @@ describe("Top Rewards", () => {
 
         const forgingDelegates = database.getActiveDelegates();
         const individualReward = data.topReward.dividedBy(5);
+
+        expect(individualReward).toEqual(Utils.BigNumber.make(3000000));
 
         for (let i = 0; i < 5; i++) {
             const topDelegate = walletManager.findByPublicKey(forgingDelegates[i].publicKey);

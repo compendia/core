@@ -4,14 +4,13 @@ import { configManager } from "../../../../packages/crypto/src/managers";
 import { dummyBlock2, dummyBlock3 } from "../fixtures/block";
 
 //      block processor
-// import { Identities, Blocks } from "../../../../packages/crypto/src";
-// import { Utils } from "@arkecosystem/crypto";
-// beforeAll(() => {
-//        console.dir(Blocks.BlockFactory.make(dummyBlock, Identities.Keys.fromPassphrase("passphrase")));
-//        const feeObj = Utils.FeeHelper.getFeeObject(dummyBlock.removedFee);
-//        console.log(feeObj);
-//        // console.dir(Blocks.BlockFactory.make(dummyBlock3, Identities.Keys.fromPassphrase("passphrase")).data);
-// });
+import { Blocks, Identities } from "../../../../packages/crypto/src";
+beforeAll(() => {
+    //     //    console.dir(Blocks.BlockFactory.make(dummyBlock, Identities.Keys.fromPassphrase("passphrase")));
+    //     //    const feeObj = Utils.FeeHelper.getFeeObject(dummyBlock.removedFee);
+    //     //    console.log(feeObj);
+    Blocks.BlockFactory.make(dummyBlock3, Identities.Keys.fromPassphrase("passphrase"));
+});
 
 describe("block deserializer", () => {
     describe("deserialize", () => {
@@ -44,6 +43,7 @@ describe("block deserializer", () => {
                 "totalFee",
                 "removedFee",
                 "reward",
+                "topReward",
                 "payloadLength",
                 "payloadHash",
                 "generatorPublicKey",

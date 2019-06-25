@@ -251,6 +251,7 @@ describe("Database Service", () => {
                         totalAmount: transfer.data.amount,
                         totalFee: Utils.BigNumber.make(1),
                         removedFee: Utils.BigNumber.ZERO,
+                        topReward: Utils.BigNumber.ZERO,
                         reward: Utils.BigNumber.make(2),
                         payloadLength: 0,
                         payloadHash: "a".repeat(64),

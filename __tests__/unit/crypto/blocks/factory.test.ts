@@ -7,11 +7,11 @@ import { dummyBlock } from "../fixtures/block";
 
 // tslint:disable-next-line
 function expectBlock({ data }: { data: IBlockData }) {
-    delete data.idHex;
-
+    // delete data.idHex;
     const blockWithoutTransactions: IBlockData = { ...dummyBlock };
     blockWithoutTransactions.reward = blockWithoutTransactions.reward;
     blockWithoutTransactions.totalAmount = blockWithoutTransactions.totalAmount;
+    blockWithoutTransactions.topReward = blockWithoutTransactions.topReward;
     blockWithoutTransactions.totalFee = blockWithoutTransactions.totalFee;
     blockWithoutTransactions.removedFee = blockWithoutTransactions.removedFee;
     delete blockWithoutTransactions.transactions;

@@ -1,8 +1,8 @@
 [
     {
         "height": 1,
-        "reward": 400000000,
-        "topReward": 15000000,
+        "reward": 0,
+        "topReward": 0,
         "topDelegates": 5,
         "activeDelegates": 47,
         "blocktime": 6,
@@ -39,6 +39,11 @@
         "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
         "aip11": true
+    },
+    {
+        "height": 1000,
+        "reward": 385000000,
+        "topReward": 15000000
     },
     {
         "height": 75600,

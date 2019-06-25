@@ -154,7 +154,8 @@ describe("Delegate", () => {
                 idHex: "11111111",
                 height: 1,
             },
-            reward: Utils.BigNumber.make("400000000"),
+            reward: Utils.BigNumber.make("0"),
+            topReward: Utils.BigNumber.make("0"),
         };
         const transactions = TransactionFactory.secondSignature(dummy.plainPassphrase)
             .withPassphrase(dummy.plainPassphrase)

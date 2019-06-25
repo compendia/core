@@ -49,6 +49,7 @@ describe("Forger Manager", () => {
                 lastBlock: { id: sampleBlock.data.id, height: sampleBlock.data.height },
                 timestamp: 1,
                 reward: 2 * 1e8,
+                topReward: 15 * 1e6,
             };
 
             await forgeManager.forgeNewBlock(del, round, {

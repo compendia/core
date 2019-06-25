@@ -147,13 +147,13 @@ export class Block implements IBlock {
                 }
             }
 
-            if (!(block.reward as BigNumber).isEqualTo(constants.reward)) {
+            if (!(block.topReward as BigNumber).isEqualTo(constants.topReward)) {
                 result.errors.push(
                     ["Invalid block top reward:", block.topReward, "expected:", constants.topReward].join(" "),
                 );
             }
 
-            if (!(block.topReward as BigNumber).isEqualTo(constants.topReward)) {
+            if (!(block.reward as BigNumber).isEqualTo(constants.reward)) {
                 result.errors.push(["Invalid block reward:", block.reward, "expected:", constants.reward].join(" "));
             }
 
@@ -249,7 +249,12 @@ export class Block implements IBlock {
             }
 
             if (HashAlgorithms.sha256(payloadBuffers).toString("hex") !== block.payloadHash) {
-                result.errors.push("Invalid payload hash");
+                result.errors.push(
+                    "Invalid payload hash: expected " +
+                        HashAlgorithms.sha256(payloadBuffers).toString("hex") +
+                        " got " +
+                        block.payloadHash,
+                );
             }
         } catch (error) {
             result.errors.push(error);

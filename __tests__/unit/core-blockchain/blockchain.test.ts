@@ -25,9 +25,14 @@ const blockchain = new Blockchain({});
 //      block processor
 // import { Identities } from "../../../packages/crypto/src";
 // beforeAll(() => {
-//     blocks101to155.forEach(block => {
-//         console.dir(Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")).data);
+//     let blocks = [];
+//     let i = 0;
+//     blocks2to100.forEach(block => {
+//         blocks[i] = Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")).data;
+//         i++;
 //     });
+//     console.dir(blocks);
+//     // console.dir(Blocks.BlockFactory.make(GB, Identities.Keys.fromPassphrase("passphrase")).data);
 // });
 
 describe("Blockchain", () => {

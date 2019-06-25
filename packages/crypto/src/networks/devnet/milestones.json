@@ -4,7 +4,7 @@
         "reward": 0,
         "activeDelegates": 51,
         "topDelegates": 5,
-        "topReward": 15000000,
+        "topReward": 0,
         "blocktime": 8,
         "block": {
             "version": 0,
@@ -36,6 +36,11 @@
         "ignoreInvalidSecondSignatureField": true,
         "ignoreExpiredTransactions": true,
         "vendorFieldLength": 64
+    },
+    {
+        "height": 1000,
+        "reward": 385000000,
+        "topReward": 15000000
     },
     {
         "height": 10800,

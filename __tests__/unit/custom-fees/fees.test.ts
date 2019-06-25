@@ -23,7 +23,7 @@ const ARKTOSHI = Constants.ARKTOSHI;
 
 beforeAll(() => {
     Managers.configManager.setFromPreset("testnet");
-    Managers.configManager.setHeight(1);
+    Managers.configManager.setHeight(1000);
 });
 
 beforeEach(() => {
@@ -41,9 +41,10 @@ describe("Fee Removal", () => {
             previousBlock: {
                 id: "11111111",
                 idHex: "11111111",
-                height: 1,
+                height: 1000,
             },
-            reward: Utils.BigNumber.make("400000000"),
+            reward: Utils.BigNumber.make("385000000"),
+            topReward: Utils.BigNumber.make("15000000"),
         };
 
         const transactions: ITransactionData[] = [];

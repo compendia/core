@@ -95,13 +95,14 @@ describe("Configuration", () => {
     });
 
     it("should get milestone for height", () => {
-        expect(configManager.getMilestone(21600)).toEqual(devnet.milestones[2]);
+        // Update milestone key when changing amount of available milestones
+        expect(configManager.getMilestone(21600)).toEqual(devnet.milestones[3]);
     });
 
     it("should get milestone for this.height if height is not provided as parameter", () => {
         configManager.setHeight(21600);
-
-        expect(configManager.getMilestone()).toEqual(devnet.milestones[2]);
+        // Update milestone key when changing amount of available milestones
+        expect(configManager.getMilestone()).toEqual(devnet.milestones[3]);
     });
 
     it("should set the height", () => {
