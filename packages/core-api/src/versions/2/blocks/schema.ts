@@ -34,6 +34,9 @@ export const index: object = {
             reward: Joi.number()
                 .integer()
                 .min(0),
+            topReward: Joi.number()
+                .integer()
+                .min(0),
             payloadLength: Joi.number()
                 .integer()
                 .positive(),
@@ -155,6 +158,14 @@ export const search: object = {
                 .min(0),
         }),
         reward: Joi.object().keys({
+            from: Joi.number()
+                .integer()
+                .min(0),
+            to: Joi.number()
+                .integer()
+                .min(0),
+        }),
+        topReward: Joi.object().keys({
             from: Joi.number()
                 .integer()
                 .min(0),
