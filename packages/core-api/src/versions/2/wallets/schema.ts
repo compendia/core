@@ -24,6 +24,16 @@ export const index: object = {
             voteBalance: Joi.number()
                 .integer()
                 .min(0),
+            stake: Joi.array().items(
+                Joi.object({
+                    amount: Joi.number().integer(),
+                    duration: Joi.number().integer(),
+                    weight: Joi.number().integer(),
+                    redeemableTimestamp: Joi.number().integer(),
+                    redeemed: Joi.boolean(),
+                }),
+            ),
+            stakeWeight: Joi.number().integer(),
             producedBlocks: Joi.number()
                 .integer()
                 .min(0),
@@ -210,5 +220,15 @@ export const search: object = {
                 .integer()
                 .min(0),
         }),
+        stakeWeight: Joi.number().integer(),
+        stake: Joi.array().items(
+            Joi.object({
+                amount: Joi.number().integer(),
+                duration: Joi.number().integer(),
+                weight: Joi.number().integer(),
+                redeemableTimestamp: Joi.number().integer(),
+                redeemed: Joi.boolean(),
+            }),
+        ),
     },
 };

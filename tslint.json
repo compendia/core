@@ -6,10 +6,6 @@
             {
                 "name": ["assert", "equal"],
                 "message": "Use 'strictEqual' instead."
-            },
-            {
-                "name": ["*", "forEach"],
-                "message": "Use a regular for loop instead."
             }
         ],
         "no-console": false,

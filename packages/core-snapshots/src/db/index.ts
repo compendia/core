@@ -150,6 +150,7 @@ export class Database {
                 "total_fee",
                 "removed_fee",
                 "reward",
+                "top_reward",
                 "payload_length",
                 "payload_hash",
                 "generator_public_key",

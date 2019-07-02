@@ -35,7 +35,7 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             wallet.removedFees = wallet.forgedFees.plus(block.removedFees);
             wallet.forgedRewards = wallet.forgedRewards.plus(block.totalRewards);
             wallet.producedBlocks = +block.totalProduced;
-            TopRewards.apply(block.data, walletManager);
+            TopRewards.apply(block, walletManager);
         }
 
         for (const block of lastForgedBlocks) {

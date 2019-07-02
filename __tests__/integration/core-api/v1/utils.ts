@@ -69,6 +69,8 @@ class Helpers {
         expect(response).toHaveProperty("address");
         expect(response).toHaveProperty("publicKey");
         expect(response).toHaveProperty("balance");
+        expect(response).toHaveProperty("stakeWeight");
+        expect(response).toHaveProperty("stake");
     }
 
     public async createTransaction() {

@@ -141,6 +141,8 @@ class Helpers {
         expect(wallet).toHaveProperty("balance");
         expect(wallet).toHaveProperty("isDelegate");
         expect(wallet).toHaveProperty("vote");
+        expect(wallet).toHaveProperty("stakeWeight");
+        expect(wallet).toHaveProperty("stake");
     }
 
     public async createTransaction() {
