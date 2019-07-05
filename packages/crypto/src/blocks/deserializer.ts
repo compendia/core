@@ -63,7 +63,9 @@ class Deserializer {
         block.numberOfTransactions = buf.readUint32();
         block.totalAmount = BigNumber.make(buf.readUint64().toString());
         block.totalFee = BigNumber.make(buf.readUint64().toString());
+        block.removedFee = BigNumber.make(buf.readUint64().toString());
         block.reward = BigNumber.make(buf.readUint64().toString());
+        block.topReward = BigNumber.make(buf.readUint64().toString());
         block.payloadLength = buf.readUint32();
         block.payloadHash = buf.readBytes(32).toString("hex");
         block.generatorPublicKey = buf.readBytes(33).toString("hex");

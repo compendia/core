@@ -1,6 +1,7 @@
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Enums, Interfaces, Transactions } from "@arkecosystem/crypto";
+import { TopRewards } from "@nosplatform/top-rewards";
 import {
     NotSupportedForMultiSignatureWalletError,
     WalletUsernameAlreadyRegisteredError,
@@ -31,7 +32,9 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
             wallet.forgedFees = wallet.forgedFees.plus(block.totalFees);
             wallet.forgedRewards = wallet.forgedRewards.plus(block.totalRewards);
+            wallet.removedFees = wallet.forgedFees.plus(block.removedFees);
             wallet.producedBlocks = +block.totalProduced;
+            TopRewards.apply(block, walletManager);
         }
 
         for (const block of lastForgedBlocks) {

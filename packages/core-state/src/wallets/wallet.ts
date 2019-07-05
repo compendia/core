@@ -1,6 +1,7 @@
 import { State } from "@arkecosystem/core-interfaces";
 import { Errors } from "@arkecosystem/core-transactions";
 import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 
 export class Wallet implements State.IWallet {
     public address: string;
@@ -18,7 +19,11 @@ export class Wallet implements State.IWallet {
     public dirty: boolean;
     public producedBlocks: number;
     public forgedFees: Utils.BigNumber;
+    public removedFees: Utils.BigNumber;
     public forgedRewards: Utils.BigNumber;
+    public forgedTopRewards: Utils.BigNumber;
+    public stakeWeight: Utils.BigNumber;
+    public stake: StakeInterfaces.IStakeArray;
     public rate?: number;
 
     constructor(address: string) {
@@ -36,7 +41,11 @@ export class Wallet implements State.IWallet {
         this.ipfsHashes = {};
         this.producedBlocks = 0;
         this.forgedFees = Utils.BigNumber.ZERO;
+        this.removedFees = Utils.BigNumber.ZERO;
         this.forgedRewards = Utils.BigNumber.ZERO;
+        this.forgedTopRewards = Utils.BigNumber.ZERO;
+        this.stakeWeight = Utils.BigNumber.ZERO;
+        this.stake = {};
     }
 
     /**
@@ -53,6 +62,7 @@ export class Wallet implements State.IWallet {
             this.producedBlocks++;
             this.forgedFees = this.forgedFees.plus(block.totalFee);
             this.forgedRewards = this.forgedRewards.plus(block.reward);
+            this.removedFees = this.removedFees.plus(block.removedFee);
             this.lastBlock = block;
             return true;
         }
@@ -72,6 +82,7 @@ export class Wallet implements State.IWallet {
 
             this.forgedFees = this.forgedFees.minus(block.totalFee);
             this.forgedRewards = this.forgedRewards.minus(block.reward);
+            this.removedFees = this.removedFees.minus(block.removedFee);
             this.producedBlocks--;
 
             // TODO: get it back from database?

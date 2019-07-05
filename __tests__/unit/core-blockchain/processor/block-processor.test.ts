@@ -18,13 +18,15 @@ const { delegates } = fixtures;
 
 let blockProcessor: BlockProcessor;
 
+//  import { Identities } from "../../../../packages/crypto/src";
+
 beforeAll(async () => {
     blockProcessor = new BlockProcessor(blockchain as any);
 });
 
 describe("Block processor", () => {
     const blockTemplate = {
-        id: "17882607875259085966",
+        id: "7407236219268452006",
         version: 0,
         timestamp: 46583330,
         height: 2,
@@ -34,9 +36,11 @@ describe("Block processor", () => {
         transactions: [],
         totalAmount: Utils.BigNumber.make(0),
         totalFee: Utils.BigNumber.make(0),
+        topReward: Utils.BigNumber.make(0),
+        removedFee: Utils.BigNumber.make(0),
         payloadLength: 0,
-        payloadHash: genesisBlock.payloadHash,
-        generatorPublicKey: delegates[0].publicKey,
+        payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
         blockSignature:
             "3045022100e7385c6ea42bd950f7f6ab8c8619cf2f66a41d8f8f185b0bc99af032cb25f30d02200b6210176a6cedfdcbe483167fd91c21d740e0e4011d24d679c601fdd46b0de9",
         createdAt: "2019-07-11T16:48:50.550Z",

@@ -330,6 +330,10 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         let totalAmount = Utils.BigNumber.ZERO;
         const allBytes = [];
 
+        const feeObject = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make(totalFee));
+        totalFee = feeObject.toReward.toNumber();
+        const removedFee = feeObject.toRemove.toNumber();
+
         for (const transaction of transactions) {
             const bytes = Transactions.Serializer.getBytes(transaction);
             allBytes.push(bytes);
@@ -344,7 +348,9 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             version: 0,
             totalAmount: totalAmount.toString(),
             totalFee,
+            removedFee,
             reward: 0,
+            topReward: 0,
             payloadHash: payloadHash.toString("hex"),
             timestamp,
             numberOfTransactions: transactions.length,
@@ -384,7 +390,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
     }
 
     private getBytes(genesisBlock) {
-        const size = 4 + 4 + 4 + 8 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 32 + 32 + 64;
+        const size = 4 + 4 + 4 + 8 + 4 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + 64;
 
         const byteBuffer = new ByteBuffer(size, true);
         byteBuffer.writeInt(genesisBlock.version);
@@ -398,7 +404,9 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         byteBuffer.writeInt(genesisBlock.numberOfTransactions);
         byteBuffer.writeLong(genesisBlock.totalAmount);
         byteBuffer.writeLong(genesisBlock.totalFee);
+        byteBuffer.writeLong(genesisBlock.removedFee);
         byteBuffer.writeLong(genesisBlock.reward);
+        byteBuffer.writeLong(genesisBlock.topReward);
 
         byteBuffer.writeInt(genesisBlock.payloadLength);
 

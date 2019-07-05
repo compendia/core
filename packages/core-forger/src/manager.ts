@@ -151,6 +151,7 @@ export class ForgerManager {
             },
             timestamp: round.timestamp,
             reward: round.reward,
+            topReward: round.topReward,
         });
 
         this.logger.info(

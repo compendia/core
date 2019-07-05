@@ -25,7 +25,8 @@
     "dependencies": {
         "@arkecosystem/crypto": "^2.5.0-next.6",
         "awilix": "^4.2.2",
-        "dayjs": "^1.8.14"
+        "dayjs": "^1.8.14",
+        "@nosplatform/stake-interfaces": "^0.0.1"
     },
     "engines": {
         "node": ">=10.x"
