@@ -120,9 +120,9 @@ export class Block implements IBlock {
     public toJson(): IBlockJson {
         const data: IBlockJson = JSON.parse(JSON.stringify(this.data));
         data.reward = this.data.reward.toFixed();
+        data.topReward = this.data.topReward.toFixed();
         data.totalAmount = this.data.totalAmount.toFixed();
         data.totalFee = this.data.totalFee.toFixed();
-        data.topReward = this.data.topReward.toFixed();
         data.removedFee = this.data.removedFee.toFixed();
         data.transactions = this.transactions.map(transaction => transaction.toJson());
 

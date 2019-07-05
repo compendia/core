@@ -5,17 +5,19 @@ import { IBlockData } from "../../../../packages/crypto/src/interfaces";
 import { configManager } from "../../../../packages/crypto/src/managers";
 import { dummyBlock } from "../fixtures/block";
 
-function expectBlock({ data }: { data: IBlockData }) {
+const expectBlock = ({ data }: { data: IBlockData }) => {
     delete data.idHex;
 
     const blockWithoutTransactions: IBlockData = { ...dummyBlock };
     blockWithoutTransactions.reward = blockWithoutTransactions.reward;
     blockWithoutTransactions.totalAmount = blockWithoutTransactions.totalAmount;
+    blockWithoutTransactions.topReward = blockWithoutTransactions.topReward;
     blockWithoutTransactions.totalFee = blockWithoutTransactions.totalFee;
+    blockWithoutTransactions.removedFee = blockWithoutTransactions.removedFee;
     delete blockWithoutTransactions.transactions;
 
     expect(data).toEqual(blockWithoutTransactions);
-}
+};
 
 beforeEach(() => configManager.setFromPreset("devnet"));
 
