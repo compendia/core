@@ -99,6 +99,7 @@ export class BlocksRepository extends Repository implements Database.IBlocksRepo
     public async statistics(): Promise<{
         numberOfTransactions: number;
         totalFee: Utils.BigNumber;
+        removedFee: Utils.BigNumber;
         totalAmount: Utils.BigNumber;
         count: number;
     }> {

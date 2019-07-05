@@ -512,7 +512,8 @@ export class DatabaseService implements Database.IDatabaseService {
         }
 
         // Sum of all tx fees equals the sum of block.totalFee
-        if (blockStats.totalFee !== transactionStats.totalFee) {
+        const transactionFeeToReward = Utils.FeeHelper.getFeeObject(transactionStats.totalFee).toReward;
+        if (!Utils.BigNumber.make(blockStats.totalFee).isEqualTo(transactionFeeToReward)) {
             errors.push(
                 `Total transaction fees: ${transactionStats.totalFee}, total of block.totalFee : ${
                     blockStats.totalFee
@@ -521,7 +522,7 @@ export class DatabaseService implements Database.IDatabaseService {
         }
 
         // Sum of all tx amount equals the sum of block.totalAmount
-        if (blockStats.totalAmount !== transactionStats.totalAmount) {
+        if (!Utils.BigNumber.make(blockStats.totalAmount).isEqualTo(transactionStats.totalAmount)) {
             errors.push(
                 `Total transaction amounts: ${transactionStats.totalAmount}, total of block.totalAmount : ${
                     blockStats.totalAmount

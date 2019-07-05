@@ -8,6 +8,8 @@ export const transformWallet = model => {
         secondPublicKey: model.secondPublicKey,
         balance: Utils.BigNumber.make(model.balance).toFixed(),
         isDelegate: !!model.username,
+        stakeWeight: model.stakeWeight,
+        stake: model.stake,
         vote: model.vote,
     };
 };
