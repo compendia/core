@@ -155,11 +155,15 @@ describe("Delegate", () => {
                 height: 1,
             },
             reward: Utils.BigNumber.ZERO,
+            topReward: Utils.BigNumber.ZERO,
         };
         const transactions = TransactionFactory.secondSignature(dummy.plainPassphrase)
             .withPassphrase(dummy.plainPassphrase)
             .withTimestamp(optionsDefault.timestamp)
             .create();
+
+        const feeObj = Utils.FeeHelper.getFeeObject(transactions[0].fee);
+
         const expectedBlockData = {
             generatorPublicKey: dummy.publicKey,
             timestamp: optionsDefault.timestamp,
@@ -167,7 +171,8 @@ describe("Delegate", () => {
             height: optionsDefault.previousBlock.height + 1,
             numberOfTransactions: 1,
             totalAmount: transactions[0].amount,
-            totalFee: transactions[0].fee,
+            totalFee: feeObj.toReward,
+            removedFee: feeObj.toRemove,
             reward: optionsDefault.reward,
         };
 
