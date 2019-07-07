@@ -1,9 +1,10 @@
+import { app } from "@arkecosystem/core-container";
 import { EventEmitter, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 
 class TopRewards {
-    public static apply(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
+    public static applyReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
         const roundInfo = roundCalculator.calculateRound(block.height);
 
         const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).stakeLevels.balance;
@@ -18,6 +19,7 @@ class TopRewards {
         const delegates = walletManager.loadActiveDelegateList(roundInfo);
 
         if (topDelegateReward.isGreaterThan(0)) {
+            const rewardedDelegates = [];
             for (let i = 0; i < topDelegateCount; i++) {
                 const delegate = walletManager.findByPublicKey(delegates[i].publicKey);
                 delegate.balance = delegate.balance.plus(topDelegateReward);
@@ -28,13 +30,13 @@ class TopRewards {
                         votedDelegate.voteBalance.plus(topDelegateReward.times(balanceWeightMultiplier).toFixed(0, 1)),
                     );
                 }
-                const emitter = new EventEmitter.EventEmitter();
-                emitter.emit("top.delegate.rewarded", { publicKey: delegate.publicKey, reward: topDelegateReward });
+                rewardedDelegates[i] = delegate.publicKey;
             }
+            this.emitter.emit("top.delegates.rewarded", rewardedDelegates, topDelegateReward);
         }
     }
 
-    public static revert(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
+    public static revertReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
         const roundInfo = roundCalculator.calculateRound(block.height);
 
         const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).stakeLevels.balance;
@@ -49,6 +51,7 @@ class TopRewards {
         const delegates = walletManager.loadActiveDelegateList(roundInfo);
 
         if (topDelegateReward.isGreaterThan(0)) {
+            const rewardedDelegates = [];
             for (let i = 0; i < topDelegateCount; i++) {
                 const delegate = walletManager.findByPublicKey(delegates[i].publicKey);
                 delegate.balance = delegate.balance.minus(topDelegateReward);
@@ -59,14 +62,15 @@ class TopRewards {
                         votedDelegate.voteBalance.minus(topDelegateReward.times(balanceWeightMultiplier).toFixed(0, 1)),
                     );
                 }
-                const emitter = new EventEmitter.EventEmitter();
-                emitter.emit("top.delegate.reward.reverted", {
-                    publicKey: delegate.publicKey,
-                    reward: topDelegateReward,
-                });
+                rewardedDelegates[i] = delegate.publicKey;
             }
+            this.emitter.emit("top.delegate.reward.reverted", rewardedDelegates, topDelegateReward);
         }
     }
+
+    private static readonly emitter: EventEmitter.EventEmitter = app.resolvePlugin<EventEmitter.EventEmitter>(
+        "event-emitter",
+    );
 }
 
 export { TopRewards };

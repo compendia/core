@@ -54,7 +54,11 @@ describe("Staking Transactions", () => {
             .sign("secret")
             .build();
 
-        walletManager.applyTransaction(stakeTransaction);
+        try {
+            walletManager.applyTransaction(stakeTransaction);
+        } catch (error) {
+            expect(undefined).toBe("this should have succeeded, instead: " + error);
+        }
 
         jest.spyOn(store, "getLastBlock").mockReturnValue({
             // @ts-ignore

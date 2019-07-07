@@ -186,7 +186,7 @@ export class WalletManager implements State.IWalletManager {
                     const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
                     votedDelegate.voteBalance = votedDelegate.voteBalance.plus(increase);
                 }
-                TopRewards.apply(block.data, this);
+                TopRewards.applyReward(block.data, this);
             }
         } catch (error) {
             this.logger.error("Failed to apply all transactions in block - reverting previous transactions");
@@ -229,7 +229,7 @@ export class WalletManager implements State.IWalletManager {
                     const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
                     votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);
                 }
-                TopRewards.revert(block.data, this);
+                TopRewards.revertReward(block.data, this);
             }
         } catch (error) {
             this.logger.error(error.stack);
@@ -323,9 +323,7 @@ export class WalletManager implements State.IWalletManager {
 
                     if (a.publicKey === b.publicKey) {
                         throw new Error(
-                            `The balance and public key of both delegates are identical! Delegate "${
-                                a.username
-                            }" appears twice in the list.`,
+                            `The balance and public key of both delegates are identical! Delegate "${a.username}" appears twice in the list.`,
                         );
                     }
 
