@@ -19,6 +19,7 @@ describe("Internal handlers - rounds", () => {
             expect(round).toEqual({
                 current: 1,
                 reward: 0,
+                topReward: 0,
                 timestamp: timestampSlots,
                 delegates,
                 currentForger: delegates[currentForger],

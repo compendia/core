@@ -18,7 +18,11 @@ const decodeBlock = (buffer: Buffer) => {
     // @ts-ignore - @TODO: remove ts-ignore
     block.totalFee = block.totalFee.toFixed();
     // @ts-ignore - @TODO: remove ts-ignore
+    block.removedFee = block.removedFee.toFixed();
+    // @ts-ignore - @TODO: remove ts-ignore
     block.reward = block.reward.toFixed();
+    // @ts-ignore - @TODO: remove ts-ignore
+    block.topReward = block.topReward.toFixed();
 
     return decamelizeKeys(block);
 };

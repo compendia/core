@@ -1,4 +1,5 @@
 import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { Logger, Shared } from "../index";
 import { IRoundInfo } from "../shared";
 
@@ -18,7 +19,11 @@ export interface IWallet {
     dirty: boolean;
     producedBlocks: number;
     forgedFees: Utils.BigNumber;
+    removedFees: Utils.BigNumber;
     forgedRewards: Utils.BigNumber;
+    forgedTopRewards: Utils.BigNumber;
+    stakeWeight: Utils.BigNumber;
+    stake: StakeInterfaces.IStakeArray;
     rate?: number;
 
     applyBlock(block: Interfaces.IBlockData): boolean;

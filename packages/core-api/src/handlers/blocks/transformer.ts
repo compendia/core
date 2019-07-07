@@ -6,7 +6,9 @@ import { Utils } from "@arkecosystem/crypto";
 export const transformBlock = (model, transform) => {
     if (!transform) {
         model.reward = Utils.BigNumber.make(model.reward).toFixed();
+        model.topReward = Utils.BigNumber.make(model.topReward).toFixed();
         model.totalFee = Utils.BigNumber.make(model.totalFee).toFixed();
+        model.removedFee = Utils.BigNumber.make(model.removedFee).toFixed();
         model.totalAmount = Utils.BigNumber.make(model.totalAmount).toFixed();
 
         return model;
@@ -17,7 +19,9 @@ export const transformBlock = (model, transform) => {
     const lastBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
 
     model.reward = Utils.BigNumber.make(model.reward);
+    model.topReward = Utils.BigNumber.make(model.topReward);
     model.totalFee = Utils.BigNumber.make(model.totalFee);
+    model.removedFee = Utils.BigNumber.make(model.removedFee);
 
     return {
         id: model.id,
@@ -26,7 +30,9 @@ export const transformBlock = (model, transform) => {
         previous: model.previousBlock,
         forged: {
             reward: model.reward.toFixed(),
+            topReward: model.topReward.toFixed(),
             fee: model.totalFee.toFixed(),
+            removed: model.totalFee.toFixed(),
             total: model.reward.plus(model.totalFee).toFixed(),
             amount: Utils.BigNumber.make(model.totalAmount).toFixed(),
         },

@@ -2,10 +2,10 @@ import "jest-extended";
 
 import { TransactionTypes } from "../../../../packages/crypto/src/enums";
 import { configManager, feeManager } from "../../../../packages/crypto/src/managers";
-import { devnet, mainnet } from "../../../../packages/crypto/src/networks";
+import { mainnet, unitnet } from "../../../../packages/crypto/src/networks";
 import { BigNumber } from "../../../../packages/crypto/src/utils";
 
-beforeEach(() => configManager.setConfig(devnet));
+beforeEach(() => configManager.setConfig(unitnet));
 
 describe("Configuration", () => {
     it("should be instantiated", () => {
@@ -26,16 +26,16 @@ describe("Configuration", () => {
 
     it('key should be "get"', () => {
         expect(configManager.get("network.nethash")).toBe(
-            "2a44f340d76ffc3df204c5f38cd355b7496c9065a1ade2ef92071436bd72e867",
+            "a63b5a3858afbca23edefac885be74d59f1a26985548a4082f4f479e74fcc348",
         );
     });
 
     it("should build milestones", () => {
-        expect(configManager.getMilestones()).toEqual(devnet.milestones);
+        expect(configManager.getMilestones()).toEqual(unitnet.milestones);
     });
 
     it("should build fees", () => {
-        const feesStatic = devnet.milestones[0].fees.staticFees;
+        const feesStatic = unitnet.milestones[0].fees.staticFees;
 
         expect(feeManager.get(TransactionTypes.Transfer)).toEqual(BigNumber.make(feesStatic.transfer));
         expect(feeManager.get(TransactionTypes.SecondSignature)).toEqual(BigNumber.make(feesStatic.secondSignature));
@@ -53,7 +53,7 @@ describe("Configuration", () => {
     });
 
     it("should update fees on milestone change", () => {
-        devnet.milestones.push({
+        unitnet.milestones.push({
             height: 100000000,
             fees: { staticFees: { transfer: 1234 } },
         } as any);
@@ -91,27 +91,27 @@ describe("Configuration", () => {
             BigNumber.make(staticFees.delegateResignation),
         );
 
-        devnet.milestones.pop();
+        unitnet.milestones.pop();
     });
 
     it("should get milestone for height", () => {
-        expect(configManager.getMilestone(21600)).toEqual(devnet.milestones[2]);
+        expect(configManager.getMilestone(75600)).toEqual(unitnet.milestones[2]);
     });
 
     it("should get milestone for this.height if height is not provided as parameter", () => {
-        configManager.setHeight(21600);
+        configManager.setHeight(75600);
 
-        expect(configManager.getMilestone()).toEqual(devnet.milestones[2]);
+        expect(configManager.getMilestone()).toEqual(unitnet.milestones[2]);
     });
 
     it("should set the height", () => {
-        configManager.setHeight(21600);
+        configManager.setHeight(75600);
 
-        expect(configManager.getHeight()).toEqual(21600);
+        expect(configManager.getHeight()).toEqual(75600);
     });
 
     it("should determine if a new milestone is becoming active", () => {
-        for (const milestone of devnet.milestones) {
+        for (const milestone of unitnet.milestones) {
             configManager.setHeight(milestone.height);
             expect(configManager.isNewMilestone()).toBeTrue();
         }

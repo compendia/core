@@ -636,7 +636,7 @@ describe("Connection", () => {
 
             connection.acceptChainedBlock(BlockFactory.fromData(block2));
 
-            expect(+mockWallet.balance).toBe(+balanceBefore.minus(block2.totalFee));
+            expect(+mockWallet.balance).toBe(+balanceBefore.minus(block2.totalFee).minus(block2.removedFee));
         });
 
         it("should remove transaction from pool if it's in the chained block", async () => {
