@@ -1,13 +1,14 @@
 import "../../../utils";
 
-import { setUp, tearDown } from "../__support__/setup";
-import { utils } from "../utils";
-
+import { Transactions, Utils } from "@arkecosystem/crypto";
+import { ARKTOSHI } from "@arkecosystem/crypto/src/constants";
 import { Address } from "../../../../packages/crypto/src/identities";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { genesisBlock } from "../../../utils/config/testnet/genesisBlock";
 import { delegates } from "../../../utils/fixtures/testnet/delegates";
 import { generateWallets } from "../../../utils/generators/wallets";
+import { setUp, tearDown } from "../__support__/setup";
+import { utils } from "../utils";
 
 const transferFee = 10000000;
 
@@ -487,6 +488,18 @@ describe("API 2.0 - Transactions", () => {
             expect(response).toBeSuccessfulResponse();
         });
 
+        it("should POST a stake transaction", async () => {
+            const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
+                .stakeAsset(7889400, Utils.BigNumber.make(10000 * ARKTOSHI))
+                .sign("secret")
+                .build();
+            const response = await utils.request("POST", "transactions", {
+                transactions: [stakeTransaction.toJson()],
+            });
+            console.log(stakeTransaction.toJson());
+            expect(response).toBeSuccessfulResponse();
+        });
+
         it("should not POST all the transactions", async () => {
             const response = await utils.request("POST", "transactions", {
                 transactions: transactions.concat(transactions),
@@ -605,6 +618,10 @@ describe("API 2.0 - Transactions", () => {
                 multiPayment: 0,
                 multiSignature: 500000000,
                 secondSignature: 500000000,
+                stakeCancel: 100000000,
+                stakeCreate: 100000000,
+                stakeRedeem: 100000000,
+                stakeUndoCancel: 100000000,
                 timelockTransfer: 0,
                 transfer: 10000000,
                 vote: 100000000,

@@ -262,8 +262,8 @@ describe("API 2.0 - Wallets", () => {
             const response = await utils.request("POST", "wallets/search", {
                 address,
                 voteBalance: {
-                    from: balance,
-                    to: balance,
+                    from: balance * 0.1,
+                    to: balance * 0.1,
                 },
             });
             expect(response).toBeSuccessfulResponse();

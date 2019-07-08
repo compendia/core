@@ -42,6 +42,7 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
@@ -66,5 +67,4 @@ module.exports = {
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
     "@arkecosystem/core-snapshots": {},
-    "@nosplatform/stake-transactions": {},
 };

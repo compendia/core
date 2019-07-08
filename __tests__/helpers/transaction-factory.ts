@@ -35,6 +35,10 @@ export class TransactionFactory {
         return new TransactionFactory(Transactions.BuilderFactory.delegateResignation());
     }
 
+    public static stakeCreate(duration: number, amount: Utils.BigNumber): TransactionFactory {
+        return new TransactionFactory(Transactions.BuilderFactory.stakeCreate().stakeAsset(duration, amount));
+    }
+
     public static vote(publicKey?: string): TransactionFactory {
         return new TransactionFactory(
             Transactions.BuilderFactory.vote().votesAsset([
