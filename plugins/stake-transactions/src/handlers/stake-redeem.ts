@@ -41,11 +41,11 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         let stakeArray: StakeInterfaces.IStakeArray;
 
         // Get wallet stake if it exists
-        if ((wallet as State.IWallet).stake === {}) {
+        if (wallet.stake === {}) {
             throw new WalletHasNoStakeError();
         }
 
-        stakeArray = (wallet as any).stake;
+        stakeArray = wallet.stake;
         const { data }: Interfaces.ITransaction = transaction;
         const blockTime = data.asset.stakeRedeem.blockTime;
 

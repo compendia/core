@@ -41,7 +41,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         let stakeArray: StakeInterfaces.IStakeArray;
 
         // Get wallet stake if it exists
-        if ((wallet as State.IWallet).stake === {}) {
+        if (wallet.stake === {}) {
             throw new WalletHasNoStakeError();
         }
 

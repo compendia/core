@@ -40,11 +40,11 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     ): boolean {
         let stakeArray: StakeInterfaces.IStakeArray;
 
-        if ((wallet as State.IWallet).stake === {}) {
+        if (wallet.stake === {}) {
             throw new WalletHasNoStakeError();
         }
 
-        stakeArray = (wallet as State.IWallet).stake;
+        stakeArray = wallet.stake;
         const data: Interfaces.ITransactionData = transaction.data;
         const blockTime = data.asset.stakeCancel.blockTime;
 
