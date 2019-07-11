@@ -40,7 +40,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     ): boolean {
         let stakeArray: StakeInterfaces.IStakeArray;
 
-        if ((wallet as State.IWallet).stake === {}) {
+        if (Object.keys(wallet.stake).length < 1) {
             throw new WalletHasNoStakeError();
         }
 

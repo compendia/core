@@ -41,7 +41,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         let stakeArray: StakeInterfaces.IStakeArray;
 
         // Get wallet stake if it exists
-        if ((wallet as any).stake === undefined) {
+        if (Object.keys(wallet.stake).length < 1) {
             throw new WalletHasNoStakeError();
         }
 
