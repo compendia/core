@@ -33,7 +33,9 @@ export const index: object = {
                     amount: Joi.number().integer(),
                     duration: Joi.number().integer(),
                     weight: Joi.number().integer(),
-                    redeemableTimestamp: Joi.number().integer(),
+                    redeemableTimestamp: Joi.number()
+                        .integer()
+                        .min(0),
                     redeemed: Joi.boolean(),
                 }),
             ),
@@ -225,7 +227,9 @@ export const search: object = {
                 amount: Joi.number().integer(),
                 duration: Joi.number().integer(),
                 weight: Joi.number().integer(),
-                redeemableTimestamp: Joi.number().integer(),
+                redeemableTimestamp: Joi.number()
+                    .integer()
+                    .min(0),
                 redeemed: Joi.boolean(),
             }),
         ),

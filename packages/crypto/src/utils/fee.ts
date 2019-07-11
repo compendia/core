@@ -7,6 +7,7 @@ export interface IFeeObject {
 
 class FeeHelper {
     public static getFeeObject(totalFee: Utils.BigNumber): IFeeObject {
+        totalFee = totalFee ? totalFee : Utils.BigNumber.ZERO;
         // Calculate collective reward (4 NOS)
         const totalReward = Utils.BigNumber.make(Managers.configManager.getMilestone().reward).plus(
             Managers.configManager.getMilestone().topReward,

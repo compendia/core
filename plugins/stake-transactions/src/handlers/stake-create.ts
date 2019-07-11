@@ -1,3 +1,4 @@
+import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
@@ -12,9 +13,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
-        const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
-        for (const t of transactions) {
-            let stakeArray: StakeInterfaces.IStakeArray;
+        const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        const transactionsRepository = databaseService.transactionsBusinessRepository;
+        const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
+
+        for (const t of transactions.rows) {
+            let stakeArray: StakeInterfaces.IStakeArray = [];
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
 
             // Get wallet stake if it exists
@@ -24,7 +28,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
             // Set stake data
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-            stakeArray[t.data.timestamp] = o;
+            stakeArray[t.timestamp] = o;
             wallet.stakeWeight = wallet.stakeWeight.plus(o.weight);
             wallet.stake = stakeArray;
             wallet.balance = wallet.balance.minus(o.amount);
@@ -76,7 +80,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-        sender.stake[transaction.data.timestamp] = o;
+        sender.stake[t.timestamp] = o;
         sender.balance = sender.balance.minus(o.amount);
         sender.stakeWeight = sender.stakeWeight.plus(o.weight);
     }
@@ -87,7 +91,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
         sender.balance = sender.balance.plus(o.amount);
-        delete sender.stake[transaction.data.timestamp];
+        delete sender.stake[t.timestamp];
         sender.stakeWeight = sender.stakeWeight.minus(o.weight);
     }
 

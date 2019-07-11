@@ -1,3 +1,4 @@
+import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Interfaces, Transactions } from "@arkecosystem/crypto";
@@ -17,8 +18,11 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
-        const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
-        for (const t of transactions) {
+        const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        const transactionsRepository = databaseService.transactionsBusinessRepository;
+        const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
+
+        for (const t of transactions.rows) {
             const sender: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const s = t.asset.stakeRedeem;
             const blockTime = s.blockTime;

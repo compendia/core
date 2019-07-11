@@ -1,3 +1,4 @@
+import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Interfaces, Transactions } from "@arkecosystem/crypto";
@@ -17,8 +18,11 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
-        const transactions = await connection.transactionsRepository.getAssetsByType(this.getConstructor().type);
-        for (const t of transactions) {
+        const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        const transactionsRepository = databaseService.transactionsBusinessRepository;
+        const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
+
+        for (const t of transactions.rows) {
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const s = t.asset.stakeUndoCancel;
             const blockTime = s.blockTime;
@@ -100,7 +104,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         let x = blockTime;
         sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
         while (x < blockTime + 315576000) {
-            if (x > transaction.data.timestamp) {
+            if (x > t.timestamp) {
                 sender.stake[blockTime].redeemableTimestamp = x;
                 break;
             }
