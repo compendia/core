@@ -31,7 +31,7 @@ class VoteWeight {
                 amount,
                 duration: s.duration,
                 weight: sWeight,
-                redeemableTimestamp: s.redeemableTimestamp,
+                redeemableTimestamp: 0,
                 redeemed: false,
             };
 

@@ -177,7 +177,7 @@ describe("Staking Transactions", () => {
                 .minus(stakeCancelTransaction.data.fee)
                 .minus(stakeUndoCancelTransaction.data.fee),
         );
-        expect(voter.stake[stakeTransaction.data.timestamp].redeemableTimestamp).toBeUndefined();
+        expect(voter.stake[stakeTransaction.data.timestamp].redeemableTimestamp).toEqual(0);
 
         walletManager.revertTransaction(stakeUndoCancelTransaction);
         expect(voter.stakeWeight).toEqual(Utils.BigNumber.ZERO);
@@ -484,7 +484,7 @@ describe("Staking Transactions", () => {
             amount: stakeAmount,
             duration: 7889400,
             weight: stakeAmount,
-            redeemableTimestamp: undefined,
+            redeemableTimestamp: 0,
             redeemed: false,
         });
 

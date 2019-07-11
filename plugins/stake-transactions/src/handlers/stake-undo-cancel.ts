@@ -28,7 +28,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
             const blockTime = s.blockTime;
             const stake = wallet.stake[blockTime];
             // Undo cancel stake
-            wallet.stake[blockTime].redeemableTimestamp = undefined;
+            wallet.stake[blockTime].redeemableTimestamp = 0;
             wallet.stakeWeight = wallet.stakeWeight.plus(stake.weight);
         }
     }
@@ -57,7 +57,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (stakeArray[blockTime].redeemableTimestamp === undefined) {
+        if (stakeArray[blockTime].redeemableTimestamp === 0) {
             throw new StakeNotYetCanceledError();
         }
 
@@ -90,7 +90,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         const blockTime = t.asset.stakeUndoCancel.blockTime;
         const stake = sender.stake[blockTime];
         // Undo cancel stake
-        sender.stake[blockTime].redeemableTimestamp = undefined;
+        sender.stake[blockTime].redeemableTimestamp = 0;
         sender.stakeWeight = sender.stakeWeight.plus(stake.weight);
     }
 
@@ -103,12 +103,11 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         // Remove stake weight
         let x = blockTime;
         sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
-        while (x < blockTime + 315576000) {
+        for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {
             if (x > t.timestamp) {
                 sender.stake[blockTime].redeemableTimestamp = x;
                 break;
             }
-            x += stake.duration;
         }
     }
 

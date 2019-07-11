@@ -491,7 +491,7 @@ describe("API 2.0 - Transactions", () => {
         it("should POST a stake transaction", async () => {
             const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
                 .stakeAsset(7889400, Utils.BigNumber.make(10000 * ARKTOSHI))
-                .sign("secret")
+                .sign(delegates[0].secret)
                 .build();
             const response = await utils.request("POST", "transactions", {
                 transactions: [stakeTransaction.toJson()],

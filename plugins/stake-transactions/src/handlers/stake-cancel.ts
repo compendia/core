@@ -24,12 +24,11 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
             const stake = wallet.stake[blockTime];
             let x = blockTime;
             wallet.stakeWeight = wallet.stakeWeight.minus(stake.weight);
-            while (x < blockTime + 315576000) {
+            for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {
                 if (x > t.timestamp) {
                     wallet.stake[blockTime].redeemableTimestamp = x;
                     break;
                 }
-                x += stake.duration;
             }
         }
     }
@@ -41,12 +40,12 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     ): boolean {
         let stakeArray: StakeInterfaces.IStakeArray;
 
-        if ((wallet as any).stake === undefined) {
+        if ((wallet as State.IWallet).stake === {}) {
             throw new WalletHasNoStakeError();
         }
 
-        stakeArray = (wallet as any).stake;
-        const { data }: Interfaces.ITransaction = transaction;
+        stakeArray = (wallet as State.IWallet).stake;
+        const data: Interfaces.ITransactionData = transaction.data;
         const blockTime = data.asset.stakeCancel.blockTime;
 
         if (!(blockTime in stakeArray)) {
@@ -84,12 +83,11 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         let x = blockTime;
         // Remove stake weight
         sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
-        while (x < blockTime + 315576000) {
+        for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {
             if (x > t.timestamp) {
                 sender.stake[blockTime].redeemableTimestamp = x;
                 break;
             }
-            x += stake.duration;
         }
     }
 
