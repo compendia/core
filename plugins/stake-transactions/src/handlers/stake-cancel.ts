@@ -22,7 +22,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
             const s = t.asset.stakeCancel;
             const blockTime = s.blockTime;
             const stake = wallet.stake[blockTime];
-            let x = blockTime;
+            let x: number;
             wallet.stakeWeight = wallet.stakeWeight.minus(stake.weight);
             for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {
                 if (x > t.timestamp) {
@@ -80,7 +80,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = sender.stake[blockTime];
-        let x = blockTime;
+        let x: number;
         // Remove stake weight
         sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
         for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {

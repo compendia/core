@@ -101,7 +101,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
         const blockTime = t.asset.stakeUndoCancel.blockTime;
         const stake = sender.stake[blockTime];
         // Remove stake weight
-        let x = blockTime;
+        let x: number;
         sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
         for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {
             if (x > t.timestamp) {
