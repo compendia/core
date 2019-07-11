@@ -41,7 +41,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         databaseWalletManager: State.IWalletManager,
     ): boolean {
         const { data }: Interfaces.ITransaction = transaction;
-
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(data);
 
         // Amount can only be in increments of 1 NOS
