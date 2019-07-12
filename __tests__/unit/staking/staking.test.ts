@@ -553,6 +553,7 @@ describe("Staking Transactions", () => {
         expect(voter.stake[stakeTransaction.data.timestamp].redeemableTimestamp).toEqual(
             voter.stake[stakeTransaction.data.timestamp].duration + stakeTransaction.data.timestamp,
         );
+        console.log(voter);
         expect(voter.stakeWeight).toEqual(Utils.BigNumber.ZERO);
         expect(voter.balance).toEqual(
             initialBalance

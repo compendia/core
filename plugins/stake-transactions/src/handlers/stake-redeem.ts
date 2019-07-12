@@ -90,8 +90,17 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const blockTime = t.asset.stakeRedeem.blockTime;
         const stake = sender.stake[blockTime];
         // Refund stake
-        sender.balance = sender.balance.plus(stake.amount);
-        sender.stake[blockTime].redeemed = true;
+        const newBalance = sender.balance.plus(stake.amount);
+        const redeemed = true;
+        Object.assign(sender, {
+            balance: newBalance,
+            stake: {
+                [blockTime]: {
+                    ...sender.stake[blockTime],
+                    redeemed,
+                },
+            },
+        });
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -102,8 +111,18 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const blockTime = t.asset.stakeRedeem.blockTime;
         const stake = sender.stake[blockTime];
         // Revert refund stake
-        sender.balance = sender.balance.minus(stake.amount);
-        sender.stake[blockTime].redeemed = false;
+        const newBalance = sender.balance.minus(stake.amount);
+        const redeemed = false;
+        Object.assign(sender, {
+            balance: newBalance,
+            stake: {
+                ...sender.stake,
+                [blockTime]: {
+                    ...sender.stake[blockTime],
+                    redeemed,
+                },
+            },
+        });
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

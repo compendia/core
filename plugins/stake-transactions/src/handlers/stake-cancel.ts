@@ -80,10 +80,17 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = sender.stake[blockTime];
-        // Remove stake weight
-        sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
         const redeemableTimestamp = Math.ceil((t.timestamp - blockTime) / stake.duration) * stake.duration + blockTime;
-        sender.stake[blockTime].redeemableTimestamp = redeemableTimestamp;
+        const newWeight = sender.stakeWeight.minus(stake.weight);
+        Object.assign(sender, {
+            stakeWeight: newWeight,
+            stake: {
+                [blockTime]: {
+                    ...sender.stake[blockTime],
+                    redeemableTimestamp,
+                },
+            },
+        });
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -92,8 +99,17 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const blockTime = t.asset.stakeCancel.blockTime;
         const stake = sender.stake[blockTime];
-        sender.stakeWeight = sender.stakeWeight.plus(stake.weight);
-        sender.stake[blockTime].redeemableTimestamp = 0;
+        const newWeight = sender.stakeWeight.plus(stake.weight);
+        const redeemableTimestamp = 0;
+        Object.assign(sender, {
+            stakeWeight: newWeight,
+            stake: {
+                [blockTime]: {
+                    ...sender.stake[blockTime],
+                    redeemableTimestamp,
+                },
+            },
+        });
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

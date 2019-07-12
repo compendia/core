@@ -79,9 +79,19 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-        sender.stake[t.timestamp] = o;
-        sender.balance = sender.balance.minus(o.amount);
-        sender.stakeWeight = sender.stakeWeight.plus(o.weight);
+        const blockTime = t.timestamp;
+        const newBalance = sender.balance.minus(o.amount);
+        const newWeight = sender.stakeWeight.plus(o.weight);
+        Object.assign(sender, {
+            balance: newBalance,
+            stakeWeight: newWeight,
+            stake: {
+                ...sender.stake,
+                [blockTime]: {
+                    o,
+                },
+            },
+        });
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -89,9 +99,17 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-        sender.balance = sender.balance.plus(o.amount);
-        delete sender.stake[t.timestamp];
-        sender.stakeWeight = sender.stakeWeight.minus(o.weight);
+        const blockTime = t.timestamp;
+        const newBalance = sender.balance.plus(o.amount);
+        const newWeight = sender.stakeWeight.minus(o.weight);
+        Object.assign(sender, {
+            balance: newBalance,
+            stakeWeight: newWeight,
+            stake: {
+                ...sender.stake,
+                [blockTime]: undefined,
+            },
+        });
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
