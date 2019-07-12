@@ -57,7 +57,7 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (stakeArray[blockTime].redeemableTimestamp === 0) {
+        if (!stakeArray[blockTime].redeemableTimestamp) {
             throw new StakeNotYetCanceledError();
         }
 

@@ -57,7 +57,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (stakeArray[blockTime].redeemableTimestamp === 0) {
+        if (!stakeArray[blockTime].redeemableTimestamp) {
             throw new StakeNotYetCanceledError();
         }
 
@@ -95,6 +95,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         Object.assign(sender, {
             balance: newBalance,
             stake: {
+                ...sender.stake,
                 [blockTime]: {
                     ...sender.stake[blockTime],
                     redeemed,

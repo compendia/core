@@ -87,9 +87,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             stakeWeight: newWeight,
             stake: {
                 ...sender.stake,
-                [blockTime]: {
-                    o,
-                },
+                [blockTime]: o,
             },
         });
     }

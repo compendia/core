@@ -85,6 +85,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         Object.assign(sender, {
             stakeWeight: newWeight,
             stake: {
+                ...sender.stake,
                 [blockTime]: {
                     ...sender.stake[blockTime],
                     redeemableTimestamp,
@@ -104,6 +105,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         Object.assign(sender, {
             stakeWeight: newWeight,
             stake: {
+                ...sender.stake,
                 [blockTime]: {
                     ...sender.stake[blockTime],
                     redeemableTimestamp,
