@@ -8,4 +8,8 @@ export enum TransactionTypes {
     TimelockTransfer = 6,
     MultiPayment = 7,
     DelegateResignation = 8,
+    StakeCreate = 100,
+    StakeCancel = 101,
+    StakeRedeem = 102,
+    StakeUndoCancel = 103,
 }

@@ -22,13 +22,13 @@ beforeAll(() => {
     Handlers.Registry.registerCustomTransactionHandler(StakeUndoCancelTransactionHandler);
 });
 
-let walletManager: State.IWalletManager;
-
 const ARKTOSHI = Constants.ARKTOSHI;
 let stakeAmount;
 let voterKeys;
 let voter;
 let initialBalance;
+
+let walletManager: State.IWalletManager;
 
 beforeEach(() => {
     walletManager = new WalletManager();
@@ -47,6 +47,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567890,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
@@ -64,6 +65,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567892,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567892);
 
         const stakeRedeemTransaction = Transactions.BuilderFactory.stakeRedeem()
@@ -87,6 +89,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567890,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
@@ -100,6 +103,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567892,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567892);
 
         const stakeUndoCancelTransaction = Transactions.BuilderFactory.stakeUndoCancel()
@@ -123,6 +127,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567890,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
@@ -138,6 +143,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567892,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567892);
 
         const stakeCancelTransaction = Transactions.BuilderFactory.stakeCancel()
@@ -197,6 +203,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567890,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
@@ -210,6 +217,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567892,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567892);
 
         const stakeCancelTransaction = Transactions.BuilderFactory.stakeCancel()
@@ -323,6 +331,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567890,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
@@ -336,6 +345,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567892,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567892);
 
         const stakeCancelTransaction = Transactions.BuilderFactory.stakeCancel()
@@ -525,6 +535,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567890,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         const stakeTransaction = Transactions.BuilderFactory.stakeCreate()
@@ -538,6 +549,7 @@ describe("Staking Transactions", () => {
             // @ts-ignore
             timestamp: 1234567892,
         });
+
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567892);
 
         const stakeCancelTransaction = Transactions.BuilderFactory.stakeCancel()

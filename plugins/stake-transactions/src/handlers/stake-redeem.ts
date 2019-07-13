@@ -28,8 +28,18 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             const blockTime = s.blockTime;
             const stake = sender.stake[blockTime];
             // Refund stake
-            sender.balance = sender.balance.plus(stake.amount);
-            sender.stake[blockTime].redeemed = true;
+            const newBalance = sender.balance.plus(stake.amount);
+            const redeemed = true;
+            Object.assign(sender, {
+                balance: newBalance,
+                stake: {
+                    ...sender.stake,
+                    [blockTime]: {
+                        ...sender.stake[blockTime],
+                        redeemed,
+                    },
+                },
+            });
         }
     }
 

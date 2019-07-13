@@ -28,8 +28,18 @@ export class StakeUndoCancelTransactionHandler extends Handlers.TransactionHandl
             const blockTime = s.blockTime;
             const stake = wallet.stake[blockTime];
             // Undo cancel stake
-            wallet.stake[blockTime].redeemableTimestamp = 0;
-            wallet.stakeWeight = wallet.stakeWeight.plus(stake.weight);
+            const redeemableTimestamp = 0;
+            const newWeight = wallet.stakeWeight.plus(stake.weight);
+            Object.assign(wallet, {
+                stakeWeight: newWeight,
+                stake: {
+                    ...wallet.stake,
+                    [blockTime]: {
+                        ...wallet.stake[blockTime],
+                        redeemableTimestamp,
+                    },
+                },
+            });
         }
     }
 

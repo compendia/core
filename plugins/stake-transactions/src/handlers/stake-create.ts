@@ -1,9 +1,9 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Constants, Crypto, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
-import { NotEnoughBalanceError, StakeDurationError, StakeNotIntegerError } from "../errors";
+import { NotEnoughBalanceError, StakeDurationError, StakeNotIntegerError, StakeTimestampError } from "../errors";
 import { VoteWeight } from "../helpers";
 import { StakeCreateTransaction } from "../transactions";
 
@@ -18,20 +18,19 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
 
         for (const t of transactions.rows) {
-            let stakeArray: StakeInterfaces.IStakeArray = [];
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
-
-            // Get wallet stake if it exists
-            if (Object.keys(wallet.stake).length > 0) {
-                stakeArray = wallet.stake;
-            }
-
-            // Set stake data
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-            stakeArray[t.timestamp] = o;
-            wallet.stakeWeight = wallet.stakeWeight.plus(o.weight);
-            wallet.stake = stakeArray;
-            wallet.balance = wallet.balance.minus(o.amount);
+            const blockTime = t.asset.stakeCreate.timestamp;
+            const newBalance = wallet.balance.minus(o.amount);
+            const newWeight = wallet.stakeWeight.plus(o.weight);
+            Object.assign(wallet, {
+                balance: newBalance,
+                stakeWeight: newWeight,
+                stake: {
+                    ...wallet.stake,
+                    [blockTime]: o,
+                },
+            });
         }
     }
 
@@ -42,6 +41,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     ): boolean {
         const { data }: Interfaces.ITransaction = transaction;
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(data);
+
+        if (
+            data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() > 120 ||
+            data.asset.stakeCreate - Crypto.Slots.getTime() < 120
+        ) {
+            throw new StakeTimestampError();
+        }
 
         // Amount can only be in increments of 1 NOS
         if ((o.amount.toNumber() / Constants.ARKTOSHI).toString().includes(".")) {
@@ -77,9 +83,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     protected applyToSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
         super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        const t = transaction.data;
-        const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-        const blockTime = t.timestamp;
+        const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(transaction.data);
+        const blockTime = transaction.data.asset.stakeCreate.timestamp;
         const newBalance = sender.balance.minus(o.amount);
         const newWeight = sender.stakeWeight.plus(o.weight);
         Object.assign(sender, {
@@ -95,9 +100,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
         super.revertForSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        const t = transaction.data;
-        const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-        const blockTime = t.timestamp;
+        const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(transaction.data);
+        const blockTime = transaction.data.asset.stakeCreate.timestamp;
         const newBalance = sender.balance.plus(o.amount);
         const newWeight = sender.stakeWeight.minus(o.weight);
         Object.assign(sender, {

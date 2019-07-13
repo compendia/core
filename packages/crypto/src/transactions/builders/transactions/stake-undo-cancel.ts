@@ -6,7 +6,7 @@ import { TransactionBuilder } from "./transaction";
 export class StakeUndoCancelBuilder extends TransactionBuilder<StakeUndoCancelBuilder> {
     constructor() {
         super();
-        this.data.type = 104;
+        this.data.type = 103;
         this.data.fee = feeManager.get(this.data.type);
         this.data.amount = BigNumber.ZERO;
         this.data.recipientId = undefined;

@@ -3,7 +3,7 @@ import ByteBuffer from "bytebuffer";
 import { IBlockTimeAsset } from "../interfaces";
 
 const { schemas } = Transactions;
-const STAKE_UNDO_CANCEL_TYPE = 104;
+const STAKE_UNDO_CANCEL_TYPE = 103;
 
 export class StakeUndoCancelTransaction extends Transactions.Transaction {
     public static type = STAKE_UNDO_CANCEL_TYPE;

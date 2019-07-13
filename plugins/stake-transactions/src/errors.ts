@@ -7,6 +7,12 @@ export class StakeAssetError extends Errors.TransactionError {
     }
 }
 
+export class StakeTimestampError extends Errors.TransactionError {
+    constructor() {
+        super(`Invalid stake timestamp.`);
+    }
+}
+
 export class NotEnoughBalanceError extends Errors.TransactionError {
     constructor() {
         super(`Not enough balance.`);

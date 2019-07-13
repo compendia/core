@@ -15,21 +15,25 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const transactionsRepository = databaseService.transactionsBusinessRepository;
         const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
-
         for (const t of transactions.rows) {
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             // Get wallet stake if it exists
             const s = t.asset.stakeCancel;
             const blockTime = s.blockTime;
             const stake = wallet.stake[blockTime];
-            let x: number;
-            wallet.stakeWeight = wallet.stakeWeight.minus(stake.weight);
-            for (x = blockTime; x < blockTime + 315576000; x += stake.duration) {
-                if (x > t.timestamp) {
-                    wallet.stake[blockTime].redeemableTimestamp = x;
-                    break;
-                }
-            }
+            const redeemableTimestamp =
+                Math.ceil((t.timestamp - blockTime) / stake.duration) * stake.duration + blockTime;
+            const newWeight = wallet.stakeWeight.minus(stake.weight);
+            Object.assign(wallet, {
+                stakeWeight: newWeight,
+                stake: {
+                    ...wallet.stake,
+                    [blockTime]: {
+                        ...wallet.stake[blockTime],
+                        redeemableTimestamp,
+                    },
+                },
+            });
         }
     }
 
