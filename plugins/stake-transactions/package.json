@@ -18,9 +18,9 @@
         "clean": "rm -rf dist/"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.5.0-next.6",
-        "@arkecosystem/core-transactions": "^2.5.0-next.6",
-        "@arkecosystem/crypto": "^2.5.0-next.6",
+        "@arkecosystem/core-interfaces": "^2.5.0-next.7",
+        "@arkecosystem/core-transactions": "^2.5.0-next.7",
+        "@arkecosystem/crypto": "^2.5.0-next.7",
         "@nosplatform/stake-interfaces": "^0.0.1",
         "bytebuffer": "^5.0.1"
     },
