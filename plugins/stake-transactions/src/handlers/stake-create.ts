@@ -66,7 +66,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeTimestampError();
         }
 
-        if (!(data.asset.stakeCreate.timestamp in wallet.stake)) {
+        if (data.asset.stakeCreate.timestamp in wallet.stake) {
             throw new StakeAlreadyExistsError();
         }
 

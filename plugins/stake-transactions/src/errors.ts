@@ -31,12 +31,6 @@ export class StakeNotIntegerError extends Errors.TransactionError {
     }
 }
 
-export class StakeAlreadyCanceledError extends Errors.TransactionError {
-    constructor() {
-        super(`Stake already canceled.`);
-    }
-}
-
 export class StakeNotFoundError extends Errors.TransactionError {
     constructor() {
         super(`Specified stake not found for wallet.`);
@@ -64,12 +58,6 @@ export class StakeNotYetRedeemableError extends Errors.TransactionError {
 export class StakeDurationError extends Errors.TransactionError {
     constructor() {
         super(`Incorrect stake duration.`);
-    }
-}
-
-export class StakeNotYetCanceledError extends Errors.TransactionError {
-    constructor() {
-        super(`Stake not yet canceled.`);
     }
 }
 
