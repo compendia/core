@@ -388,7 +388,12 @@ export class WalletManager implements State.IWalletManager {
             if (sender.vote) {
                 delegate = this.findByPublicKey(sender.vote);
             }
-            if (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
+            if (
+                (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp ||
+                    Crypto.Slots.getTime() + 120 > stake.redeemableTimestamp) &&
+                !stake.redeemed &&
+                !stake.halved
+            ) {
                 // First deduct previous stakeWeight from from delegate voteBalance
                 if (delegate) {
                     delegate.voteBalance = delegate.voteBalance.minus(sender.stakeWeight);

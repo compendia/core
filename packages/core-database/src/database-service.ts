@@ -141,7 +141,12 @@ export class DatabaseService implements Database.IDatabaseService {
             for (const voter of voters) {
                 for (const stakeObject of Object.values(voter.stake)) {
                     const stake: StakeInterfaces.IStakeObject = stakeObject;
-                    if (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
+                    if (
+                        (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp ||
+                            Crypto.Slots.getTime() + 120 > stake.redeemableTimestamp) &&
+                        !stake.redeemed &&
+                        !stake.halved
+                    ) {
                         // First deduct previous stakeWeight from delegate voteBalance
                         delegate.voteBalance = delegate.voteBalance.minus(voter.stakeWeight);
                         // Deduct old stake object weight from voter stakeWeight
