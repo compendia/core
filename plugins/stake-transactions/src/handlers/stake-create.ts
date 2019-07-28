@@ -3,7 +3,13 @@ import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/co
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Crypto, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
-import { NotEnoughBalanceError, StakeDurationError, StakeNotIntegerError, StakeTimestampError } from "../errors";
+import {
+    NotEnoughBalanceError,
+    StakeAlreadyExistsError,
+    StakeDurationError,
+    StakeNotIntegerError,
+    StakeTimestampError,
+} from "../errors";
 import { VoteWeight } from "../helpers";
 import { StakeCreateTransaction } from "../transactions";
 
@@ -22,7 +28,18 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
             const blockTime = t.asset.stakeCreate.timestamp;
             const newBalance = wallet.balance.minus(o.amount);
+
+            // 2 minute window for time flexibility
+            if (
+                Crypto.Slots.getTime() - 120 > o.redeemableTimestamp ||
+                Crypto.Slots.getTime() + 120 > o.redeemableTimestamp
+            ) {
+                o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
+                o.halved = true;
+            }
+
             const newWeight = wallet.stakeWeight.plus(o.weight);
+
             Object.assign(wallet, {
                 balance: newBalance,
                 stakeWeight: newWeight,
@@ -47,6 +64,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             data.asset.stakeCreate - Crypto.Slots.getTime() < 120
         ) {
             throw new StakeTimestampError();
+        }
+
+        if (!(data.asset.stakeCreate.timestamp in wallet.stake)) {
+            throw new StakeAlreadyExistsError();
         }
 
         // Amount can only be in increments of 1 NOS

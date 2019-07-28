@@ -13,6 +13,12 @@ export class StakeTimestampError extends Errors.TransactionError {
     }
 }
 
+export class StakeAlreadyExistsError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake at this timestamp already exists.`);
+    }
+}
+
 export class NotEnoughBalanceError extends Errors.TransactionError {
     constructor() {
         super(`Not enough balance.`);

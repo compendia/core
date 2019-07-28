@@ -4,6 +4,7 @@ import { Database, EventEmitter, Logger, Shared, State } from "@arkecosystem/cor
 import { Handlers } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Blocks, Crypto, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import assert from "assert";
 
 export class DatabaseService implements Database.IDatabaseService {
@@ -107,6 +108,8 @@ export class DatabaseService implements Database.IDatabaseService {
                         this.updateDelegateStats(this.forgingDelegates);
                     }
 
+                    await this.buildVoteWeights();
+
                     const delegates: State.IDelegateWallet[] = this.walletManager.loadActiveDelegateList(roundInfo);
 
                     await this.saveRound(delegates);
@@ -126,6 +129,32 @@ export class DatabaseService implements Database.IDatabaseService {
                     // tslint:disable-next-line:max-line-length
                     `Round ${round.toLocaleString()} has already been applied. This should happen only if you are a forger.`,
                 );
+            }
+        }
+    }
+
+    // Update stakes of voters and their delegates' voteBalance
+    public async buildVoteWeights(): Promise<void> {
+        const delegates: State.IWallet[] = this.walletManager.allByUsername().filter((w: State.IWallet) => !w.resigned);
+        for (const delegate of delegates) {
+            const voters = this.wallets.findAllByVote(delegate.publicKey).rows;
+            for (const voter of voters) {
+                for (const stakeObject of Object.values(voter.stake)) {
+                    const stake: StakeInterfaces.IStakeObject = stakeObject;
+                    if (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
+                        // First deduct previous stakeWeight
+                        delegate.voteBalance = delegate.voteBalance.minus(voter.stakeWeight);
+                        // Deduct old stake object weight from voter stakeWeight
+                        voter.stakeWeight = voter.stakeWeight.minus(stake.weight);
+                        // Set new stake object weight
+                        stake.weight = Utils.BigNumber.make(stake.weight.dividedBy(2).toFixed(0, 1));
+                        // Update voter total stakeWeight
+                        voter.stakeWeight = voter.stakeWeight.plus(stake.weight);
+                        stake.halved = true;
+                        // Update delegate voteBalance
+                        delegate.voteBalance = delegate.voteBalance.plus(voter.stakeWeight);
+                    }
+                }
             }
         }
     }
