@@ -61,7 +61,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         if (
             data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() > 120 ||
-            data.asset.stakeCreate - Crypto.Slots.getTime() < 120
+            data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() < -120
         ) {
             throw new StakeTimestampError();
         }

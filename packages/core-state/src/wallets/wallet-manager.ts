@@ -1,8 +1,8 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Crypto, Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
-import { StakeInterfaces } from "@nosplatform/stake-interfaces";
+import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { TopRewards } from "@nosplatform/top-rewards";
 import pluralize from "pluralize";
 import { TempWalletManager } from "./temp-wallet-manager";
@@ -382,34 +382,9 @@ export class WalletManager implements State.IWalletManager {
         const balanceMulitiplier = milestone.stakeLevels.balance;
 
         // Update expired (redeemable) sender stake objects for halving weight
-        for (const stakeObject of Object.values(sender.stake)) {
-            const stake: StakeInterfaces.IStakeObject = stakeObject;
-            let delegate;
-            if (sender.vote) {
-                delegate = this.findByPublicKey(sender.vote);
-            }
-            if (
-                (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp ||
-                    Crypto.Slots.getTime() + 120 > stake.redeemableTimestamp) &&
-                !stake.redeemed &&
-                !stake.halved
-            ) {
-                // First deduct previous stakeWeight from from delegate voteBalance
-                if (delegate) {
-                    delegate.voteBalance = delegate.voteBalance.minus(sender.stakeWeight);
-                }
-                // Deduct old stake object weight from voter stakeWeight
-                sender.stakeWeight = sender.stakeWeight.minus(stake.weight);
-                // Set new stake object weight
-                stake.weight = Utils.BigNumber.make(stake.weight.dividedBy(2).toFixed(0, 1));
-                // Update voter total stakeWeight
-                sender.stakeWeight = sender.stakeWeight.plus(stake.weight);
-                stake.halved = true;
-                // Update delegate voteBalance
-                if (delegate) {
-                    delegate.voteBalance = delegate.voteBalance.plus(sender.stakeWeight);
-                }
-            }
+        StakeHelpers.ExpireHelper.processStakes(sender, this);
+        if (recipient) {
+            StakeHelpers.ExpireHelper.processStakes(recipient, this);
         }
 
         // Check if transaction is of type stakeCreate
