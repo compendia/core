@@ -10,7 +10,7 @@ import {
     StakeNotIntegerError,
     StakeTimestampError,
 } from "../errors";
-import { VoteWeight } from "../helpers";
+import { ExpireHelper, VoteWeight } from "../helpers";
 import { StakeCreateTransaction } from "../transactions";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
@@ -48,6 +48,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     [blockTime]: o,
                 },
             });
+
+            ExpireHelper.storeExpiry(o, wallet, blockTime);
         }
     }
 
@@ -116,6 +118,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 [blockTime]: o,
             },
         });
+        ExpireHelper.storeExpiry(o, sender, blockTime);
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -133,6 +136,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 [blockTime]: undefined,
             },
         });
+        ExpireHelper.removeExpiry(o, sender, blockTime);
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

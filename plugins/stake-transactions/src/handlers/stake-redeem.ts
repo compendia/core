@@ -66,7 +66,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (transaction.data.timestamp < stakeArray[blockTime].redeemableTimestamp) {
+        if (!stakeArray[blockTime].halved) {
             throw new StakeNotYetRedeemableError();
         }
 

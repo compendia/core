@@ -108,7 +108,7 @@ export class DatabaseService implements Database.IDatabaseService {
                         this.updateDelegateStats(this.forgingDelegates);
                     }
 
-                    await this.buildVoteWeights();
+                    await this.expireStakes();
 
                     const delegates: State.IDelegateWallet[] = this.walletManager.loadActiveDelegateList(roundInfo);
 
@@ -133,17 +133,8 @@ export class DatabaseService implements Database.IDatabaseService {
         }
     }
 
-    // Update stakes of voters and their delegates' voteBalance
-    public async buildVoteWeights(): Promise<void> {
-        const delegates: State.IWallet[] = this.walletManager
-            .allByUsername()
-            .filter((w: State.IWallet) => !w.resigned && w.stakeWeight.isGreaterThan(0));
-        for (const delegate of delegates) {
-            const voters = this.wallets.findAllByVote(delegate.publicKey).rows;
-            for (const voter of voters) {
-                StakeHelpers.ExpireHelper.processStakes(voter, this.walletManager);
-            }
-        }
+    public async expireStakes(): Promise<void> {
+        StakeHelpers.ExpireHelper.processMonthExpirations(this.walletManager);
     }
 
     public async buildWallets(): Promise<void> {

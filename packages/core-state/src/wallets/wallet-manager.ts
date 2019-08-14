@@ -2,7 +2,6 @@ import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
-import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { TopRewards } from "@nosplatform/top-rewards";
 import pluralize from "pluralize";
 import { TempWalletManager } from "./temp-wallet-manager";
@@ -380,12 +379,6 @@ export class WalletManager implements State.IWalletManager {
         // TODO: multipayment?
         const milestone = Managers.configManager.getMilestone();
         const balanceMulitiplier = milestone.stakeLevels.balance;
-
-        // Update expired (redeemable) sender stake objects for halving weight
-        StakeHelpers.ExpireHelper.processStakes(sender, this);
-        if (recipient) {
-            StakeHelpers.ExpireHelper.processStakes(recipient, this);
-        }
 
         // Check if transaction is of type stakeCreate
         if (transaction.type === 100) {
