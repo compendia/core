@@ -30,7 +30,7 @@ module.exports = {
                 multiPayment: 500,
                 delegateResignation: 100,
                 stakeCreate: 100,
-                stakeRedeem: 100
+                stakeRedeem: 101
             },
         },
     },
