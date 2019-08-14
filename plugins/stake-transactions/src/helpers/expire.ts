@@ -7,6 +7,7 @@ import { asValue } from "awilix";
 export interface IExpirationObject {
     publicKey: string;
     stakeKey: number;
+    redeemableTimestamp: number;
 }
 
 export class ExpireHelper {
@@ -55,8 +56,12 @@ export class ExpireHelper {
             expirationList[wallet.publicKey] = [];
         }
 
-        expirationList[wallet.publicKey].push(stakeKey);
-
+        const expirationObject: IExpirationObject = {
+            publicKey: wallet.publicKey,
+            stakeKey,
+            redeemableTimestamp: stake.redeemableTimestamp,
+        };
+        expirationList.push(expirationObject);
         app.register(expirationKey, asValue(expirationList));
     }
 
@@ -64,7 +69,8 @@ export class ExpireHelper {
         const expirationMonth = this.getMonth(stake.redeemableTimestamp);
         const expirationKey = `global.stake.expirations.${expirationMonth}`;
         const expirationList: IExpirationObject[] = app.resolve(expirationKey);
-        const expirationObject: IExpirationObject = { publicKey: wallet.publicKey, stakeKey };
+        const redeemableTimestamp = stake.redeemableTimestamp;
+        const expirationObject: IExpirationObject = { publicKey: wallet.publicKey, stakeKey, redeemableTimestamp };
 
         const index = expirationList.indexOf(expirationObject);
         expirationList.splice(index, 1);
@@ -79,7 +85,12 @@ export class ExpireHelper {
             const expirations: IExpirationObject[] = app.resolve(expirationKey);
             for (const expiration of expirations) {
                 const wallet = walletManager.findByPublicKey(expiration.publicKey);
-                this.expireStake(wallet, expiration.stakeKey, walletManager);
+                if (
+                    Crypto.Slots.getTime() + 120 > expiration.redeemableTimestamp &&
+                    Crypto.Slots.getTime() - 120 > expiration.redeemableTimestamp
+                ) {
+                    this.expireStake(wallet, expiration.stakeKey, walletManager);
+                }
             }
         }
     }
