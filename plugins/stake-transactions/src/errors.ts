@@ -13,6 +13,12 @@ export class StakeTimestampError extends Errors.TransactionError {
     }
 }
 
+export class StakeAlreadyExistsError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake at this timestamp already exists.`);
+    }
+}
+
 export class NotEnoughBalanceError extends Errors.TransactionError {
     constructor() {
         super(`Not enough balance.`);
@@ -22,12 +28,6 @@ export class NotEnoughBalanceError extends Errors.TransactionError {
 export class StakeNotIntegerError extends Errors.TransactionError {
     constructor() {
         super(`Stake amount is not a whole number.`);
-    }
-}
-
-export class StakeAlreadyCanceledError extends Errors.TransactionError {
-    constructor() {
-        super(`Stake already canceled.`);
     }
 }
 
@@ -58,12 +58,6 @@ export class StakeNotYetRedeemableError extends Errors.TransactionError {
 export class StakeDurationError extends Errors.TransactionError {
     constructor() {
         super(`Incorrect stake duration.`);
-    }
-}
-
-export class StakeNotYetCanceledError extends Errors.TransactionError {
-    constructor() {
-        super(`Stake not yet canceled.`);
     }
 }
 

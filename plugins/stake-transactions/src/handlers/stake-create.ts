@@ -1,10 +1,16 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Crypto, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Constants, Crypto, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
-import { NotEnoughBalanceError, StakeDurationError, StakeNotIntegerError, StakeTimestampError } from "../errors";
-import { VoteWeight } from "../helpers";
+import {
+    NotEnoughBalanceError,
+    StakeAlreadyExistsError,
+    StakeDurationError,
+    StakeNotIntegerError,
+    StakeTimestampError,
+} from "../errors";
+import { ExpireHelper, VoteWeight } from "../helpers";
 import { StakeCreateTransaction } from "../transactions";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
@@ -16,13 +22,25 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const transactionsRepository = databaseService.transactionsBusinessRepository;
         const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
 
         for (const t of transactions.rows) {
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
             const blockTime = t.asset.stakeCreate.timestamp;
             const newBalance = wallet.balance.minus(o.amount);
+
+            // 2 minute window for time flexibility
+            if (lastBlock.data.timestamp > o.redeemableTimestamp) {
+                o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
+                o.halved = true;
+            }
+
             const newWeight = wallet.stakeWeight.plus(o.weight);
+
             Object.assign(wallet, {
                 balance: newBalance,
                 stakeWeight: newWeight,
@@ -31,6 +49,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     [blockTime]: o,
                 },
             });
+
+            ExpireHelper.storeExpiry(o, wallet, blockTime);
         }
     }
 
@@ -44,9 +64,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         if (
             data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() > 120 ||
-            data.asset.stakeCreate - Crypto.Slots.getTime() < 120
+            data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() < -120
         ) {
             throw new StakeTimestampError();
+        }
+
+        if (data.asset.stakeCreate.timestamp in wallet.stake) {
+            throw new StakeAlreadyExistsError();
         }
 
         // Amount can only be in increments of 1 NOS
@@ -58,7 +82,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             throw new NotEnoughBalanceError();
         }
 
-        if (!o.duration || o.duration < 7889400) {
+        const configManager = Managers.configManager;
+        const milestone = configManager.getMilestone();
+
+        if (!o.duration || milestone.stakeLevels[o.duration] === undefined) {
             throw new StakeDurationError();
         }
 
@@ -95,6 +122,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 [blockTime]: o,
             },
         });
+        ExpireHelper.storeExpiry(o, sender, blockTime);
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
@@ -112,6 +140,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 [blockTime]: undefined,
             },
         });
+        ExpireHelper.removeExpiry(o, sender, blockTime);
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

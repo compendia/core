@@ -25,20 +25,16 @@
                 "multiPayment": 0,
                 "delegateResignation": 2500000000,
                 "stakeCreate": 100000000,
-                "stakeCancel": 100000000,
-                "stakeRedeem": 100000000,
-                "stakeUndoCancel": 100000000
+                "stakeRedeem": 100000000
             }
         },
+        "balanceVoteWeight": 0.1,
         "stakeLevels": {
-            "balance": 0.1,
-            "3m": 1,
-            "6m": 1.25,
-            "1y": 1.5,
-            "2y": 2
+            "7889400": 1.0,
+            "15778800": 1.5,
+            "31557600": 2.0
         },
         "minimumStake": 1000000000000,
-
         "ignoreInvalidSecondSignatureField": true,
         "ignoreExpiredTransactions": true,
         "vendorFieldLength": 64

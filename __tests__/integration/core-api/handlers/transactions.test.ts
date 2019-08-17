@@ -167,6 +167,8 @@ describe("API 2.0 - Transactions", () => {
                 TimelockTransfer: 6,
                 MultiPayment: 7,
                 DelegateResignation: 8,
+                stakeCreate: 100,
+                stakeRedeem: 101,
             });
         });
     });
@@ -618,10 +620,8 @@ describe("API 2.0 - Transactions", () => {
                 multiPayment: 0,
                 multiSignature: 500000000,
                 secondSignature: 500000000,
-                stakeCancel: 100000000,
                 stakeCreate: 100000000,
                 stakeRedeem: 100000000,
-                stakeUndoCancel: 100000000,
                 timelockTransfer: 0,
                 transfer: 10000000,
                 vote: 100000000,

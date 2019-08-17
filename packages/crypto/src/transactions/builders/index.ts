@@ -4,10 +4,8 @@ import { IPFSBuilder } from "./transactions/ipfs";
 import { MultiPaymentBuilder } from "./transactions/multi-payment";
 import { MultiSignatureBuilder } from "./transactions/multi-signature";
 import { SecondSignatureBuilder } from "./transactions/second-signature";
-import { StakeCancelBuilder } from "./transactions/stake-cancel";
 import { StakeCreateBuilder } from "./transactions/stake-create";
 import { StakeRedeemBuilder } from "./transactions/stake-redeem";
-import { StakeUndoCancelBuilder } from "./transactions/stake-undo-cancel";
 import { TimelockTransferBuilder } from "./transactions/timelock-transfer";
 import { TransferBuilder } from "./transactions/transfer";
 import { VoteBuilder } from "./transactions/vote";
@@ -53,15 +51,7 @@ export class BuilderFactory {
         return new StakeCreateBuilder();
     }
 
-    public static stakeCancel(): StakeCancelBuilder {
-        return new StakeCancelBuilder();
-    }
-
     public static stakeRedeem(): StakeRedeemBuilder {
         return new StakeRedeemBuilder();
-    }
-
-    public static stakeUndoCancel(): StakeUndoCancelBuilder {
-        return new StakeUndoCancelBuilder();
     }
 }

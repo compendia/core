@@ -4,6 +4,7 @@ import { Database, EventEmitter, Logger, Shared, State } from "@arkecosystem/cor
 import { Handlers } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Blocks, Crypto, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { StakeHelpers } from "@nosplatform/stake-transactions";
 import assert from "assert";
 
 export class DatabaseService implements Database.IDatabaseService {
@@ -107,6 +108,8 @@ export class DatabaseService implements Database.IDatabaseService {
                         this.updateDelegateStats(this.forgingDelegates);
                     }
 
+                    await this.expireStakes();
+
                     const delegates: State.IDelegateWallet[] = this.walletManager.loadActiveDelegateList(roundInfo);
 
                     await this.saveRound(delegates);
@@ -128,6 +131,10 @@ export class DatabaseService implements Database.IDatabaseService {
                 );
             }
         }
+    }
+
+    public async expireStakes(): Promise<void> {
+        StakeHelpers.ExpireHelper.processMonthExpirations(this.walletManager);
     }
 
     public async buildWallets(): Promise<void> {

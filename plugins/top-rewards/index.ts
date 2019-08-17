@@ -7,7 +7,7 @@ class TopRewards {
     public static applyReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
         const roundInfo = roundCalculator.calculateRound(block.height);
 
-        const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).stakeLevels.balance;
+        const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).balanceVoteWeight;
         const balanceWeightMultiplier = balanceWeightMultiplierVal ? balanceWeightMultiplierVal : Utils.BigNumber.ZERO;
 
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
@@ -39,7 +39,7 @@ class TopRewards {
     public static revertReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
         const roundInfo = roundCalculator.calculateRound(block.height);
 
-        const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).stakeLevels.balance;
+        const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).balanceVoteWeight;
         const balanceWeightMultiplier = balanceWeightMultiplierVal ? balanceWeightMultiplierVal : Utils.BigNumber.ZERO;
 
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;

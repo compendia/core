@@ -13,6 +13,11 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         const configManager = Managers.configManager;
         const milestone = configManager.getMilestone();
 
+        const stakeLevels = [];
+        for (const duration of Object.keys(milestone.stakeLevels)) {
+            stakeLevels.push(Number(duration));
+        }
+
         return schemas.extend(schemas.transactionBaseSchema, {
             $id: "stakeCreate",
             required: ["asset"],
@@ -29,9 +34,8 @@ export class StakeCreateTransaction extends Transactions.Transaction {
                             properties: {
                                 duration: {
                                     type: "integer",
-                                    // Minimum duration of 3 months
-                                    // TODO: Don't hardcode this value. Use env.
-                                    minimum: 7889400,
+                                    // Duration must exist in stakeLevels keys
+                                    enum: stakeLevels,
                                 },
                                 amount: {
                                     bignumber: {
