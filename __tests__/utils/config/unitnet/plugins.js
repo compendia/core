@@ -27,6 +27,7 @@ module.exports = {
         minimumVersions: [">=2.0.0"],
         minimumNetworkReach: 5,
     },
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
@@ -50,4 +51,5 @@ module.exports = {
         allowRemote: false,
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
+    "@nosplatform/stake-transactions": {}
 };

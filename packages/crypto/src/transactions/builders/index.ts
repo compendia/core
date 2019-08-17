@@ -4,6 +4,8 @@ import { IPFSBuilder } from "./transactions/ipfs";
 import { MultiPaymentBuilder } from "./transactions/multi-payment";
 import { MultiSignatureBuilder } from "./transactions/multi-signature";
 import { SecondSignatureBuilder } from "./transactions/second-signature";
+import { StakeCreateBuilder } from "./transactions/stake-create";
+import { StakeRedeemBuilder } from "./transactions/stake-redeem";
 import { TimelockTransferBuilder } from "./transactions/timelock-transfer";
 import { TransferBuilder } from "./transactions/transfer";
 import { VoteBuilder } from "./transactions/vote";
@@ -43,5 +45,13 @@ export class BuilderFactory {
 
     public static delegateResignation(): DelegateResignationBuilder {
         return new DelegateResignationBuilder();
+    }
+
+    public static stakeCreate(): StakeCreateBuilder {
+        return new StakeCreateBuilder();
+    }
+
+    public static stakeRedeem(): StakeRedeemBuilder {
+        return new StakeRedeemBuilder();
     }
 }

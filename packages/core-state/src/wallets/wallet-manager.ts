@@ -1,7 +1,8 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { TopRewards } from "@nosplatform/top-rewards";
 import pluralize from "pluralize";
 import { TempWalletManager } from "./temp-wallet-manager";
 import { Wallet } from "./wallet";
@@ -39,7 +40,7 @@ export class WalletManager implements State.IWalletManager {
     public findDelegateById(id: string): State.IWallet {
         const wallet: State.IWallet = this.findById(id);
 
-        return (wallet && !!wallet.username) ? wallet : undefined;
+        return wallet && !!wallet.username ? wallet : undefined;
     }
 
     public findByAddress(address: string): State.IWallet {
@@ -139,7 +140,9 @@ export class WalletManager implements State.IWalletManager {
         for (const voter of Object.values(this.byPublicKey)) {
             if (voter.vote) {
                 const delegate: State.IWallet = this.byPublicKey[voter.vote];
-                delegate.voteBalance = delegate.voteBalance.plus(voter.balance);
+                delegate.voteBalance = delegate.voteBalance
+                    .plus(voter.stakeWeight)
+                    .plus(voter.balance.times(Managers.configManager.getMilestone().balanceVoteWeight).toFixed(0, 1));
             }
         }
     }
@@ -185,10 +188,15 @@ export class WalletManager implements State.IWalletManager {
             // If the block has been applied to the delegate, the balance is increased
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
-            if (applied && delegate.vote) {
-                const increase: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
-                const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
-                votedDelegate.voteBalance = votedDelegate.voteBalance.plus(increase);
+            if (applied) {
+                if (delegate.vote) {
+                    const increase: Utils.BigNumber = block.data.reward
+                        .plus(block.data.totalFee)
+                        .times(Managers.configManager.getMilestone().balanceVoteWeight);
+                    const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
+                    votedDelegate.voteBalance = votedDelegate.voteBalance.plus(increase);
+                }
+                TopRewards.applyReward(block.data, this);
             }
         } catch (error) {
             this.logger.error("Failed to apply all transactions in block - reverting previous transactions");
@@ -223,10 +231,15 @@ export class WalletManager implements State.IWalletManager {
             // If the block has been reverted, the balance is decreased
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
-            if (reverted && delegate.vote) {
-                const decrease: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
-                const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
-                votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);
+            if (reverted) {
+                if (delegate.vote) {
+                    const decrease: Utils.BigNumber = block.data.reward
+                        .plus(block.data.totalFee)
+                        .times(Managers.configManager.getMilestone().balanceVoteWeight);
+                    const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
+                    votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);
+                }
+                TopRewards.revertReward(block.data, this);
             }
         } catch (error) {
             this.logger.error(error.stack);
@@ -258,7 +271,7 @@ export class WalletManager implements State.IWalletManager {
                     `Can't apply transaction id:${data.id} from sender:${sender.address} due to ${error.message}`,
                 );
                 this.logger.debug(`Audit: ${JSON.stringify(sender.auditApply(data), undefined, 2)}`);
-                throw new Error(`Can't apply transaction ${data.id}`);
+                throw new Error(`Can't apply transaction ${data.id}: ${error.message}`);
             }
         }
 
@@ -374,33 +387,67 @@ export class WalletManager implements State.IWalletManager {
         revert: boolean = false,
     ): void {
         // TODO: multipayment?
-        if (transaction.type !== Enums.TransactionTypes.Vote) {
+        const milestone = Managers.configManager.getMilestone();
+        const balanceMulitiplier = milestone.balanceVoteWeight;
+
+        // Check if transaction is of type stakeCreate
+        if (transaction.type === 100) {
+            // Use transaction stakeCreate.amount
+            if (sender.vote) {
+                const delegate: State.IWallet = this.findByPublicKey(sender.vote);
+
+                const s = transaction.asset.stakeCreate;
+                const multiplier: number = milestone.stakeLevels[s.duration];
+                const sWeight: Utils.BigNumber = s.amount.times(multiplier);
+                const balanceWithFeeFixed = s.amount
+                    .plus(transaction.fee)
+                    .times(balanceMulitiplier)
+                    .toFixed(0, 1);
+
+                delegate.voteBalance = revert
+                    ? delegate.voteBalance.minus(sWeight).plus(balanceWithFeeFixed)
+                    : delegate.voteBalance.minus(balanceWithFeeFixed).plus(sWeight);
+            }
+        } else if (transaction.type !== Enums.TransactionTypes.Vote) {
             // Update vote balance of the sender's delegate
             if (sender.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(sender.vote);
-                const total: Utils.BigNumber = transaction.amount.plus(transaction.fee);
+                const total = transaction.amount
+                    .plus(transaction.fee)
+                    .times(balanceMulitiplier)
+                    .toFixed(0, 1);
                 delegate.voteBalance = revert ? delegate.voteBalance.plus(total) : delegate.voteBalance.minus(total);
             }
 
             // Update vote balance of recipient's delegate
             if (recipient && recipient.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(recipient.vote);
-                delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(transaction.amount)
-                    : delegate.voteBalance.plus(transaction.amount);
+                const total = transaction.amount.times(balanceMulitiplier).toFixed(0, 1);
+                delegate.voteBalance = revert ? delegate.voteBalance.minus(total) : delegate.voteBalance.plus(total);
             }
         } else {
             const vote: string = transaction.asset.votes[0];
             const delegate: State.IWallet = this.findByPublicKey(vote.substr(1));
-
+            const balanceAsWeight = Utils.BigNumber.make(sender.balance.times(balanceMulitiplier));
+            const feeAsWeight = Utils.BigNumber.make(transaction.fee.times(balanceMulitiplier));
             if (vote.startsWith("+")) {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.minus(sender.balance.minus(transaction.fee))
-                    : delegate.voteBalance.plus(sender.balance);
+                    ? delegate.voteBalance
+                          .minus(Utils.BigNumber.make(balanceAsWeight.minus(feeAsWeight).toFixed(0, 1)))
+                          .minus(sender.stakeWeight)
+                    : delegate.voteBalance.plus(
+                          Utils.BigNumber.make(balanceAsWeight.plus(sender.stakeWeight).toFixed(0, 1)),
+                      );
             } else {
                 delegate.voteBalance = revert
-                    ? delegate.voteBalance.plus(sender.balance)
-                    : delegate.voteBalance.minus(sender.balance.plus(transaction.fee));
+                    ? delegate.voteBalance.plus(
+                          Utils.BigNumber.make(balanceAsWeight.plus(sender.stakeWeight).toFixed(0, 1)),
+                      )
+                    : delegate.voteBalance.minus(
+                          Utils.BigNumber.make(balanceAsWeight.plus(feeAsWeight).toFixed(0, 1)).plus(
+                              sender.stakeWeight,
+                          ),
+                      );
             }
         }
     }

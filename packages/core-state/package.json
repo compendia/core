@@ -26,6 +26,8 @@
         "@arkecosystem/core-transactions": "^2.5.19",
         "@arkecosystem/core-utils": "^2.5.19",
         "@arkecosystem/crypto": "^2.5.19",
+        "@nosplatform/stake-transactions": "^0.0.1",
+        "@nosplatform/stake-interfaces": "^0.0.1",
         "immutable": "^4.0.0-rc.12",
         "lodash.clonedeep": "^4.5.0",
         "pluralize": "^8.0.0"

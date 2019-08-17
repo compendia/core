@@ -6,18 +6,24 @@ import { Codec } from "../../../../packages/core-snapshots/src/transport/codec";
 import { blocks } from "../fixtures/blocks";
 import { transactions } from "../fixtures/transactions";
 
+// tslint:disable-next-line
 function jsonBlock(block) {
     // @ts-ignore
     block.reward = block.reward.toFixed();
     // @ts-ignore
+    block.top_reward = block.top_reward.toFixed();
+    // @ts-ignore
     block.total_amount = block.total_amount.toFixed();
     // @ts-ignore
     block.total_fee = block.total_fee.toFixed();
+    // @ts-ignore
+    block.removed_fee = block.removed_fee.toFixed();
 
     return block;
 }
 
 beforeAll(async () => {
+    // tslint:disable-next-line
     transactions.forEach((transaction: any) => {
         transaction.serialized = transaction.serializedHex;
     });

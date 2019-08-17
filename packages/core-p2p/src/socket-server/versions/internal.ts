@@ -38,6 +38,7 @@ export const getCurrentRound = async (): Promise<P2P.ICurrentRound> => {
 
     const blockTime = config.getMilestone(height).blocktime;
     const reward = config.getMilestone(height).reward;
+    const topReward = config.getMilestone(height).reward;
     const delegates = await databaseService.getActiveDelegates(roundInfo);
     const timestamp = Crypto.Slots.getTime();
     const blockTimestamp = Crypto.Slots.getSlotNumber(timestamp) * blockTime;
@@ -47,6 +48,7 @@ export const getCurrentRound = async (): Promise<P2P.ICurrentRound> => {
     return {
         current: round,
         reward,
+        topReward,
         timestamp: blockTimestamp,
         delegates,
         currentForger: delegates[currentForger],

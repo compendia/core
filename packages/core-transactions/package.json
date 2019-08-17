@@ -22,6 +22,7 @@
         "@arkecosystem/core-event-emitter": "^2.5.19",
         "@arkecosystem/core-interfaces": "^2.5.19",
         "@arkecosystem/crypto": "^2.5.19",
+        "@nosplatform/top-rewards": "0.0.1",
         "bs58check": "^2.1.2"
     },
     "engines": {

@@ -26,6 +26,12 @@ const setUp = async () => {
     process.env.DISABLE_P2P_SERVER = "true"; // no need for p2p socket server to run
     process.env.CORE_RESET_DATABASE = "1";
 
+    process.env.CORE_DB_USERNAME = "core";
+    process.env.CORE_DB_PASSWORD = "nosnos";
+    process.env.CORE_DB_HOST = "localhost";
+    process.env.CORE_DB_PORT = "5432";
+    process.env.CORE_DB_DATABASE = "core_testnet";
+
     await setUpContainer({
         exclude: [
             "@arkecosystem/core-webhooks",

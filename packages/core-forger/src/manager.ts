@@ -151,6 +151,7 @@ export class ForgerManager {
             },
             timestamp: round.timestamp,
             reward: round.reward,
+            topReward: round.topReward,
         });
 
         const minimumMs: number = 2000;

@@ -16,7 +16,9 @@ export const transformDelegate = delegate => {
         },
         forged: {
             fees: delegate.forgedFees.toFixed(),
+            removed: delegate.removedFees.toFixed(),
             rewards: delegate.forgedRewards.toFixed(),
+            topReward: delegate.forgedTopRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
     };

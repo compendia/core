@@ -234,9 +234,7 @@ export class Connection implements TransactionPool.IConnection {
                     }
 
                     this.logger.error(
-                        `CanApply transaction test failed on acceptChainedBlock() in transaction pool for transaction id:${
-                            data.id
-                        } due to ${error.message}. Possible double spending attack`,
+                        `CanApply transaction test failed on acceptChainedBlock() in transaction pool for transaction id:${data.id} due to ${error.message}. Possible double spending attack`,
                     );
 
                     continue;
@@ -475,7 +473,7 @@ export class Connection implements TransactionPool.IConnection {
                 validTransactions.push(deserialized.serialized.toString("hex"));
             } catch (error) {
                 this.removeTransactionById(transaction.id);
-                this.logger.error(`Removed ${transaction.id} before forging because it is no longer valid.`);
+                this.logger.error(`Removed ${transaction.id} before forging because it is no longer valid: ${error}`);
             }
         }
 

@@ -148,7 +148,9 @@ export class Database {
                 "number_of_transactions",
                 "total_amount",
                 "total_fee",
+                "removed_fee",
                 "reward",
+                "top_reward",
                 "payload_length",
                 "payload_hash",
                 "generator_public_key",
@@ -178,14 +180,7 @@ export class Database {
             { table: "transactions" },
         );
 
-        this.roundsColumnSet = new this.pgp.helpers.ColumnSet(
-            [
-                "round",
-                "balance",
-                "public_key"
-            ],
-            { table: "rounds" }
-        );
+        this.roundsColumnSet = new this.pgp.helpers.ColumnSet(["round", "balance", "public_key"], { table: "rounds" });
     }
 }
 
