@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
-import { Crypto, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { asValue } from "awilix";
 
@@ -13,13 +13,14 @@ export interface IExpirationObject {
 export class ExpireHelper {
     public static expireStake(wallet: State.IWallet, stakeKey: number, walletManager: State.IWalletManager): void {
         const stake: StakeInterfaces.IStakeObject = wallet.stake[stakeKey];
-        if (
-            stake &&
-            (Crypto.Slots.getTime() - 120 > stake.redeemableTimestamp ||
-                Crypto.Slots.getTime() + 120 > stake.redeemableTimestamp) &&
-            !stake.redeemed &&
-            !stake.halved
-        ) {
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
+
+        if (stake && lastBlock.data.timestamp > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
+            app.resolvePlugin("logger").info(`Stake expired: ${stakeKey} of wallet ${wallet.address}.`);
+
             let delegate: State.IWallet;
             if (wallet.vote) {
                 delegate = walletManager.findByPublicKey(wallet.vote);
@@ -46,14 +47,10 @@ export class ExpireHelper {
     public static storeExpiry(stake: StakeInterfaces.IStakeObject, wallet: State.IWallet, stakeKey: number): void {
         const expirationMonth = this.getMonth(stake.redeemableTimestamp);
         const expirationKey = `global.stake.expirations.${expirationMonth}`;
-        let expirationList: IExpirationObject[];
+        let expirationList: IExpirationObject[] = [];
 
         if (app.has(expirationKey)) {
             expirationList = app.resolve(expirationKey);
-        }
-
-        if (expirationList[wallet.publicKey] === undefined) {
-            expirationList[wallet.publicKey] = [];
         }
 
         const expirationObject: IExpirationObject = {
@@ -61,7 +58,9 @@ export class ExpireHelper {
             stakeKey,
             redeemableTimestamp: stake.redeemableTimestamp,
         };
+
         expirationList.push(expirationObject);
+
         app.register(expirationKey, asValue(expirationList));
     }
 
@@ -79,16 +78,19 @@ export class ExpireHelper {
     }
 
     public static processMonthExpirations(walletManager: State.IWalletManager): void {
-        const expirationMonth = this.getMonth(Crypto.Slots.getTime());
+        app.resolvePlugin("logger").info("Processing stake expirations.");
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
+        const lastTime = lastBlock.data.timestamp;
+        const expirationMonth = this.getMonth(lastTime);
         const expirationKey = `global.stake.expirations.${expirationMonth}`;
         if (app.has(expirationKey)) {
             const expirations: IExpirationObject[] = app.resolve(expirationKey);
             for (const expiration of expirations) {
                 const wallet = walletManager.findByPublicKey(expiration.publicKey);
-                if (
-                    Crypto.Slots.getTime() + 120 > expiration.redeemableTimestamp &&
-                    Crypto.Slots.getTime() - 120 > expiration.redeemableTimestamp
-                ) {
+                if (lastBlock.data.timestamp > expiration.redeemableTimestamp) {
                     this.expireStake(wallet, expiration.stakeKey, walletManager);
                 }
             }

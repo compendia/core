@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Crypto, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Constants, Crypto, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import {
     NotEnoughBalanceError,
@@ -22,6 +22,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const transactionsRepository = databaseService.transactionsBusinessRepository;
         const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
 
         for (const t of transactions.rows) {
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
@@ -30,10 +34,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             const newBalance = wallet.balance.minus(o.amount);
 
             // 2 minute window for time flexibility
-            if (
-                Crypto.Slots.getTime() - 120 > o.redeemableTimestamp ||
-                Crypto.Slots.getTime() + 120 > o.redeemableTimestamp
-            ) {
+            if (lastBlock.data.timestamp > o.redeemableTimestamp) {
                 o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
                 o.halved = true;
             }
@@ -81,7 +82,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             throw new NotEnoughBalanceError();
         }
 
-        if (!o.duration || o.duration < 7889400) {
+        const configManager = Managers.configManager;
+        const milestone = configManager.getMilestone();
+
+        if (!o.duration || milestone.stakeLevels[o.duration] === undefined) {
             throw new StakeDurationError();
         }
 

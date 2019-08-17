@@ -132,7 +132,7 @@ export class WalletManager implements State.IWalletManager {
                 const delegate: State.IWallet = this.byPublicKey[voter.vote];
                 delegate.voteBalance = delegate.voteBalance
                     .plus(voter.stakeWeight)
-                    .plus(voter.balance.times(0.1).toFixed(0, 1));
+                    .plus(voter.balance.times(Managers.configManager.getMilestone().balanceVoteWeight).toFixed(0, 1));
             }
         }
     }
@@ -182,7 +182,7 @@ export class WalletManager implements State.IWalletManager {
                 if (delegate.vote) {
                     const increase: Utils.BigNumber = block.data.reward
                         .plus(block.data.totalFee)
-                        .times(Managers.configManager.getMilestone().stakeLevels.balance);
+                        .times(Managers.configManager.getMilestone().balanceVoteWeight);
                     const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
                     votedDelegate.voteBalance = votedDelegate.voteBalance.plus(increase);
                 }
@@ -225,7 +225,7 @@ export class WalletManager implements State.IWalletManager {
                 if (delegate.vote) {
                     const decrease: Utils.BigNumber = block.data.reward
                         .plus(block.data.totalFee)
-                        .times(Managers.configManager.getMilestone().stakeLevels.balance);
+                        .times(Managers.configManager.getMilestone().balanceVoteWeight);
                     const votedDelegate: State.IWallet = this.findByPublicKey(delegate.vote);
                     votedDelegate.voteBalance = votedDelegate.voteBalance.minus(decrease);
                 }
@@ -378,7 +378,7 @@ export class WalletManager implements State.IWalletManager {
     ): void {
         // TODO: multipayment?
         const milestone = Managers.configManager.getMilestone();
-        const balanceMulitiplier = milestone.stakeLevels.balance;
+        const balanceMulitiplier = milestone.balanceVoteWeight;
 
         // Check if transaction is of type stakeCreate
         if (transaction.type === 100) {
@@ -387,19 +387,7 @@ export class WalletManager implements State.IWalletManager {
                 const delegate: State.IWallet = this.findByPublicKey(sender.vote);
 
                 const s = transaction.asset.stakeCreate;
-
-                let level: string;
-                if (s.duration >= 7889400 && s.duration < 15778800) {
-                    level = "3m";
-                } else if (s.duration >= 15778800 && s.duration < 31557600) {
-                    level = "6m";
-                } else if (s.duration >= 31557600 && s.duration < 63115200) {
-                    level = "1y";
-                } else if (s.duration > 63115200) {
-                    level = "2y";
-                }
-
-                const multiplier: number = milestone.stakeLevels[level];
+                const multiplier: number = milestone.stakeLevels[s.duration];
                 const sWeight: Utils.BigNumber = s.amount.times(multiplier);
                 const balanceWithFeeFixed = s.amount
                     .plus(transaction.fee)

@@ -1,5 +1,5 @@
 /* tslint:disable:max-line-length no-empty */
-import "../core-database/mocks/core-container";
+import "./mocks/core-container";
 
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
@@ -10,6 +10,7 @@ import {
     StakeCreateTransactionHandler,
     StakeRedeemTransactionHandler,
 } from "../../../plugins/stake-transactions/src/handlers";
+import { ExpireHelper } from "../../../plugins/stake-transactions/src/helpers";
 
 beforeAll(() => {
     Managers.configManager.setFromPreset("testnet");
@@ -83,7 +84,7 @@ describe("Staking Transactions", () => {
 
         jest.spyOn(store, "getLastBlock").mockReturnValue({
             // @ts-ignore
-            timestamp: 1234567890,
+            data: { timestamp: 1234567890 },
         });
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
@@ -97,7 +98,9 @@ describe("Staking Transactions", () => {
 
         jest.spyOn(store, "getLastBlock").mockReturnValue({
             // @ts-ignore
-            timestamp: voter.stake[stakeTransaction.data.timestamp].redeemableTimestamp - 10,
+            data: {
+                timestamp: voter.stake[stakeTransaction.data.timestamp].redeemableTimestamp - 10,
+            },
         });
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(
@@ -254,7 +257,7 @@ describe("Staking Transactions", () => {
             .build();
 
         walletManager.applyTransaction(stakeTransaction);
-        expect(voter.stakeWeight).toEqual(stakeAmount.times(1.25));
+        expect(voter.stakeWeight).toEqual(stakeAmount.times(1.5));
         expect(delegate.voteBalance).toEqual(
             delegate.balance
                 .times(0.1)
@@ -271,6 +274,8 @@ describe("Staking Transactions", () => {
         delegate.vote = delegate.publicKey;
         delegate.voteBalance = delegate.balance.times(0.1);
         walletManager.reindex(delegate);
+
+        jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
 
         expect(delegate.voteBalance).toEqual(delegate.balance.times(0.1));
 
@@ -342,6 +347,14 @@ describe("Staking Transactions", () => {
         expect(delegate.voteBalance).toEqual(delegate.balance.times(0.1));
 
         walletManager.revertTransaction(unvoteTransaction);
+
+        jest.spyOn(app, "resolve").mockReturnValue([
+            {
+                publicKey: voter.publicKey,
+                stakeKey: 1234567890,
+                redeemableTimestamp: 1242457290,
+            },
+        ]);
 
         walletManager.revertTransaction(stakeTransaction);
         expect(voter.stakeWeight).toEqual(Utils.BigNumber.ZERO);
@@ -429,7 +442,7 @@ describe("Staking Transactions", () => {
             .build();
 
         walletManager.applyTransaction(stakeTransaction);
-        expect(voter.stakeWeight).toEqual(stakeAmount.times(1.25));
+        expect(voter.stakeWeight).toEqual(stakeAmount.times(1.5));
         expect(delegate.voteBalance).toEqual(
             delegate.balance
                 .times(0.1)
@@ -441,27 +454,28 @@ describe("Staking Transactions", () => {
 
         jest.spyOn(store, "getLastBlock").mockReturnValue({
             // @ts-ignore
-            timestamp: txTwoTime,
+            data: {
+                timestamp: txTwoTime,
+            },
         });
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(txTwoTime);
 
-        const transferTx = Transactions.BuilderFactory.transfer()
-            .amount(stakeAmount.times(0.1))
-            .fee(
-                Utils.BigNumber.make("5")
-                    .times(ARKTOSHI)
-                    .toString(),
-            )
-            .recipientId(voter.address)
-            .sign("secret")
-            .build();
-        walletManager.applyTransaction(transferTx);
+        jest.spyOn(app, "has").mockReturnValue(true);
+        jest.spyOn(app, "resolve").mockReturnValue([
+            {
+                publicKey: voter.publicKey,
+                stakeKey: stakeOneTime,
+                redeemableTimestamp: stakeOneTime + 15778800,
+            },
+        ]);
+
+        ExpireHelper.processMonthExpirations(walletManager);
 
         expect(voter.stakeWeight).toEqual(
             Utils.BigNumber.make(
                 stakeAmount
-                    .times(1.25)
+                    .times(1.5)
                     .dividedBy(2)
                     .toFixed(0, 1),
             ),
@@ -477,7 +491,9 @@ describe("Staking Transactions", () => {
 
         jest.spyOn(store, "getLastBlock").mockReturnValue({
             // @ts-ignore
-            timestamp: txThreeTime,
+            data: {
+                timestamp: txThreeTime,
+            },
         });
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(txThreeTime);
@@ -496,7 +512,7 @@ describe("Staking Transactions", () => {
         expect(voter.stakeWeight).toEqual(
             Utils.BigNumber.make(
                 stakeAmount
-                    .times(1.25)
+                    .times(1.5)
                     .dividedBy(2)
                     .toFixed(0, 1),
             ),
