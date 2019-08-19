@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { State } from "@arkecosystem/core-interfaces";
+import { EventEmitter, State } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { asValue } from "awilix";
@@ -41,6 +41,7 @@ export class ExpireHelper {
                 delegate.voteBalance = delegate.voteBalance.plus(wallet.stakeWeight);
             }
             this.removeExpiry(stake, wallet, stakeKey);
+            this.emitter.emit("stake.expired", { publicKey: wallet.publicKey, stakeKey });
         }
     }
 
@@ -102,4 +103,8 @@ export class ExpireHelper {
         const month = new Date(e.getFullYear(), e.getMonth(), 1).getTime() / 1000;
         return month;
     }
+
+    private static readonly emitter: EventEmitter.EventEmitter = app.resolvePlugin<EventEmitter.EventEmitter>(
+        "event-emitter",
+    );
 }
