@@ -41,7 +41,8 @@
         "relay:testnet": "cross-env CORE_PATH_CONFIG=./bin/config/testnet yarn ark relay:run --env=test",
         "start:devnet": "cross-env CORE_PATH_CONFIG=./bin/config/devnet yarn ark core:run",
         "start:mainnet": "cross-env CORE_PATH_CONFIG=./bin/config/mainnet yarn ark core:run",
-        "start:testnet": "cross-env CORE_PATH_CONFIG=./bin/config/testnet yarn ark core:run --env=test"
+        "start:testnet": "cross-env CORE_PATH_CONFIG=./bin/config/testnet yarn ark core:run --env=test",
+        "start:nosdev": "cross-env CORE_PATH_CONFIG=./bin/config/nosdevnet2 yarn ark core:run"
     },
     "dependencies": {
         "@arkecosystem/core-api": "^2.5.19",
