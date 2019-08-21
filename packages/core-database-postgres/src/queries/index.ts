@@ -10,10 +10,14 @@ export const queries = {
         findByHeights: loadQueryFile(__dirname, "./blocks/find-by-heights.sql"),
         headers: loadQueryFile(__dirname, "./blocks/headers.sql"),
         heightRange: loadQueryFile(__dirname, "./blocks/height-range.sql"),
+        heightRangeWithTransactions: loadQueryFile(__dirname, "./blocks/height-range-with-transactions.sql"),
         latest: loadQueryFile(__dirname, "./blocks/latest.sql"),
         recent: loadQueryFile(__dirname, "./blocks/recent.sql"),
         statistics: loadQueryFile(__dirname, "./blocks/statistics.sql"),
         top: loadQueryFile(__dirname, "./blocks/top.sql"),
+    },
+    common: {
+        truncateAllTables: loadQueryFile(__dirname, "./common/truncate-all-tables.sql"),
     },
     migrations: {
         create: loadQueryFile(__dirname, "./migrations/create.sql"),
@@ -23,16 +27,13 @@ export const queries = {
         delete: loadQueryFile(__dirname, "./rounds/delete.sql"),
         find: loadQueryFile(__dirname, "./rounds/find.sql"),
     },
-    integrityVerifier: {
-        blockRewards: loadQueryFile(__dirname, "./integrity-verifier/block-rewards.sql"),
-        delegates: loadQueryFile(__dirname, "./integrity-verifier/delegates.sql"),
-        delegatesForgedBlocks: loadQueryFile(__dirname, "./integrity-verifier/delegates-forged-blocks.sql"),
-        lastForgedBlocks: loadQueryFile(__dirname, "./integrity-verifier/last-forged-blocks.sql"),
-        multiSignatures: loadQueryFile(__dirname, "./integrity-verifier/multi-signatures.sql"),
-        receivedTransactions: loadQueryFile(__dirname, "./integrity-verifier/received-transactions.sql"),
-        secondSignatures: loadQueryFile(__dirname, "./integrity-verifier/second-signatures.sql"),
-        sentTransactions: loadQueryFile(__dirname, "./integrity-verifier/sent-transactions.sql"),
-        votes: loadQueryFile(__dirname, "./integrity-verifier/votes.sql"),
+    stateBuilder: {
+        blockRewards: loadQueryFile(__dirname, "./state-builder/block-rewards.sql"),
+        delegatesForgedBlocks: loadQueryFile(__dirname, "./state-builder/delegates-forged-blocks.sql"),
+        lastForgedBlocks: loadQueryFile(__dirname, "./state-builder/last-forged-blocks.sql"),
+        receivedTransactions: loadQueryFile(__dirname, "./state-builder/received-transactions.sql"),
+        sentTransactions: loadQueryFile(__dirname, "./state-builder/sent-transactions.sql"),
+        assetsByType: loadQueryFile(__dirname, "./state-builder/assets-by-type.sql"),
     },
     transactions: {
         findByBlock: loadQueryFile(__dirname, "./transactions/find-by-block.sql"),
@@ -42,5 +43,6 @@ export const queries = {
         forged: loadQueryFile(__dirname, "./transactions/forged.sql"),
         findById: loadQueryFile(__dirname, "./transactions/find-by-id.sql"),
         deleteByBlock: loadQueryFile(__dirname, "./transactions/delete-by-block.sql"),
+        feeStatistics: loadQueryFile(__dirname, "./transactions/fee-statistics.sql"),
     },
 };

@@ -2,12 +2,15 @@
     {
         "height": 1,
         "reward": 0,
+        "topReward": 0,
+        "topDelegates": 5,
         "activeDelegates": 51,
         "blocktime": 8,
         "block": {
             "version": 0,
             "maxTransactions": 50,
-            "maxPayload": 2097152
+            "maxPayload": 2097152,
+            "acceptExpiredTransactionTimestamps": true
         },
         "epoch": "2017-03-21T13:00:00.000Z",
         "fees": {
@@ -20,7 +23,7 @@
                 "ipfs": 0,
                 "timelockTransfer": 0,
                 "multiPayment": 0,
-                "delegateResignation": 0
+                "delegateResignation": 2500000000
             }
         },
         "vendorFieldLength": 64
@@ -44,6 +47,12 @@
         "height": 8204000,
         "block": {
             "idFullSha256": true
+        }
+    },
+    {
+        "height": 9000000,
+        "block": {
+            "acceptExpiredTransactionTimestamps": false
         }
     }
 ]

@@ -7,6 +7,7 @@ import zlib from "zlib";
 
 import { app } from "@arkecosystem/core-container";
 import { EventEmitter, Logger } from "@arkecosystem/core-interfaces";
+import { Managers } from "@arkecosystem/crypto";
 
 import * as utils from "../utils";
 import { Codec } from "./codec";
@@ -14,6 +15,12 @@ import { canImportRecord, verifyData } from "./verification";
 
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+
+const fixData = (table, data) => {
+    if (table === "blocks" && data.height === 1) {
+        data.id = Managers.configManager.get("genesisBlock").id;
+    }
+}
 
 export const exportTable = async (table, options) => {
     const snapFileName = utils.getFilePath(table, options.meta.folder);
@@ -51,7 +58,7 @@ export const exportTable = async (table, options) => {
         };
     } catch (error) {
         app.forceExit("Error while exporting data via query stream", error);
-        return null;
+        return undefined;
     }
 };
 
@@ -71,7 +78,7 @@ export const importTable = async (table, options) => {
               .pipe(decodeStream);
 
     let values = [];
-    let prevData = null;
+    let prevData;
     let counter = 0;
     const saveData = async data => {
         if (data && data.length > 0) {
@@ -83,15 +90,18 @@ export const importTable = async (table, options) => {
     };
 
     emitter.emit("start", { count: options.meta[table].count });
-    // @ts-ignore
+
+    // tslint:disable-next-line: await-promise
     for await (const record of readStream) {
         counter++;
 
+        fixData(table, record);
+
         if (!verifyData(table, record, prevData, options.verifySignatures)) {
-            app.forceExit(`Error verifying data. Payload ${JSON.stringify(record, null, 2)}`);
+            app.forceExit(`Error verifying data. Payload ${JSON.stringify(record, undefined, 2)}`);
         }
 
-        if (canImportRecord(table, record, options.lastBlock)) {
+        if (canImportRecord(table, record, options)) {
             values.push(record);
         }
 
@@ -120,17 +130,18 @@ export const verifyTable = async (table, options) => {
               .pipe(decodeStream);
 
     logger.info(`Starting to verify snapshot file ${sourceFile}`);
-    let prevData = null;
+    let prevData;
 
     decodeStream.on("data", data => {
+        fixData(table, data);
         if (!verifyData(table, data, prevData, options.verifySignatures)) {
-            app.forceExit(`Error verifying data. Payload ${JSON.stringify(data, null, 2)}`);
+            app.forceExit(`Error verifying data. Payload ${JSON.stringify(data, undefined, 2)}`);
         }
         prevData = data;
     });
 
     readStream.on("finish", () => {
-        logger.info(`Snapshot file ${sourceFile} succesfully verified`);
+        logger.info(`Snapshot file ${sourceFile} successfully verified`);
     });
 };
 

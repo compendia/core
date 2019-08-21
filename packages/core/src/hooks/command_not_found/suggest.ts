@@ -6,9 +6,9 @@ import * as Levenshtein from "fast-levenshtein";
 import minBy from "lodash.minby";
 import { confirm } from "../../helpers/prompts";
 
-function closest(commandIDs: string[], cmd: string) {
+const closest = (commandIDs: string[], cmd: string) => {
     return minBy(commandIDs, c => Levenshtein.get(cmd, c))!;
-}
+};
 
 export const init: Hook<"init"> = async function(opts) {
     const commandIDs = opts.config.commandIDs;
@@ -19,7 +19,7 @@ export const init: Hook<"init"> = async function(opts) {
 
     let binHelp = `${opts.config.bin} help`;
     const idSplit = opts.id.split(":");
-    if (await opts.config.findTopic(idSplit[0])) {
+    if (opts.config.findTopic(idSplit[0])) {
         // if valid topic, update binHelp with topic
         binHelp = `${binHelp} ${idSplit[0]}`;
     }

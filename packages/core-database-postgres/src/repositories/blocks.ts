@@ -1,25 +1,44 @@
 import { Database } from "@arkecosystem/core-interfaces";
+import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Block } from "../models";
 import { queries } from "../queries";
 import { Repository } from "./repository";
 
-const { blocks: sql } = queries;
-
 export class BlocksRepository extends Repository implements Database.IBlocksRepository {
-    /**
-     * Find a block by its ID.
-     * @param  {Number} id
-     * @return {Promise}
-     */
-    public async findById(id) {
-        return this.db.oneOrNone(sql.findById, { id });
+    public async search(params: Database.ISearchParameters): Promise<{ rows: Interfaces.IBlockData[]; count: number }> {
+        // TODO: we're selecting all the columns right now. Add support for choosing specific columns, when it proves useful.
+        const selectQuery = this.query.select().from(this.query);
+        const selectQueryCount = this.query.select(this.query.count().as("cnt")).from(this.query);
+        // Blocks repo atm, doesn't search using any custom parameters
+        const parameterList = params.parameters.filter(o => o.operator !== Database.SearchOperator.OP_CUSTOM);
+
+        if (parameterList.length) {
+            let first;
+            do {
+                first = parameterList.shift();
+                // ignore params whose operator is unknown
+            } while (!first.operator && parameterList.length);
+
+            if (first) {
+                for (const query of [selectQuery, selectQueryCount]) {
+                    query.where(this.query[this.propToColumnName(first.field)][first.operator](first.value));
+                }
+                for (const param of parameterList) {
+                    for (const query of [selectQuery, selectQueryCount]) {
+                        query.and(this.query[this.propToColumnName(param.field)][param.operator](param.value));
+                    }
+                }
+            }
+        }
+
+        return this.findManyWithCount(selectQuery, selectQueryCount, params.paginate, params.orderBy);
     }
 
-    /**
-     * Find many blocks by their IDs.
-     * @param {String[]} ids
-     */
-    public async findByIds(ids: string[]) {
+    public async findById(id: string): Promise<Interfaces.IBlockData> {
+        return this.db.oneOrNone(queries.blocks.findById, { id });
+    }
+
+    public async findByIds(ids: string[]): Promise<Interfaces.IBlockData[]> {
         return this.findMany(
             this.query
                 .select()
@@ -29,150 +48,78 @@ export class BlocksRepository extends Repository implements Database.IBlocksRepo
         );
     }
 
-    /**
-     * Get a block at the given height.
-     * @param  {Number} height the height of the blocks to retrieve
-     * @return {Promise}
-     */
-    public async findByHeight(height: number) {
-        return this.db.oneOrNone(sql.findByHeight, { height });
+    public async findByHeight(height: number): Promise<Interfaces.IBlockData> {
+        return this.db.oneOrNone(queries.blocks.findByHeight, { height });
     }
 
-    /**
-     * Get all of the blocks at the given heights.
-     * @param  {Array} heights the heights of the blocks to retrieve
-     * @return {Promise}
-     */
-    public async findByHeights(heights: number[]) {
-        return this.db.manyOrNone(sql.findByHeights, { heights });
+    public async findByHeights(heights: number[]): Promise<Interfaces.IBlockData[]> {
+        return this.db.manyOrNone(queries.blocks.findByHeights, { heights });
     }
 
-    /**
-     * Count the number of records in the database.
-     * @return {Promise}
-     */
-    public async count() {
-        const { count } = await this.db.one(sql.count);
-        return count;
+    public async count(): Promise<number> {
+        return (await this.db.one(queries.blocks.count)).count;
     }
 
-    /**
-     * Get all of the common blocks from the database.
-     * @param  {Array} ids
-     * @return {Promise}
-     */
-    public async common(ids) {
-        return this.db.manyOrNone(sql.common, { ids });
+    public async getBlockRewards(): Promise<any> {
+        return this.db.many(queries.stateBuilder.blockRewards);
     }
 
-    /**
-     * Get all of the blocks within the given height range.
-     * @param  {Number} start
-     * @param  {Number} end
-     * @return {Promise}
-     */
-    public async headers(start, end) {
-        return this.db.many(sql.headers, { start, end });
+    public async getLastForgedBlocks(): Promise<any> {
+        return this.db.many(queries.stateBuilder.lastForgedBlocks);
     }
 
-    /**
-     * Get all of the blocks within the given height range and order them by height.
-     * @param  {Number} start
-     * @param  {Number} end
-     * @return {Promise}
-     */
-    public async heightRange(start, end) {
-        return this.db.manyOrNone(sql.heightRange, { start, end });
+    public async getDelegatesForgedBlocks(): Promise<any> {
+        return this.db.many(queries.stateBuilder.delegatesForgedBlocks);
     }
 
-    /**
-     * Get the last created block from the database.
-     * @return {Promise}
-     */
-    public async latest() {
-        return this.db.oneOrNone(sql.latest);
+    public async common(ids: string[]): Promise<Interfaces.IBlockData[]> {
+        return this.db.manyOrNone(queries.blocks.common, { ids });
     }
 
-    /**
-     * Get the 10 most recently created blocks from the database.
-     * @return {Promise}
-     */
-    public async recent() {
-        return this.db.many(sql.recent);
+    public async headers(start: number, end: number): Promise<Interfaces.IBlockData[]> {
+        return this.db.many(queries.blocks.headers, { start, end });
     }
 
-    /**
-     * Get statistics about all blocks from the database.
-     * @return {Promise}
-     */
-    public async statistics() {
-        return this.db.one(sql.statistics);
+    public async heightRange(start: number, end: number): Promise<Interfaces.IBlockData[]> {
+        return this.db.manyOrNone(queries.blocks.heightRange, { start, end });
     }
 
-    /**
-     * Get top count blocks
-     * @return {Promise}
-     */
-    public async top(count) {
-        return this.db.many(sql.top, { top: count });
+    public async heightRangeWithTransactions(start: number, end: number): Promise<Database.IDownloadBlock[]> {
+        return this.db.manyOrNone(queries.blocks.heightRangeWithTransactions, { start, end }).map(block => {
+            if (block.transactions === null) {
+                delete block.transactions;
+            }
+            return block;
+        });
     }
 
-    /**
-     * Delete the block from the database.
-     * @param  {Number} id
-     * @return {Promise}
-     */
-    public async delete(id) {
-        return this.db.none(sql.delete, { id });
+    public async latest(): Promise<Interfaces.IBlockData> {
+        return this.db.oneOrNone(queries.blocks.latest);
     }
 
-    /**
-     * Get the model related to this repository.
-     * @return {Block}
-     */
-    public getModel() {
+    public async recent(): Promise<Interfaces.IBlockData[]> {
+        return this.db.many(queries.blocks.recent);
+    }
+
+    public async statistics(): Promise<{
+        numberOfTransactions: number;
+        totalFee: Utils.BigNumber;
+        removedFee: Utils.BigNumber;
+        totalAmount: Utils.BigNumber;
+        count: number;
+    }> {
+        return this.db.one(queries.blocks.statistics);
+    }
+
+    public async top(count: number): Promise<Interfaces.IBlockData[]> {
+        return this.db.many(queries.blocks.top, { top: count });
+    }
+
+    public async delete(ids: string[], db: any): Promise<void> {
+        return db.none(queries.blocks.delete, { ids });
+    }
+
+    public getModel(): Block {
         return new Block(this.pgp);
-    }
-
-    /* TODO: Remove with v1 */
-    public async findAll(params: Database.SearchParameters) {
-        const selectQuery = this.query.select().from(this.query);
-        // Blocks repo atm, doesn't search using any custom parameters
-        const parameterList = params.parameters.filter(o => o.operator !== Database.SearchOperator.OP_CUSTOM);
-        if (parameterList.length) {
-            const first = parameterList.shift();
-            /* Notice the difference between 'findAll' and 'search' is that the former assumes eq for all params passed in */
-            if (first) {
-                selectQuery.where(this.query[this.propToColumnName(first.field)].equals(first.value));
-                for (const param of parameterList) {
-                    selectQuery.and(this.query[this.propToColumnName(param.field)].equals(param.value));
-                }
-            }
-        }
-
-        return this.findManyWithCount(selectQuery, params.paginate, params.orderBy);
-    }
-
-    public async search(params: Database.SearchParameters) {
-        // TODO: we're selecting all the columns right now. Add support for choosing specific columns, when it proves useful.
-        const selectQuery = this.query.select().from(this.query);
-        // Blocks repo atm, doesn't search using any custom parameters
-        const parameterList = params.parameters.filter(o => o.operator !== Database.SearchOperator.OP_CUSTOM);
-        if (parameterList.length) {
-            let first;
-            do {
-                first = parameterList.shift();
-                // ignore params whose operator is unknown
-            } while (!first.operator && parameterList.length);
-
-            if (first) {
-                selectQuery.where(this.query[this.propToColumnName(first.field)][first.operator](first.value));
-                for (const param of parameterList) {
-                    selectQuery.and(this.query[this.propToColumnName(param.field)][param.operator](param.value));
-                }
-            }
-        }
-
-        return this.findManyWithCount(selectQuery, params.paginate, params.orderBy);
     }
 }

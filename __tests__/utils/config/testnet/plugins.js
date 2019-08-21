@@ -1,6 +1,7 @@
 module.exports = {
     "@arkecosystem/core-event-emitter": {},
     "@arkecosystem/core-logger-pino": {},
+    "@arkecosystem/core-state": {},
     "@arkecosystem/core-database-postgres": {
         connection: {
             host: process.env.CORE_DB_HOST || "localhost",
@@ -14,21 +15,19 @@ module.exports = {
         enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
         allowedSenders: [],
-        // 100+ years in the future to avoid our hardcoded transactions used in the
-        // tests to expire immediately
-        maxTransactionAge: 4036608000,
         dynamicFees: {
             minFeePool: 1000,
             minFeeBroadcast: 1000,
         },
     },
     "@arkecosystem/core-p2p": {
-        host: process.env.CORE_P2P_HOST || "0.0.0.0",
-        port: process.env.CORE_P2P_PORT || 4000,
+        server: {
+            port: process.env.CORE_P2P_PORT || 4000,
+        },
         minimumVersions: [">=2.0.0"],
         minimumNetworkReach: 5,
-        coldStart: 5,
     },
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
@@ -44,13 +43,11 @@ module.exports = {
             whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
         },
     },
-    "@arkecosystem/core-forger": {
-        hosts: [`http://127.0.0.1:${process.env.CORE_P2P_PORT || 4000}`],
-    },
-    "@arkecosystem/core-json-rpc": {
-        enabled: process.env.CORE_JSON_RPC_ENABLED,
-        host: process.env.CORE_JSON_RPC_HOST || "0.0.0.0",
-        port: process.env.CORE_JSON_RPC_PORT || 8080,
+    "@arkecosystem/core-forger": {},
+    "@arkecosystem/core-exchange-json-rpc": {
+        enabled: process.env.CORE_EXCHANGE_JSON_RPC_ENABLED,
+        host: process.env.CORE_EXCHANGE_JSON_RPC_HOST || "0.0.0.0",
+        port: process.env.CORE_EXCHANGE_JSON_RPC_PORT || 8080,
         allowRemote: false,
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },

@@ -68,6 +68,12 @@ class Httpie {
             opts = {};
         }
 
+        if (!opts.headers) {
+            opts.headers = {};
+        }
+
+        opts.headers["content-type"] = "application/json";
+
         if (opts.body && typeof opts !== "string") {
             opts.body = JSON.stringify(opts.body);
         }
@@ -75,6 +81,10 @@ class Httpie {
         // Do not retry unless explicitly stated.
         if (!opts.retry) {
             opts.retry = { retries: 0 };
+        }
+
+        if (!opts.timeout && process.env.NODE_ENV !== "test") {
+            opts.timeout = 1500;
         }
 
         try {

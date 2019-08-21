@@ -1,5 +1,7 @@
-import { httpie } from "@arkecosystem/core-utils";
 import "jest-extended";
+
+import { httpie } from "@arkecosystem/core-utils";
+import { Managers } from "@arkecosystem/crypto";
 import nock from "nock";
 import { TransferCommand } from "../../../../../packages/core-tester-cli/src/commands/send/transfer";
 import { arkToSatoshi, captureTransactions, expectTransactions, toFlags } from "../../shared";
@@ -7,14 +9,14 @@ import { arkToSatoshi, captureTransactions, expectTransactions, toFlags } from "
 beforeEach(() => {
     // Just passthru. We'll test the Command class logic in its own test file more thoroughly
     nock("http://localhost:4003")
-        .get("/api/v2/node/configuration")
+        .get("/api/node/configuration")
         .twice()
         .reply(200, { data: { constants: {} } });
 
-    nock("http://localhost:4000")
-        .get("/config")
+    nock("http://localhost:4003")
+        .get("/api/node/configuration/crypto")
         .twice()
-        .reply(200, { data: { network: { name: "unitnet" } } });
+        .reply(200, { data: Managers.configManager.getPreset("unitnet") });
 
     jest.spyOn(httpie, "post");
 });

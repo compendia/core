@@ -1,35 +1,40 @@
 {
     "name": "@arkecosystem/core-utils",
+    "version": "2.5.19",
     "description": "Utilities for ARK Core",
-    "version": "2.3.21",
+    "license": "MIT",
     "contributors": [
         "Brian Faust <brian@ark.io>"
     ],
-    "license": "MIT",
-    "main": "dist/index.js",
     "files": [
         "dist"
     ],
+    "main": "dist/index",
     "scripts": {
-        "prepublishOnly": "yarn build",
-        "compile": "../../node_modules/typescript/bin/tsc",
         "build": "yarn clean && yarn compile",
         "build:watch": "yarn clean && yarn compile -w",
-        "clean": "del dist"
+        "clean": "del dist",
+        "compile": "../../node_modules/typescript/bin/tsc",
+        "prepublishOnly": "yarn build"
     },
     "dependencies": {
-        "@arkecosystem/core-container": "^2.3.21",
-        "@arkecosystem/core-interfaces": "^2.3.21",
-        "@arkecosystem/crypto": "^2.3.21",
-        "@faustbrian/dato": "^0.2.0",
+        "@arkecosystem/core-container": "^2.5.19",
+        "@arkecosystem/core-interfaces": "^2.5.19",
+        "@arkecosystem/crypto": "^2.5.19",
         "cli-table3": "^0.5.1",
+        "dayjs": "^1.8.15",
         "fast-json-parse": "^1.0.3",
-        "got": "^9.6.0"
+        "got": "^9.6.0",
+        "immutable": "^4.0.0-rc.12",
+        "nanomatch": "^1.2.13"
     },
-    "publishConfig": {
-        "access": "public"
+    "devDependencies": {
+        "@types/got": "^9.6.1"
     },
     "engines": {
         "node": ">=10.x"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

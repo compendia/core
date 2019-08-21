@@ -34,17 +34,26 @@ export class Database {
         return this.db.oneOrNone(queries.blocks.latest);
     }
 
+    /**
+     * Get the highest row from the rounds table.
+     * @return Object latest row
+     * @return null if the table is empty.
+     */
+    public async getLastRound(): Promise<{ public_key: string; balance: string; round: string } | null> {
+        return this.db.oneOrNone(queries.rounds.latest);
+    }
+
     public async getBlockByHeight(height) {
         return this.db.oneOrNone(queries.blocks.findByHeight, { height });
     }
 
     public async truncate() {
         try {
-            logger.info("Truncating tables: rounds, transactions, blocks");
+            const tables: string = "rounds, transactions, blocks";
 
-            for (const table of ["rounds", "transactions", "blocks"]) {
-                await this.db.none(queries.truncate(table));
-            }
+            logger.info(`Truncating tables: ${tables}`);
+
+            await this.db.none(queries.truncate(tables));
         } catch (error) {
             app.forceExit(error.message);
         }
@@ -73,9 +82,15 @@ export class Database {
         return this.getLastBlock();
     }
 
-    public async getExportQueries(startHeight, endHeight) {
-        const startBlock = await this.getBlockByHeight(startHeight);
-        const endBlock = await this.getBlockByHeight(endHeight);
+    public async getExportQueries(meta: {
+        startHeight: number;
+        endHeight: number;
+        skipRoundRows: number;
+        skipCompression: boolean;
+        folder: string;
+    }) {
+        const startBlock = await this.getBlockByHeight(meta.startHeight);
+        const endBlock = await this.getBlockByHeight(meta.endHeight);
 
         if (!startBlock || !endBlock) {
             app.forceExit(
@@ -83,8 +98,8 @@ export class Database {
             );
         }
 
-        const roundInfoStart: Shared.IRoundInfo = roundCalculator.calculateRound(startHeight);
-        const roundInfoEnd: Shared.IRoundInfo = roundCalculator.calculateRound(endHeight);
+        const roundInfoStart: Shared.IRoundInfo = roundCalculator.calculateRound(meta.startHeight);
+        const roundInfoEnd: Shared.IRoundInfo = roundCalculator.calculateRound(meta.endHeight);
 
         return {
             blocks: rawQuery(this.pgp, queries.blocks.heightRange, {
@@ -96,8 +111,9 @@ export class Database {
                 end: endBlock.timestamp,
             }),
             rounds: rawQuery(this.pgp, queries.rounds.roundRange, {
-                start: roundInfoStart.round,
-                end: roundInfoEnd.round,
+                startRound: roundInfoStart.round,
+                endRound: roundInfoEnd.round,
+                skipRoundRows: meta.skipRoundRows,
             }),
         };
     }
@@ -132,7 +148,9 @@ export class Database {
                 "number_of_transactions",
                 "total_amount",
                 "total_fee",
+                "removed_fee",
                 "reward",
+                "top_reward",
                 "payload_length",
                 "payload_hash",
                 "generator_public_key",
@@ -162,9 +180,7 @@ export class Database {
             { table: "transactions" },
         );
 
-        this.roundsColumnSet = new this.pgp.helpers.ColumnSet(["id", "public_key", "balance", "round"], {
-            table: "rounds",
-        });
+        this.roundsColumnSet = new this.pgp.helpers.ColumnSet(["round", "balance", "public_key"], { table: "rounds" });
     }
 }
 

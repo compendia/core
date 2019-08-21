@@ -1,187 +1,25 @@
-import { Database } from "@arkecosystem/core-interfaces";
-import { slots } from "@arkecosystem/crypto";
-import { dato } from "@faustbrian/dato";
+import { app } from "@arkecosystem/core-container";
+import { Database, State } from "@arkecosystem/core-interfaces";
+import { Crypto, Enums, Interfaces, Utils } from "@arkecosystem/crypto";
+import dayjs from "dayjs";
 import partition from "lodash.partition";
 import { Transaction } from "../models";
 import { queries } from "../queries";
 import { Repository } from "./repository";
 
-const { transactions: sql } = queries;
-
 export class TransactionsRepository extends Repository implements Database.ITransactionsRepository {
-    /**
-     * Find a transactions by its ID.
-     * @param  {String} id
-     * @return {Promise}
-     */
-    public async findById(id) {
-        return this.db.oneOrNone(sql.findById, { id });
-    }
-
-    /**
-     * Find multiple transactionss by their block ID.
-     * @param  {String} id
-     * @return {Promise}
-     */
-    public async findByBlockId(id) {
-        return this.db.manyOrNone(sql.findByBlock, { id });
-    }
-
-    /**
-     * Find multiple transactionss by their block ID and order them by sequence.
-     * @param  {Number} id
-     * @return {Promise}
-     */
-    public async latestByBlock(id) {
-        return this.db.manyOrNone(sql.latestByBlock, { id });
-    }
-
-    /**
-     * Find multiple transactionss by their block IDs and order them by sequence.
-     * @param  {Array} ids
-     * @return {Promise}
-     */
-    public async latestByBlocks(ids) {
-        return this.db.manyOrNone(sql.latestByBlocks, { ids });
-    }
-
-    /**
-     * Get all of the forged transactions from the database.
-     * @param  {Array} ids
-     * @return {Promise}
-     */
-    public async forged(ids) {
-        return this.db.manyOrNone(sql.forged, { ids });
-    }
-
-    /**
-     * Get statistics about all transactions from the database.
-     * @return {Promise}
-     */
-    public async statistics() {
-        return this.db.one(sql.statistics);
-    }
-
-    /**
-     * Delete the transactions from the database.
-     * @param  {Number} id
-     * @return {Promise}
-     */
-    public async deleteByBlockId(id) {
-        return this.db.none(sql.deleteByBlock, { id });
-    }
-
-    /**
-     * Get the model related to this repository.
-     * @return {Transaction}
-     */
-    public getModel() {
-        return new Transaction(this.pgp);
-    }
-
-    public getFeeStatistics(minFeeBroadcast: number): Promise<any> {
-        const query = this.query
-            .select(
-                this.query.type,
-                this.query.fee.min("minFee"),
-                this.query.fee.max("maxFee"),
-                this.query.fee.avg("avgFee"),
-                this.query.timestamp.max("timestamp"),
-            )
-            .from(this.query)
-            // Should make this '30' figure configurable
-            .where(
-                this.query.timestamp.gte(
-                    slots.getTime(
-                        dato()
-                            .subDays(30)
-                            .toMilliseconds(),
-                    ),
-                ),
-            )
-            .and(this.query.fee.gte(minFeeBroadcast))
-            .group(this.query.type)
-            .order('"timestamp" DESC');
-
-        return this.findMany(query);
-    }
-
-    public async findAllByWallet(wallet: any, paginate?: Database.SearchPaginate, orderBy?: Database.SearchOrderBy[]) {
-        return this.findManyWithCount(
-            this.query
-                .select()
-                .from(this.query)
-                .where(this.query.sender_public_key.equals(wallet.publicKey))
-                .or(this.query.recipient_id.equals(wallet.address)),
-            paginate,
-            orderBy,
-        );
-    }
-
-    public async findWithVendorField() {
-        const selectQuery = this.query
-            .select()
-            .from(this.query)
-            .where(this.query.vendor_field_hex.isNotNull());
-
-        return this.findMany(selectQuery);
-    }
-
-    // TODO: Remove with v1
-    public async findAll(parameters: Database.SearchParameters) {
+    public async search(parameters: Database.ISearchParameters): Promise<Database.ITransactionsPaginated> {
         if (!parameters.paginate) {
             parameters.paginate = {
                 limit: 100,
                 offset: 0,
             };
         }
+
         const selectQuery = this.query.select().from(this.query);
+        const selectQueryCount = this.query.select(this.query.count().as("cnt")).from(this.query);
         const params = parameters.parameters;
-        if (params.length) {
-            const [customOps, otherOps] = partition(
-                params,
-                param => param.operator === Database.SearchOperator.OP_CUSTOM,
-            );
 
-            const hasNonCustomOps = otherOps.length > 0;
-
-            const first = otherOps.shift();
-            if (first) {
-                selectQuery.where(this.query[this.propToColumnName(first.field)].equals(first.value));
-                for (const op of otherOps) {
-                    selectQuery.and(this.query[this.propToColumnName(op.field)].equals(op.value));
-                }
-            }
-
-            customOps.forEach(o => {
-                if (o.field === "ownerWallet") {
-                    const wallet = o.value as Database.IWallet;
-                    if (hasNonCustomOps) {
-                        selectQuery.and(
-                            this.query.sender_public_key
-                                .equals(wallet.publicKey)
-                                .or(this.query.recipient_id.equals(wallet.address)),
-                        );
-                    } else {
-                        selectQuery
-                            .where(this.query.sender_public_key.equals(wallet.publicKey))
-                            .or(this.query.recipient_id.equals(wallet.address));
-                    }
-                }
-            });
-        }
-        return this.findManyWithCount(selectQuery, parameters.paginate, parameters.orderBy);
-    }
-
-    public async search(parameters: Database.SearchParameters) {
-        if (!parameters.paginate) {
-            parameters.paginate = {
-                limit: 100,
-                offset: 0,
-            };
-        }
-        const selectQuery = this.query.select().from(this.query);
-        const params = parameters.parameters;
         if (params.length) {
             // 'search' doesn't support custom-op 'ownerId' like 'findAll' can
             const ops = params.filter(value => value.operator !== Database.SearchOperator.OP_CUSTOM);
@@ -192,30 +30,158 @@ export class TransactionsRepository extends Repository implements Database.ITran
 
             if (participants.length > 0) {
                 const [first, last] = participants;
-                selectQuery.where(this.query[this.propToColumnName(first.field)][first.operator](first.value));
+                for (const query of [selectQuery, selectQueryCount]) {
+                    query.where(this.query[this.propToColumnName(first.field)][first.operator](first.value));
+                }
 
                 if (last) {
                     const usesInOperator = participants.every(
                         condition => condition.operator === Database.SearchOperator.OP_IN,
                     );
+
                     if (usesInOperator) {
-                        selectQuery.or(this.query[this.propToColumnName(last.field)][last.operator](last.value));
+                        for (const query of [selectQuery, selectQueryCount]) {
+                            query.or(this.query[this.propToColumnName(last.field)][last.operator](last.value));
+                        }
                     } else {
                         // This search is 1 `senderPublicKey` and 1 `recipientId`
-                        selectQuery.and(this.query[this.propToColumnName(last.field)][last.operator](last.value));
+                        for (const query of [selectQuery, selectQueryCount]) {
+                            query.and(this.query[this.propToColumnName(last.field)][last.operator](last.value));
+                        }
+                    }
+                } else if (first.field === "recipientId" && first.operator === Database.SearchOperator.OP_EQ) {
+                    // Workaround to include transactions (e.g. type 2) where the recipient_id is missing in the database
+                    const walletManager: State.IWalletManager = app.resolvePlugin<Database.IDatabaseService>("database")
+                        .walletManager;
+                    const recipientWallet: State.IWallet = walletManager.findByAddress(first.value);
+
+                    for (const query of [selectQuery, selectQueryCount]) {
+                        query.or(
+                            this.query.sender_public_key
+                                .equals(recipientWallet.publicKey)
+                                .and(this.query.recipient_id.isNull()),
+                        );
                     }
                 }
             } else if (rest.length) {
                 const first = rest.shift();
-                selectQuery.where(this.query[this.propToColumnName(first.field)][first.operator](first.value));
+
+                for (const query of [selectQuery, selectQueryCount]) {
+                    query.where(this.query[this.propToColumnName(first.field)][first.operator](first.value));
+                }
             }
 
             for (const condition of rest) {
-                selectQuery.and(
-                    this.query[this.propToColumnName(condition.field)][condition.operator](condition.value),
-                );
+                for (const query of [selectQuery, selectQueryCount]) {
+                    query.and(this.query[this.propToColumnName(condition.field)][condition.operator](condition.value));
+                }
             }
         }
-        return this.findManyWithCount(selectQuery, parameters.paginate, parameters.orderBy);
+
+        return this.findManyWithCount(selectQuery, selectQueryCount, parameters.paginate, parameters.orderBy);
+    }
+
+    public async findById(id: string): Promise<Interfaces.ITransactionData> {
+        return this.db.oneOrNone(queries.transactions.findById, { id });
+    }
+
+    public async findByBlockId(
+        id: string,
+    ): Promise<
+        Array<{
+            id: string;
+            serialized: Buffer;
+        }>
+    > {
+        return this.db.manyOrNone(queries.transactions.findByBlock, { id });
+    }
+
+    public async latestByBlock(
+        id: string,
+    ): Promise<
+        Array<{
+            id: string;
+            serialized: Buffer;
+        }>
+    > {
+        return this.db.manyOrNone(queries.transactions.latestByBlock, { id });
+    }
+
+    public async latestByBlocks(
+        ids: string[],
+    ): Promise<
+        Array<{
+            id: string;
+            blockId: string;
+            serialized: Buffer;
+        }>
+    > {
+        return this.db.manyOrNone(queries.transactions.latestByBlocks, { ids });
+    }
+
+    public async getAssetsByType(type: Enums.TransactionTypes | number): Promise<any> {
+        return this.db.manyOrNone(queries.stateBuilder.assetsByType, { type });
+    }
+
+    public async getReceivedTransactions(): Promise<any> {
+        return this.db.many(queries.stateBuilder.receivedTransactions);
+    }
+
+    public async getSentTransactions(): Promise<any> {
+        return this.db.many(queries.stateBuilder.sentTransactions);
+    }
+
+    public async forged(ids: string[]): Promise<Interfaces.ITransactionData[]> {
+        return this.db.manyOrNone(queries.transactions.forged, { ids });
+    }
+
+    public async statistics(): Promise<{
+        count: number;
+        totalFee: Utils.BigNumber;
+        removedFee: Utils.BigNumber;
+        totalAmount: Utils.BigNumber;
+    }> {
+        return this.db.one(queries.transactions.statistics);
+    }
+
+    public async deleteByBlockId(ids: string[], db: any): Promise<void> {
+        return db.none(queries.transactions.deleteByBlock, { ids });
+    }
+
+    public async getFeeStatistics(
+        days: number,
+        minFee?: number,
+    ): Promise<Array<{ type: number; fee: number; timestamp: number }>> {
+        minFee = minFee || 0;
+
+        const age = Crypto.Slots.getTime(
+            dayjs()
+                .subtract(days, "day")
+                .valueOf(),
+        );
+
+        return this.db.manyOrNone(queries.transactions.feeStatistics, { age, minFee });
+    }
+
+    public async findAllByWallet(
+        wallet: State.IWallet,
+        paginate?: Database.ISearchPaginate,
+        orderBy?: Database.ISearchOrderBy[],
+    ): Promise<Database.ITransactionsPaginated> {
+        const selectQuery = this.query.select();
+        const selectQueryCount = this.query.select(this.query.count().as("cnt"));
+
+        for (const query of [selectQuery, selectQueryCount]) {
+            query
+                .from(this.query)
+                .where(this.query.sender_public_key.equals(wallet.publicKey))
+                .or(this.query.recipient_id.equals(wallet.address));
+        }
+
+        return this.findManyWithCount(selectQuery, selectQueryCount, paginate, orderBy);
+    }
+
+    public getModel(): Transaction {
+        return new Transaction(this.pgp);
     }
 }
