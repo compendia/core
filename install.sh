@@ -100,41 +100,9 @@ fi
 
 success "Installed system dependencies!"
 
-heading "Installing node.js & npm..."
-
-sudo rm -rf /usr/local/{lib/node{,/.npm,_modules},bin,share/man}/{npm*,node*,man1/node*}
-sudo rm -rf ~/{.npm,.forever,.node*,.cache,.nvm}
-
-if [[ ! -z $DEB ]]; then
-    sudo wget --quiet -O - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
-    (echo "deb https://deb.nodesource.com/node_11.x $(lsb_release -s -c) main" | sudo tee /etc/apt/sources.list.d/nodesource.list)
-    sudo apt-get update
-    sudo apt-get install nodejs -y
-elif [[ ! -z $RPM ]]; then
-    sudo yum install gcc-c++ make -y
-    curl -sL https://rpm.nodesource.com/setup_11.x | sudo -E bash - > /dev/null 2>&1
-fi
-
-success "Installed node.js & npm!"
-
-heading "Installing Yarn..."
-
-if [[ ! -z $DEB ]]; then
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-    (echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list)
-
-    sudo apt-get update
-    sudo apt-get install -y yarn
-elif [[ ! -z $RPM ]]; then
-    curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
-    sudo yum install yarn -y
-fi
-
-success "Installed Yarn!"
-
 heading "Installing PM2..."
 
-sudo yarn global add pm2
+yarn global add pm2
 pm2 install pm2-logrotate
 pm2 set pm2-logrotate:max_size 500M
 pm2 set pm2-logrotate:compress true

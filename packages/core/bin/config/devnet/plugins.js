@@ -12,7 +12,7 @@ module.exports = {
         },
     },
     "@arkecosystem/core-transaction-pool": {
-        enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
+        enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
         allowedSenders: [],
         dynamicFees: {
@@ -29,15 +29,18 @@ module.exports = {
                 timelockTransfer: 500,
                 multiPayment: 500,
                 delegateResignation: 100,
+                stakeCreate: 100,
+                stakeRedeem: 101
             },
         },
     },
     "@arkecosystem/core-p2p": {
         server: {
-            port: process.env.CORE_P2P_PORT || 4002,
+            port: process.env.CORE_P2P_PORT || 4000,
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
