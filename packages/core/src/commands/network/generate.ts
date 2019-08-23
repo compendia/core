@@ -262,6 +262,8 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
     private generateCryptoGenesisBlock(genesisWallet, delegates, pubKeyHash: number, totalPremine: string) {
         const premineWallet = this.createWallet(pubKeyHash);
 
+        console.log(`Genesis wallet: ${genesisWallet.passphrase}`);
+
         const transactions = [
             ...this.buildDelegateTransactions(delegates),
             this.createTransferTransaction(premineWallet, genesisWallet, totalPremine),
