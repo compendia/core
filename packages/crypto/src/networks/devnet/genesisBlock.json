@@ -17,7 +17,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 0,
-            "fee": 0,
+            "fee": "0",
             "amount": "33000000000000000",
             "recipientId": "dcEPL8Hze9gy6vCrnjn1P8VLvipbQTTBi6",
             "senderPublicKey": "0240ffca1ce9cf564a9c6956274e4a383614f3c419504cfd4cd1463e481c3a4f48",
@@ -29,7 +29,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "022fed9e0e0a8197cdb8eb5646c57ca14d09ce076338e5894e282e6d2197b9358a",
             "asset": {
@@ -44,7 +44,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03e53368f3c101a077c79881e0d1c070029e14e02c5831a9ae5f018b3c262526b8",
             "asset": {
@@ -59,7 +59,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02af5141019287cf398512aae856a34a7e60c41c79835b6cb0e77908ea9da15933",
             "asset": {
@@ -74,7 +74,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0270fb69c65472c776fad0b22a0b5cb659a699778e3b27775b57f1fcab7c48b9cd",
             "asset": {
@@ -89,7 +89,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03160e98db19d239853cffda0728e6d91483d640b6334fd5dc50373264553c1d04",
             "asset": {
@@ -104,7 +104,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02d89bc289497897b8a51a93c6b492387720d2589f1b36a8ff6866cc2d91ea15ff",
             "asset": {
@@ -119,7 +119,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02fa311b6a522292c72b16139571ab455aeba8f33b1a0494456bd5a53bef9c56fa",
             "asset": {
@@ -134,7 +134,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "022b0de93b6050b35c69e8f570ce03657f7ea28bf8a910f3b131efb2bf21414d0c",
             "asset": {
@@ -149,7 +149,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "037cb3917db67ad900c37463df4f9ae741f0579349a029d4f9d4f62f39066bd85b",
             "asset": {
@@ -164,7 +164,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "022c77f7a028281e74fd0c481df2b6cc4394b1fe9ffabca7a13f296b2e08af57dc",
             "asset": {
@@ -179,7 +179,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0210dcce7d2315f00f0e168806931818664124246080024d3508b449ecc414120e",
             "asset": {
@@ -194,7 +194,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "036186537d83332573ec1051cf7cad531bf82ed39052a1e2cac06098baf9d0aed9",
             "asset": {
@@ -209,7 +209,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02e48d577678a9b82f73e4040bba4a05e6f39113a972c3f1851efccfde5571714c",
             "asset": {
@@ -224,7 +224,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "033f91ec6f53eab46816243449d4698ee647cd6cc28bc951281ece45d8afaeeecf",
             "asset": {
@@ -239,7 +239,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "037993d2bd6d67ee9dd69c332c6e057f64678c3addd7cf0a0adcdba73f023f75db",
             "asset": {
@@ -254,7 +254,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02011ac466986387d3b37c529c5d4a684087a1087c46b0adfac0caea6c2e94330d",
             "asset": {
@@ -269,7 +269,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "023ea2b50adf95c51438dba278e7c94b69563a9f5364926bfc0fa390e9da246de9",
             "asset": {
@@ -284,7 +284,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03d0316aa7a015ea4b26d7dbba037d7225668c503e4815204ec2cde1d036eb9e9c",
             "asset": {
@@ -299,7 +299,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02e55a2d79146099088d501f057b42830c7866143d2accfe623dfcb5b92e527ff1",
             "asset": {
@@ -314,7 +314,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0375d9f0a7f28f05c47a5f97eb2e7194708d3861a3f489b845f4730e2537fcf2cc",
             "asset": {
@@ -329,7 +329,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0364bf3f373df744cfbfeef63b484cee57265ee375ae95f612c48d467ee6118985",
             "asset": {
@@ -344,7 +344,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0289a374683f4367bb3f7b81e091bce41552f32652d00e4d8f3f04ab90a9e706a9",
             "asset": {
@@ -359,7 +359,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02fc72e6a0ea097b1b458401faed59ac8ac49915b97e705a3ec133726fa3d01cdf",
             "asset": {
@@ -374,7 +374,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02cbf52adbbc3f613d6dede173f13e70ec47955462279a48552abbc2f811bbacf1",
             "asset": {
@@ -389,7 +389,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03109f49a5220d2796ffbcbe1696df9c3283ffac456f17abb066822f7ce306312e",
             "asset": {
@@ -404,7 +404,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03cc243333a3f4cf5943f18ef52cfca1e961a4e80bea07f6d2d6f3d42079b201d6",
             "asset": {
@@ -419,7 +419,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02444707d00aea18c9a5655b4479664fc083a1b58061a383550327f0075d44a337",
             "asset": {
@@ -434,7 +434,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02331921b57fb79cac94a98ef242cae0c528b78064203c9543d99b2077d1560dfb",
             "asset": {
@@ -449,7 +449,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03d5ad63e811d452700c3358a7fcf58fb7ab13672aa50b08f1e08b022b94176f79",
             "asset": {
@@ -464,7 +464,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0320d554a7a7f5f6dc7e1f4c9050eabdb7a0edffdf4096e275cb1539272b2863c6",
             "asset": {
@@ -479,7 +479,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02792fef9cf624e898e2835739f976a156833b5926eab894f8f9e61a55087d954e",
             "asset": {
@@ -494,7 +494,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0266f85c3a5de3a94334cc02d46694709b716faf19999ed3c5b40c5424cd15bee2",
             "asset": {
@@ -509,7 +509,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "0311317b62be9511cd7ea65439a91f8609576a6eb32a89dc8b5d66fab2a3449593",
             "asset": {
@@ -524,7 +524,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "036589075734250d2717d9e7bbfe413b6b0ec4ba2a4a24051e469698cfe1ed0b7b",
             "asset": {
@@ -539,7 +539,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02973e09ead7de13e159574611e62f3eb5bf47f52d6ff4a99cc2ffcf9c27d67102",
             "asset": {
@@ -554,7 +554,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02369cc088f33db3b4703728c122e6ca8e0bc3b780ce1065eccb8d3d486766a084",
             "asset": {
@@ -569,7 +569,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02d381fa27f0d8c7ca1db938546f99ef4aeb03db05ddf0e65b94eb7272fb484b22",
             "asset": {
@@ -584,7 +584,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02f5dd87408eb8d2534c9a4f543a94fc7ca6204724bdf726cfaaa78a9fc51eceee",
             "asset": {
@@ -599,7 +599,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02303b9c2892215b59f1fcd020f234c400e02ab212dfd5926421d8c27ae5b0486a",
             "asset": {
@@ -614,7 +614,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "030a7f5f0d2734d08ffdfb13af784bcfcc1bcb937ceb4e298da26e7101dd5d347b",
             "asset": {
@@ -629,7 +629,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03fdbfb41c5d23d112ac276de1c3fc25216679ad829f4278672d81dfca956b9cad",
             "asset": {
@@ -644,7 +644,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "030d80b106e93d88dbcf6ade5b995c359013366da51a5765514eb71d2034d36f7e",
             "asset": {
@@ -659,7 +659,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03c8e3238a5dd875b331d2c6b907b84eef2f1f220f1c062f2c8b895f3fa149677c",
             "asset": {
@@ -674,7 +674,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02a53e3a4b75cceb8f229a04d8e7c0ce323f11cdcf846dd06ceeee09fe2839e4b2",
             "asset": {
@@ -689,7 +689,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "02ab8efb25db206ec74f747575b595999f9a4d67fa7e58e76587a4d7d6a99fbc6e",
             "asset": {
@@ -704,7 +704,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "031c34aa9b67f4e6980f12fbf4d5189f2a3e27a5a6451abd54476e5ebdfe17b426",
             "asset": {
@@ -719,7 +719,7 @@
             "timestamp": 0,
             "version": 1,
             "type": 2,
-            "fee": 0,
+            "fee": "0",
             "amount": "0",
             "senderPublicKey": "03e1e48da4ab9d7899a356a2623dc126b3ff30c8b519d9c27a0b56dc2c8acc15ee",
             "asset": {

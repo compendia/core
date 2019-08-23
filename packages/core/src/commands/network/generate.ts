@@ -319,7 +319,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
     private formatGenesisTransaction(transaction, wallet) {
         Object.assign(transaction, {
-            fee: 0,
+            fee: "0",
             timestamp: 0,
         });
         transaction.signature = Transactions.Signer.sign(transaction, wallet.keys);
