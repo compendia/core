@@ -1,18 +1,18 @@
 {
     "name": "devnet",
-    "messagePrefix": "devnet message:\n",
+    "messagePrefix": "nOS Devnet message:\n",
     "bip32": {
         "public": 70617039,
         "private": 70615956
     },
-    "pubKeyHash": 30,
-    "nethash": "451a38fe1622d1e2f130afaaa5b2bebb0debc1dbdfbaab0e2f43306f136412f6",
-    "wif": 170,
-    "slip44": 111,
+    "pubKeyHash": 90,
+    "nethash": "5684d78cbe9316ea5cecaf6f3389bcae0ef43f7364719f0e1cb20979dcb3712b",
+    "wif": 171,
+    "slip44": 1,
     "aip20": 0,
     "client": {
         "token": "NOS",
         "symbol": "◎",
-        "explorer": "https://dexplorer.nos.dev"
+        "explorer": "http://localhost:8080"
     }
 }
