@@ -93,7 +93,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("stake.registered", transaction.data);
+        emitter.emit("stake.created", transaction.data);
     }
 
     public canEnterTransactionPool(
