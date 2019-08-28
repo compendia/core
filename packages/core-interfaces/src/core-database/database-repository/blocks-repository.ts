@@ -21,6 +21,7 @@ export interface IBlocksRepository extends IRepository {
     statistics(): Promise<{
         numberOfTransactions: number;
         totalFee: Utils.BigNumber;
+        removedFee: Utils.BigNumber;
         totalAmount: Utils.BigNumber;
         count: number;
     }>;

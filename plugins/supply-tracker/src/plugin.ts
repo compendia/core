@@ -20,11 +20,9 @@ export const plugin: Container.IPluginDescriptor = {
         emitter.on("block.forged", block => {
             const blockData: Interfaces.IBlockData = block;
             if (app.has("supply")) {
-                console.log("Supply: " + app.resolve("supply"));
                 const lastSupply: Utils.BigNumber = app.resolve("supply");
                 let supply = lastSupply;
                 supply = supply
-                    .plus(blockData.totalFee)
                     .plus(blockData.reward)
                     .plus(blockData.topReward)
                     .minus(blockData.removedFee);
@@ -37,6 +35,24 @@ export const plugin: Container.IPluginDescriptor = {
             } else {
                 const genesisBlock = app.getConfig().all().genesisBlock;
                 app.register("supply", asValue(Utils.BigNumber.make(genesisBlock.totalAmount)));
+            }
+        });
+
+        emitter.on("block.reverted", block => {
+            const blockData: Interfaces.IBlockData = block;
+            if (app.has("supply")) {
+                const lastSupply: Utils.BigNumber = app.resolve("supply");
+                let supply = lastSupply;
+                supply = supply
+                    .minus(blockData.reward)
+                    .minus(blockData.topReward)
+                    .plus(blockData.removedFee);
+                app.register("supply", asValue(supply));
+                logger.info(
+                    `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${supply.dividedBy(
+                        Constants.ARKTOSHI,
+                    )}`,
+                );
             }
         });
 
@@ -86,6 +102,28 @@ export const plugin: Container.IPluginDescriptor = {
                     Constants.ARKTOSHI,
                 )}`,
             );
+        });
+
+        // On stake revert
+        emitter.on("transaction.reverted", tx => {
+            if (tx.type === 100) {
+                const lastSupply: Utils.BigNumber = app.resolve("supply");
+
+                let supply = lastSupply;
+                supply = supply.plus(tx.asset.stakeCreate.amount);
+
+                let totalStake: Utils.BigNumber = app.resolve("stake.total");
+                totalStake = totalStake.minus(tx.asset.stakeCreate.amount);
+
+                app.register("supply", asValue(supply));
+                app.register("stake.total", asValue(totalStake));
+
+                logger.info(
+                    `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${supply.dividedBy(
+                        Constants.ARKTOSHI,
+                    )}`,
+                );
+            }
         });
     },
     async deregister(container: Container.IContainer, options) {

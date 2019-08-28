@@ -33,7 +33,10 @@ export const transformBlock = (model, transform) => {
             topReward: model.topReward.toFixed(),
             fee: model.totalFee.toFixed(),
             removed: model.removedFee.toFixed(),
-            total: model.totalFee.minus(model.removedFee).toFixed(),
+            total: model.totalFee
+                .plus(model.reward)
+                .plus(model.topReward)
+                .toFixed(),
             amount: Utils.BigNumber.make(model.totalAmount).toFixed(),
         },
         payload: {

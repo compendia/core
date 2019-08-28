@@ -36,7 +36,8 @@
         },
         "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
-        "aip11": true
+        "aip11": true,
+        "vestedWalletPublicKey": ""
     },
     {
         "height": 1000,
