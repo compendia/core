@@ -1,7 +1,7 @@
 [
     {
         "height": 1,
-        "reward": 0,
+        "reward": 400000000,
         "topReward": 0,
         "topDelegates": 5,
         "activeDelegates": 51,
@@ -36,7 +36,8 @@
         },
         "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
-        "aip11": true
+        "aip11": true,
+        "vestedWalletPublicKey": ""
     },
     {
         "height": 1000,

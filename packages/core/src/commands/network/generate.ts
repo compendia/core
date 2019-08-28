@@ -237,8 +237,18 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
                         timelockTransfer: 0,
                         multiPayment: 0,
                         delegateResignation: 2500000000,
+                        stakeCreate: 10000000,
+                        stakeRedeem: 10000000,
                     },
                 },
+                balanceVoteWeight: 0.1,
+                stakeLevels: {
+                    120: 0.5,
+                    7889400: 1.0,
+                    15778800: 1.5,
+                    31557600: 2.0,
+                },
+                minimumStake: 1000000000000,
                 vendorFieldLength: 64,
                 aip11: true,
             },
@@ -251,6 +261,8 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
     private generateCryptoGenesisBlock(genesisWallet, delegates, pubKeyHash: number, totalPremine: string) {
         const premineWallet = this.createWallet(pubKeyHash);
+
+        console.log(`Genesis wallet: ${genesisWallet.passphrase}`);
 
         const transactions = [
             ...this.buildDelegateTransactions(delegates),
@@ -307,7 +319,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
     private formatGenesisTransaction(transaction, wallet) {
         Object.assign(transaction, {
-            fee: 0,
+            fee: "0",
             timestamp: 0,
         });
         transaction.signature = Transactions.Signer.sign(transaction, wallet.keys);
@@ -347,10 +359,10 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         const block = {
             version: 0,
             totalAmount: totalAmount.toString(),
-            totalFee,
-            removedFee,
-            reward: 0,
-            topReward: 0,
+            totalFee: totalFee.toString(),
+            removedFee: removedFee.toString(),
+            reward: "0",
+            topReward: "0",
             payloadHash: payloadHash.toString("hex"),
             timestamp,
             numberOfTransactions: transactions.length,

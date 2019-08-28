@@ -15,7 +15,7 @@ class FeeHelper {
         let rewardedFees = Utils.BigNumber.ZERO;
         let removedFees = totalFee;
         let equalizer = Utils.BigNumber.ZERO;
-        if (Utils.BigNumber.make(totalFee).isGreaterThan(totalReward)) {
+        if (Utils.BigNumber.make(totalFee).isGreaterThan(totalReward) && totalReward > Utils.BigNumber.ZERO) {
             // If fee is odd number or one nostoshi, set equalizer to deduct remaining .5 nostoshi from removal and add to reward
             const deductedFee = totalFee.minus(totalReward);
             if (deductedFee.toNumber() % 2 || deductedFee.isEqualTo(Utils.BigNumber.ONE)) {
@@ -31,6 +31,9 @@ class FeeHelper {
                     .times(0.5)
                     .minus(equalizer),
             );
+        } else {
+            rewardedFees = totalFee;
+            removedFees = Utils.BigNumber.ZERO;
         }
         return { toReward: rewardedFees, toRemove: removedFees };
     }
