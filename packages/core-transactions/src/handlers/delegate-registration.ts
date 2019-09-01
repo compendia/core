@@ -32,7 +32,7 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
             wallet.forgedFees = wallet.forgedFees.plus(block.totalFees);
             wallet.forgedRewards = wallet.forgedRewards.plus(block.totalRewards);
-            wallet.removedFees = wallet.forgedFees.plus(block.removedFees);
+            wallet.removedFees = wallet.removedFees.plus(block.removedFees);
             wallet.producedBlocks = +block.totalProduced;
             TopRewards.applyReward(block, walletManager);
         }

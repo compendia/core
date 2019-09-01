@@ -1,7 +1,8 @@
 import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
-import { Utils } from "@arkecosystem/crypto";
+import { roundCalculator } from "@arkecosystem/core-utils";
+import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 
 export const transformBlock = (model, transform) => {
     if (!transform) {
@@ -16,7 +17,21 @@ export const transformBlock = (model, transform) => {
 
     const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     const generator: State.IWallet = databaseService.walletManager.findByPublicKey(model.generatorPublicKey);
-    const lastBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
+    const lastBlock: Interfaces.IBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
+    const topDelegateCount = Managers.configManager.getMilestone(lastBlock.data.height).topDelegates;
+
+    // Get top rewarded delegates
+    const roundInfo = roundCalculator.calculateRound(lastBlock.data.height);
+    const delegates = databaseService.walletManager.loadActiveDelegateList(roundInfo);
+    const topDelegates = [];
+    let i = 0;
+
+    for (const delegate of delegates) {
+        if (i < topDelegateCount) {
+            topDelegates.push({ username: delegate.username, address: delegate.address });
+        }
+        i++;
+    }
 
     model.reward = Utils.BigNumber.make(model.reward);
     model.topReward = Utils.BigNumber.make(model.topReward);
@@ -52,5 +67,6 @@ export const transformBlock = (model, transform) => {
         confirmations: lastBlock ? lastBlock.data.height - model.height : 0,
         transactions: model.numberOfTransactions,
         timestamp: formatTimestamp(model.timestamp),
+        topDelegates,
     };
 };

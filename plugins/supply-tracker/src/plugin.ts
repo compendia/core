@@ -36,6 +36,15 @@ export const plugin: Container.IPluginDescriptor = {
                 const genesisBlock = app.getConfig().all().genesisBlock;
                 app.register("supply", asValue(Utils.BigNumber.make(genesisBlock.totalAmount)));
             }
+
+            if (blockData.removedFee.isGreaterThan(Utils.BigNumber.ZERO)) {
+                let removedFees = Utils.BigNumber.ZERO;
+                if (app.has("fees.removed")) {
+                    removedFees = app.resolve("fees.removed");
+                }
+                removedFees = removedFees.plus(blockData.removedFee);
+                app.register("fees.removed", asValue(Utils.BigNumber.make(removedFees)));
+            }
         });
 
         emitter.on("block.reverted", block => {
@@ -53,6 +62,14 @@ export const plugin: Container.IPluginDescriptor = {
                         Constants.ARKTOSHI,
                     )}`,
                 );
+            }
+            if (blockData.removedFee.isGreaterThan(Utils.BigNumber.ZERO)) {
+                let removedFees = Utils.BigNumber.ZERO;
+                if (app.has("fees.removed")) {
+                    removedFees = app.resolve("fees.removed");
+                }
+                removedFees = removedFees.minus(blockData.removedFee);
+                app.register("fees.removed", asValue(Utils.BigNumber.make(removedFees)));
             }
         });
 
@@ -104,8 +121,9 @@ export const plugin: Container.IPluginDescriptor = {
             );
         });
 
-        // On stake revert
-        emitter.on("transaction.reverted", tx => {
+        emitter.on("transaction.reverted", txObj => {
+            const tx: Interfaces.ITransactionData = txObj;
+            // On stake revert
             if (tx.type === 100) {
                 const lastSupply: Utils.BigNumber = app.resolve("supply");
 

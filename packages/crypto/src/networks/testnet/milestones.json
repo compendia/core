@@ -1,8 +1,8 @@
 [
     {
         "height": 1,
-        "reward": 400000000,
-        "topReward": 0,
+        "reward": 385000000,
+        "topReward": 15000000,
         "topDelegates": 5,
         "activeDelegates": 51,
         "blocktime": 6,
@@ -38,11 +38,6 @@
         "vendorFieldLength": 64,
         "aip11": true,
         "vestedWalletPublicKey": ""
-    },
-    {
-        "height": 1000,
-        "reward": 385000000,
-        "topReward": 15000000
     },
     {
         "height": 75600,
