@@ -47,7 +47,7 @@ export class ExpireHelper {
 
     public static storeExpiry(stake: StakeInterfaces.IStakeObject, wallet: State.IWallet, stakeKey: number): void {
         const expirationMonth = this.getMonth(stake.redeemableTimestamp);
-        const expirationKey = `global.stake.expirations.${expirationMonth}`;
+        const expirationKey = `stake.expirations.${expirationMonth}`;
         let expirationList: IExpirationObject[] = [];
 
         if (app.has(expirationKey)) {
@@ -67,7 +67,7 @@ export class ExpireHelper {
 
     public static removeExpiry(stake: StakeInterfaces.IStakeObject, wallet: State.IWallet, stakeKey: number): void {
         const expirationMonth = this.getMonth(stake.redeemableTimestamp);
-        const expirationKey = `global.stake.expirations.${expirationMonth}`;
+        const expirationKey = `stake.expirations.${expirationMonth}`;
         const expirationList: IExpirationObject[] = app.resolve(expirationKey);
         const redeemableTimestamp = stake.redeemableTimestamp;
         const expirationObject: IExpirationObject = { publicKey: wallet.publicKey, stakeKey, redeemableTimestamp };
@@ -86,13 +86,19 @@ export class ExpireHelper {
             .getLastBlock();
         const lastTime = lastBlock.data.timestamp;
         const expirationMonth = this.getMonth(lastTime);
-        const expirationKey = `global.stake.expirations.${expirationMonth}`;
+        const expirationKey = `stake.expirations.${expirationMonth}`;
         if (app.has(expirationKey)) {
             const expirations: IExpirationObject[] = app.resolve(expirationKey);
             for (const expiration of expirations) {
                 const wallet = walletManager.findByPublicKey(expiration.publicKey);
-                if (lastBlock.data.timestamp > expiration.redeemableTimestamp) {
+                if (lastBlock.data.timestamp > expiration.redeemableTimestamp && wallet.stake[expiration.stakeKey]) {
                     this.expireStake(wallet, expiration.stakeKey, walletManager);
+                } else if (wallet.stake[expiration.stakeKey] === undefined) {
+                    // If stake isn't found then the chain state has reverted to a point before its stakeCreate.
+                    // Delete expiration from list in this case
+                    const index = expirations.indexOf(expiration);
+                    expirations.splice(index, 1);
+                    app.register(expirationKey, asValue(expirations));
                 }
             }
         }

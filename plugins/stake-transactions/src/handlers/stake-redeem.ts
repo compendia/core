@@ -20,7 +20,6 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const transactionsRepository = databaseService.transactionsBusinessRepository;
         const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
-
         for (const t of transactions.rows) {
             const sender: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const s = t.asset.stakeRedeem;

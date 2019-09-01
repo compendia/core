@@ -14,7 +14,7 @@ jest.mock("@arkecosystem/core-container", () => {
                 };
             },
             has: name => {
-                if (name === "global.stake.expirations.1241128800") {
+                if (name === "stake.expirations.1241128800") {
                     return false;
                 }
                 return false;

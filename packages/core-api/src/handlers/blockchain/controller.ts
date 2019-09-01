@@ -13,6 +13,11 @@ export class BlockchainController extends Controller {
             staked = app.resolve("stake.total").toNumber();
         }
 
+        let removed: number = Utils.BigNumber.ZERO.toNumber();
+        if (app.has("fees.removed")) {
+            removed = app.resolve("fees.removed").toNumber();
+        }
+
         return {
             data: {
                 block: {
@@ -21,6 +26,7 @@ export class BlockchainController extends Controller {
                 },
                 supply,
                 staked,
+                removed,
             },
         };
     }
