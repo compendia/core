@@ -108,8 +108,6 @@ export class DatabaseService implements Database.IDatabaseService {
                         this.updateDelegateStats(this.forgingDelegates);
                     }
 
-                    await this.expireStakes();
-
                     const delegates: State.IDelegateWallet[] = this.walletManager.loadActiveDelegateList(roundInfo);
 
                     await this.saveRound(delegates);
@@ -131,10 +129,6 @@ export class DatabaseService implements Database.IDatabaseService {
                 );
             }
         }
-    }
-
-    public async expireStakes(): Promise<void> {
-        StakeHelpers.ExpireHelper.processMonthExpirations(this.walletManager);
     }
 
     public async buildWallets(): Promise<void> {

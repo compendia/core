@@ -70,7 +70,7 @@ export class ExpireHelper {
         }
     }
 
-    public static async processMonthExpirations(walletManager: State.IWalletManager): Promise<void> {
+    public static async processExpirations(walletManager: State.IWalletManager): Promise<void> {
         app.resolvePlugin("logger").info("Processing stake expirations.");
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
