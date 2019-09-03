@@ -7,7 +7,7 @@ import "reflect-metadata";
 import { createConnection, getConnection } from "typeorm";
 
 // Entities
-import { Stake, Statistic } from "./entities";
+import { Round, Stake, Statistic } from "./entities";
 
 // Core plugins
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
@@ -20,9 +20,9 @@ export const plugin: Container.IPluginDescriptor = {
         logger.info(`Registering Storage Plug-in.`);
         await createConnection({
             type: "sqlite",
-            database: "./storage.sql",
+            database: "./storage.sqlite",
             // Import entities to connection
-            entities: [Stake, Statistic],
+            entities: [Stake, Statistic, Round],
             synchronize: true,
         });
     },

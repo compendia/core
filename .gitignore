@@ -81,6 +81,3 @@ transaction-pool.sqlite-wal
 
 # P2P
 /peers.json
-
-# SQLite db
-/packages/core/db.sql

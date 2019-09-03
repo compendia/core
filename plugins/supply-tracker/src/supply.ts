@@ -1,16 +1,19 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
-import { Container, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
-import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Container, Database, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
+import { roundCalculator } from "@arkecosystem/core-utils";
+import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { Constants } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { StakeHelpers } from "@nosplatform/stake-transactions";
+import { MoreThan } from "typeorm";
 import { defaults } from "./defaults";
 
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
-import { Statistic } from "@nosplatform/storage";
+import { Round, Statistic } from "@nosplatform/storage";
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -65,11 +68,7 @@ export const plugin: Container.IPluginDescriptor = {
                 .minus(blockData.removedFee)
                 .toString();
             await supply.save();
-            logger.info(
-                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
-                    supply.value,
-                ).dividedBy(Constants.ARKTOSHI)}`,
-            );
+
             // fees.removed global state
             if (Utils.BigNumber.make(blockData.removedFee).isGreaterThan(Utils.BigNumber.ZERO)) {
                 removedFees.value = Utils.BigNumber.make(removedFees.value)
@@ -77,6 +76,98 @@ export const plugin: Container.IPluginDescriptor = {
                     .toString();
                 await removedFees.save();
             }
+
+            // Save round data
+            const roundData = roundCalculator.calculateRound(blockData.height);
+            let round = await Round.findOne({ id: roundData.round });
+            if (!round) {
+                round = new Round();
+                round.id = roundData.round;
+                round.removed = "0";
+                round.staked = "0";
+                round.forged = "0";
+                round.topDelegates = "";
+                round.released = "0";
+            }
+            round.forged = Utils.BigNumber.make(round.forged)
+                .plus(blockData.reward)
+                .plus(blockData.topReward)
+                .toString();
+            round.removed = Utils.BigNumber.make(round.removed)
+                .plus(blockData.removedFee)
+                .toString();
+
+            // Store round top delegates if not already stored
+            if (round.topDelegates === "") {
+                const delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
+                const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
+                const topDelegates = [];
+                let i = 0;
+                for (const delegate of delegates) {
+                    if (i < topDelegateCount) {
+                        topDelegates.push(delegate.address);
+                    }
+                    i++;
+                }
+                round.topDelegates = topDelegates.toString();
+            }
+            await round.save();
+
+            logger.info(
+                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
+                    supply.value,
+                ).dividedBy(Constants.ARKTOSHI)}`,
+            );
+        });
+
+        emitter.on("block.reverted", async block => {
+            const blockData: Interfaces.IBlockData = block;
+            const lastSupply = Utils.BigNumber.make(supply.value);
+            supply.value = lastSupply
+                .minus(blockData.reward)
+                .minus(blockData.topReward)
+                .plus(blockData.removedFee)
+                .toString();
+            await supply.save();
+
+            // Save round data
+            const lastBlock = await databaseService.getLastBlock();
+            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const round = await Round.findOne({ id: roundData.round });
+            round.forged = Utils.BigNumber.make(round.forged)
+                .minus(blockData.reward)
+                .minus(blockData.topReward)
+                .toString();
+
+            if (blockData.removedFee.isGreaterThan(Utils.BigNumber.ZERO)) {
+                removedFees.value = Utils.BigNumber.make(removedFees.value)
+                    .minus(blockData.removedFee)
+                    .toString();
+                removedFees.save();
+
+                // Save round data
+                const lastBlock = await databaseService.getLastBlock();
+                const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+                const round = await Round.findOne({ id: roundData.round });
+                round.removed = Utils.BigNumber.make(round.removed)
+                    .minus(blockData.removedFee)
+                    .toString();
+            }
+
+            await round.save();
+
+            // Remove any rounds stored later than latest round the node reverted to
+            const laterRounds = await Round.find({ where: { id: MoreThan(roundData.round) } });
+            for (const laterRound of laterRounds) {
+                logger.info(`Round ${laterRound.id} reverted. Deleting round info. `);
+                await laterRound.remove();
+            }
+
+            logger.info(
+                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
+                    supply.value,
+                ).dividedBy(Constants.ARKTOSHI)}`,
+            );
         });
 
         // All transfers from the mint wallet are added to supply
@@ -84,12 +175,22 @@ export const plugin: Container.IPluginDescriptor = {
             const genesisBlock: Interfaces.IBlockData = app.getConfig().all().genesisBlock;
             const tx: Interfaces.ITransactionData = txData;
             const senderAddress = Identities.Address.fromPublicKey(tx.senderPublicKey);
+
+            const lastBlock = await databaseService.getLastBlock();
+            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const round = await Round.findOne({ id: roundData.round });
+
             if (tx.type === Enums.TransactionTypes.Transfer && tx.blockId !== genesisBlock.id) {
                 if (senderAddress === genesisBlock.transactions[0].recipientId) {
                     // Add coins to supply when sent from mint address
                     supply.value = Utils.BigNumber.make(supply.value)
                         .plus(tx.amount)
                         .toString();
+                    // Save round data
+                    round.forged = Utils.BigNumber.make(round.forged)
+                        .plus(tx.amount)
+                        .toString();
+                    await round.save();
                     logger.info(
                         `Transaction from mint wallet: ${tx.amount.toString()} added to supply. New supply: ${
                             supply.value
@@ -102,34 +203,19 @@ export const plugin: Container.IPluginDescriptor = {
                         .minus(tx.amount)
                         .toString();
                     await supply.save();
+                    // Save round data
+                    round.forged = Utils.BigNumber.make(round.forged)
+                        .minus(tx.amount)
+                        .toString();
+                    await round.save();
                 }
             }
         });
 
-        emitter.on("block.reverted", async block => {
-            const blockData: Interfaces.IBlockData = block;
-            const lastSupply = Utils.BigNumber.make(supply.value);
-            supply.value = lastSupply
-                .minus(blockData.reward)
-                .minus(blockData.topReward)
-                .plus(blockData.removedFee)
-                .toString();
-            await supply.save();
-            logger.info(
-                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
-                    supply.value,
-                ).dividedBy(Constants.ARKTOSHI)}`,
-            );
-            if (blockData.removedFee.isGreaterThan(Utils.BigNumber.ZERO)) {
-                removedFees.value = Utils.BigNumber.make(removedFees.value)
-                    .minus(blockData.removedFee)
-                    .toString();
-                removedFees.save();
-            }
-        });
-
         // On stake create
-        emitter.on("stake.created", async tx => {
+        emitter.on("stake.created", async txData => {
+            const tx: Interfaces.ITransactionData = txData;
+
             const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(tx);
             const lastSupply = Utils.BigNumber.make(supply.value);
 
@@ -140,6 +226,15 @@ export const plugin: Container.IPluginDescriptor = {
 
             await supply.save();
             await staked.save();
+
+            // Save round data
+            const lastBlock = await databaseService.getLastBlock();
+            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const round = await Round.findOne({ id: roundData.round });
+            round.staked = Utils.BigNumber.make(round.staked)
+                .plus(o.amount)
+                .toString();
+            await round.save();
 
             logger.info(
                 `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
@@ -164,6 +259,15 @@ export const plugin: Container.IPluginDescriptor = {
             await supply.save();
             await staked.save();
 
+            // Save round data
+            const lastBlock = await databaseService.getLastBlock();
+            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const round = await Round.findOne({ id: roundData.round });
+            round.released = Utils.BigNumber.make(round.released)
+                .plus(stake.amount)
+                .toString();
+            await round.save();
+
             logger.info(
                 `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
                     supply.value,
@@ -184,6 +288,17 @@ export const plugin: Container.IPluginDescriptor = {
 
                 await supply.save();
                 await staked.save();
+
+                // Save round data
+                const lastBlock = await databaseService.getLastBlock();
+                const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+                const round = await Round.findOne({ id: roundData.round });
+                if (round) {
+                    round.staked = Utils.BigNumber.make(round.staked)
+                        .minus(tx.asset.stakeCreate.amount)
+                        .toString();
+                    await round.save();
+                }
 
                 logger.info(
                     `Supply updated. Previous: ${lastSupply.dividedBy(
