@@ -60,9 +60,3 @@ export class StakeDurationError extends Errors.TransactionError {
         super(`Incorrect stake duration.`);
     }
 }
-
-export class StakeAlreadyExpiredError extends Errors.TransactionError {
-    constructor() {
-        super(`Stake is already expired.`);
-    }
-}

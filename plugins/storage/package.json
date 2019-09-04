@@ -24,7 +24,8 @@
         "@arkecosystem/core-interfaces": "^2.5.19",
         "@arkecosystem/core-container": "^2.5.19",
         "@arkecosystem/crypto": "^2.5.19",
-        "bytebuffer": "^5.0.1"
+        "bytebuffer": "^5.0.1",
+        "@arkecosystem/core-http-utils": "^2.5.19"
     },
     "devDependencies": {
         "@types/bytebuffer": "^5.0.40",

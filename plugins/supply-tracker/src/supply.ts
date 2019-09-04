@@ -244,7 +244,7 @@ export const plugin: Container.IPluginDescriptor = {
         });
 
         // On stake create
-        emitter.on("stake.expired", async stakeObj => {
+        emitter.on("stake.released", async stakeObj => {
             const walletManager = app.resolvePlugin("database").walletManager;
             const sender = walletManager.findByPublicKey(stakeObj.publicKey);
             const blockTime = stakeObj.stakeKey;

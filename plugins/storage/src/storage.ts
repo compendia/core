@@ -1,10 +1,10 @@
 import { app } from "@arkecosystem/core-container";
 import { Container, Logger } from "@arkecosystem/core-interfaces";
-import { defaults } from "./defaults";
-
 // TypeORM imports
 import "reflect-metadata";
 import { createConnection, getConnection } from "typeorm";
+import { defaults } from "./defaults";
+import { startServer } from "./server";
 
 // Entities
 import { Round, Stake, Statistic } from "./entities";
@@ -25,6 +25,7 @@ export const plugin: Container.IPluginDescriptor = {
             entities: [Stake, Statistic, Round],
             synchronize: true,
         });
+        startServer({ host: "localhost", port: 8000 });
     },
     async deregister(container: Container.IContainer, options) {
         logger.info(`Deregistering Storage Plug-in.`);

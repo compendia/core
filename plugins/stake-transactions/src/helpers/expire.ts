@@ -20,7 +20,7 @@ export class ExpireHelper {
             .getLastBlock();
 
         if (stake && lastBlock.data.timestamp > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
-            app.resolvePlugin("logger").info(`Stake expired: ${stakeKey} of wallet ${wallet.address}.`);
+            app.resolvePlugin("logger").info(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
 
             let delegate: State.IWallet;
             if (wallet.vote) {
@@ -42,7 +42,7 @@ export class ExpireHelper {
                 delegate.voteBalance = delegate.voteBalance.plus(wallet.stakeWeight);
             }
             this.removeExpiry(stake, wallet, stakeKey);
-            this.emitter.emit("stake.expired", { publicKey: wallet.publicKey, stakeKey });
+            this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey });
         }
     }
 
