@@ -52,7 +52,7 @@ describe("Fee Removal", () => {
         const tx = Transactions.BuilderFactory.transfer()
             .amount(stakeAmount.times(0.1))
             .fee(
-                Utils.BigNumber.make("5")
+                Utils.BigNumber.make("15")
                     .times(ARKTOSHI)
                     .toString(),
             )
@@ -63,7 +63,7 @@ describe("Fee Removal", () => {
         const tx2 = Transactions.BuilderFactory.transfer()
             .amount(stakeAmount.times(0.2))
             .fee(
-                Utils.BigNumber.make("5")
+                Utils.BigNumber.make("10")
                     .times(ARKTOSHI)
                     .toString(),
             )
@@ -76,9 +76,12 @@ describe("Fee Removal", () => {
 
         optionsDefault.timestamp = tx.data.timestamp;
 
-        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("10").times(ARKTOSHI));
-        expect(feeObj.toRemove).toEqual(Utils.BigNumber.make("7").times(ARKTOSHI));
-        expect(feeObj.toReward).toEqual(Utils.BigNumber.make("3").times(ARKTOSHI));
+        const feeObj = Utils.FeeHelper.getFeeObject(
+            Utils.BigNumber.make("25").times(ARKTOSHI),
+            Utils.BigNumber.make(optionsDefault.reward).plus(optionsDefault.topReward),
+        );
+        expect(feeObj.toRemove).toEqual(Utils.BigNumber.make("14.5").times(ARKTOSHI));
+        expect(feeObj.toReward).toEqual(Utils.BigNumber.make("10.5").times(ARKTOSHI));
 
         const expectedBlockData = {
             generatorPublicKey: dummy.publicKey,

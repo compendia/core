@@ -1,4 +1,4 @@
-import { Managers, Utils } from "../";
+import { Utils } from "../";
 
 export interface IFeeObject {
     toReward: Utils.BigNumber;
@@ -6,12 +6,9 @@ export interface IFeeObject {
 }
 
 class FeeHelper {
-    public static getFeeObject(totalFee: Utils.BigNumber): IFeeObject {
+    public static getFeeObject(totalFee: Utils.BigNumber, totalReward: Utils.BigNumber): IFeeObject {
         totalFee = totalFee ? totalFee : Utils.BigNumber.ZERO;
         // Calculate collective reward (block reward + top rewards)
-        const totalReward = Utils.BigNumber.make(Managers.configManager.getMilestone().reward).plus(
-            Managers.configManager.getMilestone().topReward,
-        );
         let rewardedFees = Utils.BigNumber.ZERO;
         let removedFees = totalFee;
         let equalizer = Utils.BigNumber.ZERO;

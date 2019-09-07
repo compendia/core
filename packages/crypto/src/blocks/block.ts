@@ -233,7 +233,10 @@ export class Block implements IBlock {
                 payloadBuffers.push(bytes);
             }
 
-            const feeObj = FeeHelper.getFeeObject(BigNumber.make(totalFee));
+            const feeObj = FeeHelper.getFeeObject(
+                BigNumber.make(totalFee),
+                BigNumber.make(block.reward).plus(block.topReward),
+            );
             totalFee = feeObj.toReward;
             removedFee = feeObj.toRemove;
 

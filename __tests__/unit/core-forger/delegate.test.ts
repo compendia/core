@@ -162,7 +162,7 @@ describe("Delegate", () => {
             .withTimestamp(optionsDefault.timestamp)
             .create();
 
-        const feeObj = Utils.FeeHelper.getFeeObject(transactions[0].fee);
+        const feeObj = Utils.FeeHelper.getFeeObject(transactions[0].fee, Utils.BigNumber.ZERO);
 
         const expectedBlockData = {
             generatorPublicKey: dummy.publicKey,
