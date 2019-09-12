@@ -21,11 +21,11 @@
         "typeorm": "^0.2.18",
         "reflect-metadata": "0.1.13",
         "sqlite3": "^4.1.0",
-        "@arkecosystem/core-interfaces": "^2.5.19",
-        "@arkecosystem/core-container": "^2.5.19",
-        "@arkecosystem/crypto": "^2.5.19",
+        "@arkecosystem/core-interfaces": "^2.5.24",
+        "@arkecosystem/core-container": "^2.5.24",
+        "@arkecosystem/crypto": "^2.5.24",
         "bytebuffer": "^5.0.1",
-        "@arkecosystem/core-http-utils": "^2.5.19"
+        "@arkecosystem/core-http-utils": "^2.5.24"
     },
     "devDependencies": {
         "@types/bytebuffer": "^5.0.40",
