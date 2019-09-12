@@ -21,24 +21,21 @@ class FeeHelper {
             if (deductedFee.toNumber() % 2 || deductedFee.isEqualTo(Utils.BigNumber.ONE)) {
                 equalizer = Utils.BigNumber.make(0.5);
             }
-            rewardedFees = Utils.BigNumber.make(totalFee)
-                .minus(totalReward)
+            rewardedFees = deductedFee
                 .times(0.5) // Relative fee reward and removal factors are hard-coded since it's only when split 50/50 (due to odd/even number equalizing)
                 .plus(equalizer);
-            removedFees = Utils.BigNumber.make(totalReward).plus(
-                totalFee
-                    .minus(totalReward)
-                    .times(0.5)
-                    .minus(equalizer),
-            );
+            removedFees = deductedFee
+                .times(0.5)
+                .plus(totalReward)
+                .minus(equalizer);
         } else if (totalReward.isGreaterThan(Utils.BigNumber.ZERO)) {
-            // If there are block rewards but the collected fees are lower than the block reward: all fees are removed.
+            // If there are block rewards but the collected fees are equal to or lower than the block reward: all fees are removed.
             removedFees = totalFee;
             rewardedFees = Utils.BigNumber.ZERO;
         } else {
             // If there is no block reward: all fees should be awarded to the forger.
-            rewardedFees = totalFee;
             removedFees = Utils.BigNumber.ZERO;
+            rewardedFees = totalFee;
         }
 
         return { toReward: rewardedFees, toRemove: removedFees };
