@@ -1,22 +1,20 @@
-import { app } from "@arkecosystem/core-container";
 import { Utils } from "@arkecosystem/crypto";
 import Hapi from "@hapi/hapi";
+import { Statistic } from "@nosplatform/storage";
 import { Controller } from "../shared/controller";
 
 export class BlockchainController extends Controller {
     public async index(request: Hapi.Request, h: Hapi.ResponseToolkit) {
         const lastBlock = this.blockchain.getLastBlock();
-        const supply: number = app.resolve("supply").toNumber();
 
-        let staked: number = Utils.BigNumber.ZERO.toNumber();
-        if (app.has("stake.total")) {
-            staked = app.resolve("stake.total").toNumber();
-        }
+        const supplyModel = await Statistic.findOne({ name: "supply" });
+        const supply = Utils.BigNumber.make(supplyModel.value).toNumber();
 
-        let removed: number = Utils.BigNumber.ZERO.toNumber();
-        if (app.has("fees.removed")) {
-            removed = app.resolve("fees.removed").toNumber();
-        }
+        const stakeModel = await Statistic.findOne({ name: "staked" });
+        const staked = Utils.BigNumber.make(stakeModel.value).toNumber();
+
+        const removedFeesModel = await Statistic.findOne({ name: "removed" });
+        const removed = Utils.BigNumber.make(removedFeesModel.value).toNumber();
 
         return {
             data: {

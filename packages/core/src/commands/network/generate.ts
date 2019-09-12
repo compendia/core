@@ -342,7 +342,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         let totalAmount = Utils.BigNumber.ZERO;
         const allBytes = [];
 
-        const feeObject = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make(totalFee));
+        const feeObject = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make(totalFee), Utils.BigNumber.ZERO);
         totalFee = feeObject.toReward.toNumber();
         const removedFee = feeObject.toRemove.toNumber();
 

@@ -40,6 +40,7 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/storage": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {

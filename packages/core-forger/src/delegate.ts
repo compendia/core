@@ -99,7 +99,10 @@ export class Delegate {
                 this.decryptKeysWithOtp();
             }
 
-            const feeObj = Utils.FeeHelper.getFeeObject(transactionData.fee);
+            const feeObj = Utils.FeeHelper.getFeeObject(
+                transactionData.fee,
+                Utils.BigNumber.make(options.reward).plus(options.topReward),
+            );
 
             const block: Interfaces.IBlock = Blocks.BlockFactory.make(
                 {

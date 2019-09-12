@@ -1,6 +1,6 @@
 {
-    "name": "@nosplatform/stake-transactions",
-    "description": "Stake transactions for ARK Core",
+    "name": "@nosplatform/storage",
+    "description": "SQLite & TypeORM database plug-in to manage informational persistent storage.",
     "version": "0.0.1",
     "contributors": [
         "Dean van Dugteren <dean@nos.io>"
@@ -18,12 +18,14 @@
         "clean": "rm -rf dist/"
     },
     "dependencies": {
+        "typeorm": "^0.2.18",
+        "reflect-metadata": "0.1.13",
+        "sqlite3": "^4.1.0",
         "@arkecosystem/core-interfaces": "^2.5.19",
-        "@arkecosystem/core-transactions": "^2.5.19",
+        "@arkecosystem/core-container": "^2.5.19",
         "@arkecosystem/crypto": "^2.5.19",
-        "@nosplatform/stake-interfaces": "^0.0.1",
-        "@nosplatform/storage": "^0.0.1",
-        "bytebuffer": "^5.0.1"
+        "bytebuffer": "^5.0.1",
+        "@arkecosystem/core-http-utils": "^2.5.19"
     },
     "devDependencies": {
         "@types/bytebuffer": "^5.0.40",

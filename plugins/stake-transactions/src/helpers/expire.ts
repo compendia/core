@@ -2,7 +2,8 @@ import { app } from "@arkecosystem/core-container";
 import { EventEmitter, State } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
-import { asValue } from "awilix";
+import { Stake } from "@nosplatform/storage";
+import { LessThan } from "typeorm";
 
 export interface IExpirationObject {
     publicKey: string;
@@ -19,7 +20,7 @@ export class ExpireHelper {
             .getLastBlock();
 
         if (stake && lastBlock.data.timestamp > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
-            app.resolvePlugin("logger").info(`Stake expired: ${stakeKey} of wallet ${wallet.address}.`);
+            app.resolvePlugin("logger").info(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
 
             let delegate: State.IWallet;
             if (wallet.vote) {
@@ -41,73 +42,52 @@ export class ExpireHelper {
                 delegate.voteBalance = delegate.voteBalance.plus(wallet.stakeWeight);
             }
             this.removeExpiry(stake, wallet, stakeKey);
-            this.emitter.emit("stake.expired", { publicKey: wallet.publicKey, stakeKey });
+            this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey });
         }
     }
 
-    public static storeExpiry(stake: StakeInterfaces.IStakeObject, wallet: State.IWallet, stakeKey: number): void {
-        const expirationMonth = this.getMonth(stake.redeemableTimestamp);
-        const expirationKey = `stake.expirations.${expirationMonth}`;
-        let expirationList: IExpirationObject[] = [];
-
-        if (app.has(expirationKey)) {
-            expirationList = app.resolve(expirationKey);
-        }
-
-        const expirationObject: IExpirationObject = {
-            publicKey: wallet.publicKey,
-            stakeKey,
-            redeemableTimestamp: stake.redeemableTimestamp,
-        };
-
-        expirationList.push(expirationObject);
-
-        app.register(expirationKey, asValue(expirationList));
+    public static async storeExpiry(
+        stake: StakeInterfaces.IStakeObject,
+        wallet: State.IWallet,
+        stakeKey: number,
+    ): Promise<void> {
+        const stakeModel = new Stake();
+        stakeModel.stakeKey = stakeKey;
+        stakeModel.address = wallet.address;
+        stakeModel.redeemableTimestamp = stake.redeemableTimestamp;
+        await stakeModel.save();
     }
 
-    public static removeExpiry(stake: StakeInterfaces.IStakeObject, wallet: State.IWallet, stakeKey: number): void {
-        const expirationMonth = this.getMonth(stake.redeemableTimestamp);
-        const expirationKey = `stake.expirations.${expirationMonth}`;
-        const expirationList: IExpirationObject[] = app.resolve(expirationKey);
+    public static async removeExpiry(
+        stake: StakeInterfaces.IStakeObject,
+        wallet: State.IWallet,
+        stakeKey: number,
+    ): Promise<void> {
         const redeemableTimestamp = stake.redeemableTimestamp;
-        const expirationObject: IExpirationObject = { publicKey: wallet.publicKey, stakeKey, redeemableTimestamp };
-
-        const index = expirationList.indexOf(expirationObject);
-        expirationList.splice(index, 1);
-
-        app.register(expirationKey, asValue(expirationList));
+        const stakeModel = await Stake.findOne({ address: wallet.address, redeemableTimestamp, stakeKey });
+        if (stakeModel) {
+            await stakeModel.remove();
+        }
     }
 
-    public static processMonthExpirations(walletManager: State.IWalletManager): void {
+    public static async processExpirations(walletManager: State.IWalletManager): Promise<void> {
         app.resolvePlugin("logger").info("Processing stake expirations.");
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();
         const lastTime = lastBlock.data.timestamp;
-        const expirationMonth = this.getMonth(lastTime);
-        const expirationKey = `stake.expirations.${expirationMonth}`;
-        if (app.has(expirationKey)) {
-            const expirations: IExpirationObject[] = app.resolve(expirationKey);
-            for (const expiration of expirations) {
-                const wallet = walletManager.findByPublicKey(expiration.publicKey);
-                if (lastBlock.data.timestamp > expiration.redeemableTimestamp && wallet.stake[expiration.stakeKey]) {
-                    this.expireStake(wallet, expiration.stakeKey, walletManager);
-                } else if (wallet.stake[expiration.stakeKey] === undefined) {
-                    // If stake isn't found then the chain state has reverted to a point before its stakeCreate.
-                    // Delete expiration from list in this case
-                    const index = expirations.indexOf(expiration);
-                    expirations.splice(index, 1);
-                    app.register(expirationKey, asValue(expirations));
-                }
+        const expirations = await Stake.find({ where: { redeemableTimestamp: LessThan(lastTime) } });
+        for (const expiration of expirations) {
+            const wallet = walletManager.findByAddress(expiration.address);
+            if (wallet.stake[expiration.stakeKey] && wallet.stake[expiration.stakeKey].halved === false) {
+                this.expireStake(wallet, expiration.stakeKey, walletManager);
+            } else if (wallet.stake[expiration.stakeKey] === undefined) {
+                // If stake isn't found then the chain state has reverted to a point before its stakeCreate.
+                // Delete expiration from db in this case
+                await expiration.remove();
             }
         }
-    }
-
-    public static getMonth(time: number): number {
-        const e = new Date(time * 1000);
-        const month = new Date(e.getFullYear(), e.getMonth(), 1).getTime() / 1000;
-        return month;
     }
 
     private static readonly emitter: EventEmitter.EventEmitter = app.resolvePlugin<EventEmitter.EventEmitter>(
