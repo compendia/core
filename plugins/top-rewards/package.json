@@ -12,16 +12,16 @@
     ],
     "scripts": {
         "prepublishOnly": "yarn build",
-        "compile": "./node_modules/.bin/tsc",
+        "compile": "../../node_modules/typescript/bin/tsc",
         "build": "yarn clean && yarn compile",
         "build:watch": "yarn clean && yarn compile -w",
         "clean": "rm -rf dist/"
     },
     "dependencies": {
+        "@arkecosystem/crypto": "^2.5.19",
         "@arkecosystem/core-container": "^2.5.19",
         "@arkecosystem/core-interfaces": "^2.5.19",
-        "@arkecosystem/core-utils": "^2.5.19",
-        "@arkecosystem/crypto": "^2.5.19"
+        "@arkecosystem/core-utils": "^2.5.19"
     },
     "devDependencies": {
         "@types/bytebuffer": "^5.0.40",
