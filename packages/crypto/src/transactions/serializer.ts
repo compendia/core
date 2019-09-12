@@ -156,8 +156,8 @@ export class Serializer {
             }
         }
 
-        bb.writeInt64(+transaction.amount.toFixed());
-        bb.writeInt64(+transaction.fee.toFixed());
+        bb.writeInt64(+Utils.BigNumber.make(transaction.amount).toFixed());
+        bb.writeInt64(+Utils.BigNumber.make(transaction.fee).toFixed());
 
         if (assetSize > 0) {
             for (let i = 0; i < assetSize; i++) {

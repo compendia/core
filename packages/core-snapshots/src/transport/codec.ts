@@ -50,7 +50,7 @@ const decodeTransaction = (buffer: Buffer) => {
     transaction.sequence = sequence;
     transaction.timestamp = timestamp;
     transaction.amount = transaction.amount.toFixed();
-    transaction.fee = transaction.fee.toFixed();
+    transaction.fee = Utils.BigNumber.make(transaction.fee).toFixed();
     transaction.vendorFieldHex = transaction.vendorFieldHex ? transaction.vendorFieldHex : undefined;
     transaction.recipientId = transaction.recipientId ? transaction.recipientId : undefined;
     transaction.serialized = serialized;

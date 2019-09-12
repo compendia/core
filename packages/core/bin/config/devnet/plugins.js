@@ -40,6 +40,7 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/storage": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
@@ -65,4 +66,5 @@ module.exports = {
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
     "@arkecosystem/core-snapshots": {},
+    "@nosplatform/supply-tracker": {}
 };
