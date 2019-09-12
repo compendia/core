@@ -35,7 +35,7 @@ beforeEach(() => {
 });
 
 describe("Fee Removal", () => {
-    it("should calculate removedFee and award totalFee when forging a block", () => {
+    it("should calculate removedFee and award totalFee when forging (fees > block reward)", () => {
         const optionsDefault = {
             timestamp: 12345689,
             previousBlock: {
@@ -112,6 +112,78 @@ describe("Fee Removal", () => {
         });
 
         expect(block.transactions).toHaveLength(2);
+        expect(block.transactions[0].id).toBe(transactions[0].id);
+
+        const delegateWallet = walletManager.findByPublicKey(delegate.publicKey);
+        delegateWallet.applyBlock(block.data);
+        expect(delegateWallet.balance).toEqual(feeObj.toReward.plus(block.data.reward));
+    });
+
+    it("should calculate removedFee and award totalFee when forging (fees < block reward)", () => {
+        const optionsDefault = {
+            timestamp: 12345689,
+            previousBlock: {
+                id: "11111111",
+                idHex: "11111111",
+                height: 1000,
+            },
+            reward: Utils.BigNumber.make("385000000"),
+            topReward: Utils.BigNumber.make("15000000"),
+        };
+
+        const transactions: ITransactionData[] = [];
+
+        const tx = Transactions.BuilderFactory.transfer()
+            .amount(stakeAmount.times(0.1))
+            .fee(
+                Utils.BigNumber.make("3")
+                    .times(ARKTOSHI)
+                    .toString(),
+            )
+            .recipientId(voter.address)
+            .sign("secret")
+            .build();
+
+        transactions.push(tx.data);
+
+        optionsDefault.timestamp = tx.data.timestamp;
+
+        const feeObj = Utils.FeeHelper.getFeeObject(
+            Utils.BigNumber.make("3").times(ARKTOSHI),
+            Utils.BigNumber.make(optionsDefault.reward).plus(optionsDefault.topReward),
+        );
+        expect(feeObj.toRemove).toEqual(Utils.BigNumber.make("3").times(ARKTOSHI));
+        expect(feeObj.toReward).toEqual(Utils.BigNumber.ZERO);
+
+        const expectedBlockData = {
+            generatorPublicKey: dummy.publicKey,
+            timestamp: optionsDefault.timestamp,
+            previousBlock: optionsDefault.previousBlock.id,
+            height: optionsDefault.previousBlock.height + 1,
+            numberOfTransactions: 2,
+            totalAmount: Utils.BigNumber.make(transactions[0].amount),
+            removedFee: feeObj.toRemove,
+            totalFee: feeObj.toReward,
+            reward: optionsDefault.reward,
+        };
+
+        const delegate = new Delegate(dummy.plainPassphrase, testnet.network);
+
+        const block = delegate.forge(transactions, optionsDefault);
+
+        for (const key in Object.keys(expectedBlockData)) {
+            if (key !== undefined) {
+                expect(block.data[key]).toEqual(expectedBlockData[key]);
+            }
+        }
+
+        expect(block.verification).toEqual({
+            containsMultiSignatures: false,
+            errors: [],
+            verified: true,
+        });
+
+        expect(block.transactions).toHaveLength(1);
         expect(block.transactions[0].id).toBe(transactions[0].id);
 
         const delegateWallet = walletManager.findByPublicKey(delegate.publicKey);
