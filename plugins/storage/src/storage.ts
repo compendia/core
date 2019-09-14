@@ -1,6 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Container, Logger } from "@arkecosystem/core-interfaces";
 import { Managers } from "@arkecosystem/crypto";
+import * as path from "path";
 // TypeORM imports
 import "reflect-metadata";
 import { createConnection, getConnection } from "typeorm";
@@ -13,6 +14,7 @@ import { Round, Stake, Statistic } from "./entities";
 // Core plugins
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const network = Managers.configManager.get("network");
+const dbPath = path.resolve(__dirname, `../../storage/databases/${network.name}.sqlite`);
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -20,9 +22,10 @@ export const plugin: Container.IPluginDescriptor = {
     alias: "storage",
     async register(container: Container.IContainer, options) {
         logger.info(`Registering Storage Plug-in.`);
+        logger.info(`Storage Plug-in Database Path: ${dbPath}`);
         await createConnection({
             type: "sqlite",
-            database: `../../plugins/storage/databases/${network.name}.sqlite`,
+            database: dbPath,
             // Import entities to connection
             entities: [Stake, Statistic, Round],
             synchronize: true,
