@@ -26,6 +26,10 @@ export const calculateApproval = (delegate, height?: number): number => {
 export const calculateForgedTotal = (delegate): string => {
     const forgedFees = Utils.BigNumber.make(delegate.forgedFees);
     const forgedRewards = Utils.BigNumber.make(delegate.forgedRewards);
+    const forgedTopRewards = Utils.BigNumber.make(delegate.forgedTopRewards);
 
-    return forgedFees.plus(forgedRewards).toFixed();
+    return forgedFees
+        .plus(forgedRewards)
+        .plus(forgedTopRewards)
+        .toFixed();
 };
