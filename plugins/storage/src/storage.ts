@@ -30,7 +30,30 @@ export const plugin: Container.IPluginDescriptor = {
             entities: [Stake, Statistic, Round],
             synchronize: true,
         });
-        startServer({ host: "localhost", port: 8000 });
+        startServer({
+            host: "0.0.0.0",
+            port: 8000,
+            whitelist: ["*"],
+            rateLimit: {
+                enabled: !process.env.CORE_API_RATE_LIMIT,
+                pathLimit: false,
+                userLimit: process.env.CORE_API_RATE_LIMIT_USER_LIMIT || 300,
+                userCache: {
+                    expiresIn: process.env.CORE_API_RATE_LIMIT_USER_EXPIRES || 60000,
+                },
+            },
+            cache: {
+                enabled: true,
+                generateTimeout: process.env.CORE_API_CACHE_TIMEOUT || 8000,
+            },
+            ssl: {
+                enabled: process.env.CORE_API_SSL,
+                host: process.env.CORE_API_SSL_HOST || "0.0.0.0",
+                port: process.env.CORE_API_SSL_PORT || 8443,
+                key: process.env.CORE_API_SSL_KEY,
+                cert: process.env.CORE_API_SSL_CERT,
+            },
+        });
     },
     async deregister(container: Container.IContainer, options) {
         logger.info(`Deregistering Storage Plug-in.`);
