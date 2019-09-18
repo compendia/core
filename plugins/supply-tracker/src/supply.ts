@@ -21,6 +21,7 @@ export const plugin: Container.IPluginDescriptor = {
     alias: "supply-tracker",
     async register(container: Container.IContainer, options) {
         logger.info(`Registering Supply Tracker.`);
+        let processing = false;
 
         /**
          * Bootstrap Database
@@ -59,65 +60,75 @@ export const plugin: Container.IPluginDescriptor = {
 
         // On new block
         emitter.on("block.applied", async block => {
-            const blockData: Interfaces.IBlockData = block;
-            // supply global state
-            const lastSupply = Utils.BigNumber.make(supply.value);
-            supply.value = lastSupply
-                .plus(blockData.reward)
-                .plus(blockData.topReward)
-                .minus(blockData.removedFee)
-                .toString();
-            await supply.save();
+            const interval = setInterval(async () => {
+                if (!processing) {
+                    const blockData: Interfaces.IBlockData = block;
+                    // supply global state
+                    const lastSupply = Utils.BigNumber.make(supply.value);
+                    supply.value = lastSupply
+                        .plus(blockData.reward)
+                        .plus(blockData.topReward)
+                        .minus(blockData.removedFee)
+                        .toString();
+                    await supply.save();
 
-            // fees.removed global state
-            if (Utils.BigNumber.make(blockData.removedFee).isGreaterThan(Utils.BigNumber.ZERO)) {
-                removedFees.value = Utils.BigNumber.make(removedFees.value)
-                    .plus(blockData.removedFee)
-                    .toString();
-                await removedFees.save();
-            }
-
-            // Save round data
-            const roundData = roundCalculator.calculateRound(blockData.height);
-            let round = await Round.findOne({ id: roundData.round });
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
-                round.topDelegates = "";
-                round.released = "0";
-            }
-            round.forged = Utils.BigNumber.make(round.forged)
-                .plus(blockData.reward)
-                .plus(blockData.topReward)
-                .toString();
-            round.removed = Utils.BigNumber.make(round.removed)
-                .plus(blockData.removedFee)
-                .toString();
-
-            // Store round top delegates if not already stored
-            if (round.topDelegates === "") {
-                const delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
-                const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
-                const topDelegates = [];
-                let i = 0;
-                for (const delegate of delegates) {
-                    if (i < topDelegateCount) {
-                        topDelegates.push(delegate.address);
+                    // fees.removed global state
+                    if (Utils.BigNumber.make(blockData.removedFee).isGreaterThan(Utils.BigNumber.ZERO)) {
+                        removedFees.value = Utils.BigNumber.make(removedFees.value)
+                            .plus(blockData.removedFee)
+                            .toString();
+                        await removedFees.save();
                     }
-                    i++;
-                }
-                round.topDelegates = topDelegates.toString();
-            }
-            await round.save();
 
-            logger.info(
-                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
-                    supply.value,
-                ).dividedBy(Constants.ARKTOSHI)}`,
-            );
+                    // Save round data
+                    const roundData = roundCalculator.calculateRound(blockData.height);
+
+                    processing = true;
+                    let round = await Round.findOne({ id: roundData.round });
+
+                    if (!round) {
+                        round = new Round();
+                        round.id = roundData.round;
+                        round.removed = "0";
+                        round.staked = "0";
+                        round.forged = "0";
+                        round.topDelegates = "";
+                        round.released = "0";
+                    }
+
+                    round.forged = Utils.BigNumber.make(round.forged)
+                        .plus(blockData.reward)
+                        .plus(blockData.topReward)
+                        .toString();
+                    round.removed = Utils.BigNumber.make(round.removed)
+                        .plus(blockData.removedFee)
+                        .toString();
+
+                    // Store round top delegates if not already stored
+                    if (round.topDelegates === "") {
+                        const delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
+                        const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
+                        const topDelegates = [];
+                        let i = 0;
+                        for (const delegate of delegates) {
+                            if (i < topDelegateCount) {
+                                topDelegates.push(delegate.address);
+                            }
+                            i++;
+                        }
+                        round.topDelegates = topDelegates.toString();
+                    }
+                    await round.save();
+
+                    logger.info(
+                        `Supply updated. Previous: ${lastSupply.dividedBy(
+                            Constants.ARKTOSHI,
+                        )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                    );
+                    processing = false;
+                    clearInterval(interval);
+                }
+            }, 100);
         });
 
         emitter.on("block.reverted", async block => {

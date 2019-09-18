@@ -18,12 +18,20 @@ export const plugin: Container.IPluginDescriptor = {
         Handlers.Registry.registerCustomTransactionHandler(StakeCreateTransactionHandler);
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Redeem Transaction");
         Handlers.Registry.registerCustomTransactionHandler(StakeRedeemTransactionHandler);
-        emitter.on("block.applied", async block => {
-            const isNewRound = roundCalculator.isNewRound(block.height);
-            if (isNewRound) {
-                await StakeHelpers.ExpireHelper.processExpirations(databaseService.walletManager);
+        let processing = false;
+        const interval = setInterval(async () => {
+            if (!processing) {
+                processing = true;
+                emitter.on("block.applied", async block => {
+                    const isNewRound = roundCalculator.isNewRound(block.height);
+                    if (isNewRound) {
+                        await StakeHelpers.ExpireHelper.processExpirations(databaseService.walletManager);
+                    }
+                });
+                processing = false;
+                clearInterval(interval);
             }
-        });
+        }, 100);
     },
     async deregister(container: Container.IContainer, options) {
         container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering Stake Create Transaction");
