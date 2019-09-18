@@ -58,7 +58,7 @@ export const plugin: Container.IPluginDescriptor = {
          */
 
         // On new block
-        emitter.on("block.forged", async block => {
+        emitter.on("block.applied", async block => {
             const blockData: Interfaces.IBlockData = block;
             // supply global state
             const lastSupply = Utils.BigNumber.make(supply.value);
