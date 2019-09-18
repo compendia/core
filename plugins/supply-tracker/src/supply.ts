@@ -62,6 +62,8 @@ export const plugin: Container.IPluginDescriptor = {
         emitter.on("block.applied", async block => {
             const interval = setInterval(async () => {
                 if (!processing) {
+                    processing = true;
+
                     const blockData: Interfaces.IBlockData = block;
                     // supply global state
                     const lastSupply = Utils.BigNumber.make(supply.value);
@@ -83,7 +85,6 @@ export const plugin: Container.IPluginDescriptor = {
                     // Save round data
                     const roundData = roundCalculator.calculateRound(blockData.height);
 
-                    processing = true;
                     let round = await Round.findOne({ id: roundData.round });
 
                     if (!round) {
