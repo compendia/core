@@ -1,4 +1,6 @@
 // tslint:disable:member-ordering
+import { app } from "@arkecosystem/core-container";
+import { Logger } from "@arkecosystem/core-interfaces";
 import { MalformedTransactionBytesError, TransactionSchemaError, TransactionVersionError } from "../errors";
 import { ITransaction, ITransactionData, ITransactionJson } from "../interfaces";
 import { BigNumber, isException } from "../utils";
@@ -32,6 +34,7 @@ export class TransactionFactory {
 
             return transaction;
         } catch (error) {
+            app.resolvePlugin<Logger.ILogger>("logger").error(`fromBytesUnsafe error: ${error}`);
             throw new MalformedTransactionBytesError();
         }
     }

@@ -11,6 +11,9 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
+    "@nosplatform/storage": {},
+    "@nosplatform/supply-tracker": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -34,9 +37,6 @@ module.exports = {
             },
         },
     },
-    "@nosplatform/storage": {},
-    "@nosplatform/stake-transactions": {},
-    "@nosplatform/supply-tracker": {},
     "@arkecosystem/core-p2p": {
         server: {
             port: process.env.CORE_P2P_PORT || 4000,
