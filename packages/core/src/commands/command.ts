@@ -1,5 +1,5 @@
 import { Container } from "@arkecosystem/core-interfaces";
-import { Networks } from "@arkecosystem/crypto";
+import { Networks } from "@nosplatform/crypto";
 import Command, { flags } from "@oclif/command";
 import cli from "cli-ux";
 import envPaths, { Paths } from "env-paths";

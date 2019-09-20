@@ -3,7 +3,7 @@ import "jest-extended";
 import "../mocks/core-container";
 import { defaults } from "../mocks/p2p-options";
 
-import { Blocks, Managers } from "@arkecosystem/crypto/src";
+import { Blocks, Managers } from "@nosplatform/crypto/src";
 import delay from "delay";
 import SocketCluster from "socketcluster";
 import socketCluster from "socketcluster-client";

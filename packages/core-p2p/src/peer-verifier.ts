@@ -2,7 +2,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, Logger, P2P, Shared, State } from "@arkecosystem/core-interfaces";
 import { CappedSet, NSect, roundCalculator } from "@arkecosystem/core-utils";
-import { Blocks, Interfaces } from "@arkecosystem/crypto";
+import { Blocks, Interfaces } from "@nosplatform/crypto";
 import assert from "assert";
 import { inspect } from "util";
 import { Severity } from "./enums";

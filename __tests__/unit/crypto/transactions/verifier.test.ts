@@ -1,9 +1,9 @@
 import "jest-extended";
 
-import { Utils } from "@arkecosystem/crypto";
-import { TransactionVersionError } from "@arkecosystem/crypto/src/errors";
-import { Keys } from "@arkecosystem/crypto/src/identities";
-import { Signer, Verifier } from "@arkecosystem/crypto/src/transactions";
+import { Utils } from "@nosplatform/crypto";
+import { TransactionVersionError } from "@nosplatform/crypto/src/errors";
+import { Keys } from "@nosplatform/crypto/src/identities";
+import { Signer, Verifier } from "@nosplatform/crypto/src/transactions";
 import { configManager } from "../../../../packages/crypto/src/managers";
 import { createRandomTx } from "./__support__";
 

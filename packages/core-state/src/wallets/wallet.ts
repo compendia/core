@@ -1,6 +1,6 @@
 import { State } from "@arkecosystem/core-interfaces";
-import { Errors } from "@arkecosystem/core-transactions";
-import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Errors } from "@nosplatform/core-transactions";
+import { Crypto, Enums, Identities, Interfaces, Transactions, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 
 export class Wallet implements State.IWallet {

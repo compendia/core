@@ -1,4 +1,4 @@
-import { Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Managers, Transactions, Utils } from "@nosplatform/crypto";
 import ByteBuffer from "bytebuffer";
 import { IStakeCreateAsset } from "../interfaces";
 

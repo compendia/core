@@ -6,19 +6,15 @@
             {
                 "name": ["assert", "equal"],
                 "message": "Use 'strictEqual' instead."
-            },
-            {
-                "name": ["*", "forEach"],
-                "message": "Use a regular for loop instead."
             }
         ],
-        "await-promise": true,
+        "await-promise": false,
         "no-console": false,
         "no-default-export": true,
-        "no-null-keyword": true,
+        "no-null-keyword": false,
         "no-shadowed-variable": false,
         "object-literal-sort-keys": false,
-        "only-arrow-functions": true,
+        "only-arrow-functions": false,
         "radix": false,
         "return-undefined": true
     }

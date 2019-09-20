@@ -2,10 +2,10 @@
 import "../../core-database/mocks/core-container";
 
 import { State } from "@arkecosystem/core-interfaces";
-import { InsufficientBalanceError } from "@arkecosystem/core-transactions/src/errors";
-import { Blocks, Constants, Enums, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
-import { Address } from "@arkecosystem/crypto/src/identities";
-import { IBlockData } from "@arkecosystem/crypto/src/interfaces";
+import { InsufficientBalanceError } from "@nosplatform/core-transactions/src/errors";
+import { Blocks, Constants, Enums, Identities, Interfaces, Transactions, Utils } from "@nosplatform/crypto";
+import { Address } from "@nosplatform/crypto/src/identities";
+import { IBlockData } from "@nosplatform/crypto/src/interfaces";
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { fixtures } from "../../../utils";

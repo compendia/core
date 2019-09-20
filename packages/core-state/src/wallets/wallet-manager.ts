@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
-import { Handlers } from "@arkecosystem/core-transactions";
-import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Handlers } from "@nosplatform/core-transactions";
+import { Enums, Identities, Interfaces, Managers, Utils } from "@nosplatform/crypto";
 import { TopRewards } from "@nosplatform/top-rewards";
 import pluralize from "pluralize";
 import { TempWalletManager } from "./temp-wallet-manager";

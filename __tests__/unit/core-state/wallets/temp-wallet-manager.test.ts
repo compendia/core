@@ -2,7 +2,7 @@
 import "../../core-database/mocks/core-container";
 
 import { State } from "@arkecosystem/core-interfaces";
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
 import wallets from "../__fixtures__/wallets.json";
 

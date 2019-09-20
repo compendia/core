@@ -1,5 +1,5 @@
 // tslint:disable:max-classes-per-file
-import { Errors } from "@arkecosystem/core-transactions";
+import { Errors } from "@nosplatform/core-transactions";
 
 export class StakeAssetError extends Errors.TransactionError {
     constructor() {

@@ -1,4 +1,4 @@
-import { Enums, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Enums, Interfaces, Utils } from "@nosplatform/crypto";
 import { IWallet } from "../../core-state/wallets";
 import { ITransactionsPaginated } from "../business-repository";
 import { ISearchOrderBy, ISearchPaginate, ISearchParameters } from "../search";

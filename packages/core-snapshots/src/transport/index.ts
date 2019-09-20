@@ -7,7 +7,7 @@ import zlib from "zlib";
 
 import { app } from "@arkecosystem/core-container";
 import { EventEmitter, Logger } from "@arkecosystem/core-interfaces";
-import { Managers } from "@arkecosystem/crypto";
+import { Managers } from "@nosplatform/crypto";
 
 import * as utils from "../utils";
 import { Codec } from "./codec";
@@ -20,7 +20,7 @@ const fixData = (table, data) => {
     if (table === "blocks" && data.height === 1) {
         data.id = Managers.configManager.get("genesisBlock").id;
     }
-}
+};
 
 export const exportTable = async (table, options) => {
     const snapFileName = utils.getFilePath(table, options.meta.folder);

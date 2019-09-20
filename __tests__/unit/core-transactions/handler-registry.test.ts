@@ -1,7 +1,7 @@
 import "jest-extended";
 
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Crypto, Enums, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Crypto, Enums, Identities, Interfaces, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import bs58check from "bs58check";
 import ByteBuffer from "bytebuffer";
 import { Errors } from "../../../packages/core-transactions/src";

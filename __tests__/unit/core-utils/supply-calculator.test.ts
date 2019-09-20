@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import "jest-extended";
 import { calculate } from "../../../packages/core-utils/src/supply-calculator";
 

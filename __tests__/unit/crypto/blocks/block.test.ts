@@ -1,7 +1,7 @@
 import "jest-extended";
 
-// import { Interfaces, Utils } from "@arkecosystem/crypto";
-import { Utils } from "@arkecosystem/crypto";
+// import { Interfaces, Utils } from "@nosplatform/crypto";
+import { Utils } from "@nosplatform/crypto";
 import ByteBuffer from "bytebuffer";
 import { Delegate } from "../../../../packages/core-forger/src/delegate";
 import { Block, BlockFactory } from "../../../../packages/crypto/src/blocks";

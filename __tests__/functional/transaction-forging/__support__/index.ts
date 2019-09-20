@@ -1,7 +1,7 @@
 import "jest-extended";
 
 import { Container, Database, State } from "@arkecosystem/core-interfaces";
-import { Identities, Managers, Utils } from "@arkecosystem/crypto";
+import { Identities, Managers, Utils } from "@nosplatform/crypto";
 import delay from "delay";
 import { secrets } from "../../../utils/config/testnet/delegates.json";
 import { setUpContainer } from "../../../utils/helpers/container";

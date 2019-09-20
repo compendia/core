@@ -1,6 +1,6 @@
 const {
     Blocks
-} = require('@arkecosystem/crypto')
+} = require('@nosplatform/crypto')
 
 const data = require('../helpers').getJSONFixture('block/deserialized/no-transactions');
 

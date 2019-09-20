@@ -1,4 +1,4 @@
-import { Interfaces } from "@arkecosystem/crypto";
+import { Interfaces } from "@nosplatform/crypto";
 import { IPeer } from "./peer";
 
 export interface IPeerCommunicator {

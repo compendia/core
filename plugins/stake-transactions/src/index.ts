@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Container, Database, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
-import { Handlers } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
+import { Handlers } from "@nosplatform/core-transactions";
 import { defaults } from "./defaults";
 import { StakeCreateTransactionHandler, StakeRedeemTransactionHandler } from "./handlers";
 import * as StakeHelpers from "./helpers";

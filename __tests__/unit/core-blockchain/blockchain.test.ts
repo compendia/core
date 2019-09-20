@@ -3,7 +3,7 @@ import "./mocks/";
 import { container } from "./mocks/container";
 
 import * as Utils from "@arkecosystem/core-utils";
-import { Blocks, Crypto, Interfaces } from "@arkecosystem/crypto";
+import { Blocks, Crypto, Interfaces } from "@nosplatform/crypto";
 import delay from "delay";
 import { Blockchain } from "../../../packages/core-blockchain/src/blockchain";
 import { stateMachine } from "../../../packages/core-blockchain/src/state-machine";

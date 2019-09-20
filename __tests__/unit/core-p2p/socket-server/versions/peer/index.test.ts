@@ -3,7 +3,7 @@ import "../../../mocks/core-container";
 import { blockchain } from "../../../mocks/blockchain";
 import { database } from "../../../mocks/database";
 
-import { Crypto } from "@arkecosystem/crypto";
+import { Crypto } from "@nosplatform/crypto";
 import { acceptNewPeer } from "../../../../../../packages/core-p2p/src/socket-server/versions/internal";
 import {
     getBlocks,

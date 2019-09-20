@@ -3,7 +3,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Shared, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Interfaces } from "@arkecosystem/crypto";
+import { Interfaces } from "@nosplatform/crypto";
 import { Blockchain } from "../../blockchain";
 import { BlockProcessorResult } from "../block-processor";
 import { BlockHandler } from "./block-handler";
@@ -150,9 +150,7 @@ export class UnchainedHandler extends BlockHandler {
             }
 
             this.logger.info(
-                `Forked block disregarded because it is not allowed to be forged. Caused by delegate: ${
-                    this.block.data.generatorPublicKey
-                }`,
+                `Forked block disregarded because it is not allowed to be forged. Caused by delegate: ${this.block.data.generatorPublicKey}`,
             );
 
             return UnchainedBlockStatus.GeneratorMismatch;

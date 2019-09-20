@@ -4,8 +4,8 @@ import { container } from "./mocks/core-container";
 import { state } from "./mocks/state";
 
 import { Wallets } from "@arkecosystem/core-state";
-import { Handlers } from "@arkecosystem/core-transactions";
-import { Blocks, Constants, Crypto, Enums, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Handlers } from "@nosplatform/core-transactions";
+import { Blocks, Constants, Crypto, Enums, Interfaces, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import delay from "delay";
 import cloneDeep from "lodash.clonedeep";
 import randomSeed from "random-seed";

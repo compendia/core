@@ -2,7 +2,7 @@
 
 import { app } from "@arkecosystem/core-container";
 import { P2P } from "@arkecosystem/core-interfaces";
-import { Crypto, Interfaces } from "@arkecosystem/crypto";
+import { Crypto, Interfaces } from "@nosplatform/crypto";
 import { NetworkStateStatus } from "./enums";
 
 class QuorumDetails implements P2P.IQuorumDetails {
