@@ -1,7 +1,7 @@
 import "jest-extended";
 
 import { State } from "@arkecosystem/core-interfaces";
-import { ITransactionData } from "@arkecosystem/crypto/dist/interfaces";
+import { ITransactionData } from "@nosplatform/crypto/dist/interfaces";
 import { Delegate } from "../../../packages/core-forger/src/delegate";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Constants, Identities, Managers, Transactions, Utils } from "../../../packages/crypto";

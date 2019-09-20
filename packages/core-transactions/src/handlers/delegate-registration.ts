@@ -1,6 +1,6 @@
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Enums, Interfaces, Transactions } from "@arkecosystem/crypto";
+import { Enums, Interfaces, Transactions } from "@nosplatform/crypto";
 import { TopRewards } from "@nosplatform/top-rewards";
 import {
     NotSupportedForMultiSignatureWalletError,

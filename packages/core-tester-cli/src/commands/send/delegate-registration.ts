@@ -1,4 +1,4 @@
-import { Identities } from "@arkecosystem/crypto";
+import { Identities } from "@nosplatform/crypto";
 import { satoshiFlag } from "../../flags";
 import { logger } from "../../logger";
 import { SendCommand } from "../../shared/send";

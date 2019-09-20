@@ -6,8 +6,8 @@ import bs58check from "bs58check";
 import ByteBuffer from "bytebuffer";
 
 import { Wallets } from "@arkecosystem/core-state";
-import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Crypto, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Handlers } from "@nosplatform/core-transactions";
+import { Constants, Crypto, Identities, Interfaces, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import { Connection } from "../../../packages/core-transaction-pool/src/connection";
 import { defaults } from "../../../packages/core-transaction-pool/src/defaults";
 import { Memory } from "../../../packages/core-transaction-pool/src/memory";

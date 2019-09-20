@@ -1,6 +1,6 @@
 const {
     Transactions
-} = require('@arkecosystem/crypto')
+} = require('@nosplatform/crypto')
 
 const data = require('../../helpers').getJSONFixture('transaction/deserialized/0');
 const serializedHex = require('../../helpers').getFixture('transaction/serialized/0.txt');

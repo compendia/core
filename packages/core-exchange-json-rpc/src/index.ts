@@ -1,6 +1,6 @@
 import { Container, Logger } from "@arkecosystem/core-interfaces";
-import { Managers } from "@arkecosystem/crypto";
 import { start } from "@arkecosystem/exchange-json-rpc";
+import { Managers } from "@nosplatform/crypto";
 import { defaults } from "./defaults";
 
 export const plugin: Container.IPluginDescriptor = {

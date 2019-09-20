@@ -1,5 +1,5 @@
 {
-    "name": "@arkecosystem/core-transactions",
+    "name": "@nosplatform/core-transactions",
     "version": "2.5.24",
     "description": "Transaction Services for ARK Core",
     "license": "MIT",
@@ -21,7 +21,7 @@
     "dependencies": {
         "@arkecosystem/core-event-emitter": "^2.5.24",
         "@arkecosystem/core-interfaces": "^2.5.24",
-        "@arkecosystem/crypto": "^2.5.24",
+        "@nosplatform/crypto": "^2.5.24",
         "@nosplatform/top-rewards": "0.0.1",
         "bs58check": "^2.1.2"
     },

@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Blockchain } from "@arkecosystem/core-interfaces";
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 
 const BignumMod = Utils.BigNumber.clone({ DECIMAL_PLACES: 2 });
 

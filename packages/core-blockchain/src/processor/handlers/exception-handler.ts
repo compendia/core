@@ -1,4 +1,4 @@
-import { Interfaces } from "@arkecosystem/crypto";
+import { Interfaces } from "@nosplatform/crypto";
 import { BlockProcessorResult } from "../block-processor";
 import { AcceptBlockHandler } from "./accept-block-handler";
 import { BlockHandler } from "./block-handler";

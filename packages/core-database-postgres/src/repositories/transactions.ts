@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, State } from "@arkecosystem/core-interfaces";
-import { Crypto, Enums, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Crypto, Enums, Interfaces, Utils } from "@nosplatform/crypto";
 import dayjs from "dayjs";
 import partition from "lodash.partition";
 import { Transaction } from "../models";

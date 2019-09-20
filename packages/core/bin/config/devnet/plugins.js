@@ -43,6 +43,7 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,

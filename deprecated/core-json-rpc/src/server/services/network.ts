@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { Logger, P2P } from "@arkecosystem/core-interfaces";
 import { Peer } from "@arkecosystem/core-p2p";
 import { httpie } from "@arkecosystem/core-utils";
-import { Interfaces, Managers } from "@arkecosystem/crypto";
+import { Interfaces, Managers } from "@nosplatform/crypto";
 import isReachable from "is-reachable";
 import sample from "lodash.sample";
 

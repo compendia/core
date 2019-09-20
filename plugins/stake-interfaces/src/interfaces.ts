@@ -1,4 +1,4 @@
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 
 export type StakeLevel = "3m" | "6m" | "1y" | "2y";
 

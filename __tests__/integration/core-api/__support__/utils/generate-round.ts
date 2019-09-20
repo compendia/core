@@ -1,4 +1,4 @@
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 
 export function generateRound(delegates, round) {
     return delegates.map(delegate => ({

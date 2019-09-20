@@ -1,5 +1,5 @@
-import { Validation } from "@arkecosystem/crypto";
 import { Server } from "@hapi/hapi";
+import { Validation } from "@nosplatform/crypto";
 import get from "lodash.get";
 import { IRequestParameters, IResponse, IResponseError } from "../../interfaces";
 

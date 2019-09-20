@@ -1,5 +1,5 @@
-import { Utils } from "@arkecosystem/crypto";
-import { Blocks, Managers } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
+import { Blocks, Managers } from "@nosplatform/crypto";
 
 Managers.configManager.setFromPreset("unitnet");
 

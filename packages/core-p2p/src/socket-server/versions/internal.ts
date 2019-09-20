@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, EventEmitter, Logger, P2P, TransactionPool } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Crypto } from "@arkecosystem/crypto";
+import { Crypto } from "@nosplatform/crypto";
 
 export const acceptNewPeer = async ({ service, req }: { service: P2P.IPeerService; req }): Promise<void> => {
     await service.getProcessor().validateAndAcceptPeer({ ip: req.data.ip });

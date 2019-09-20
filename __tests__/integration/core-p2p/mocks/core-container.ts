@@ -1,4 +1,4 @@
-import { Managers } from "@arkecosystem/crypto";
+import { Managers } from "@nosplatform/crypto";
 import * as plugins from "../../../utils/config/testnet/plugins.js";
 import { blocks2to100 } from "../../../utils/fixtures";
 import { delegates } from "../../../utils/fixtures/testnet/delegates";

@@ -3,7 +3,7 @@ import "../../../utils";
 import { setUp, tearDown } from "../__support__/setup";
 import { utils } from "../utils";
 
-import { Blocks } from "@arkecosystem/crypto";
+import { Blocks } from "@nosplatform/crypto";
 import { genesisBlock } from "../../../utils/config/testnet/genesisBlock";
 import { blocks2to100 } from "../../../utils/fixtures";
 import { resetBlockchain } from "../../../utils/helpers";

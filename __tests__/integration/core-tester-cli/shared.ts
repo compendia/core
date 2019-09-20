@@ -1,5 +1,5 @@
 import { httpie } from "@arkecosystem/core-utils";
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 
 const defaultOpts = ["--skipProbing"];
 

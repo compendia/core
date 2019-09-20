@@ -1,6 +1,6 @@
 import { Blockchain, Container, Database } from "@arkecosystem/core-interfaces";
-import { Handlers } from "@arkecosystem/core-transactions";
-import { Blocks, Identities, Utils } from "@arkecosystem/crypto";
+import { Handlers } from "@nosplatform/core-transactions";
+import { Blocks, Identities, Utils } from "@nosplatform/crypto";
 import { generateMnemonic } from "bip39";
 import { WalletManager } from "../../../packages/core-transaction-pool/src/wallet-manager";
 import { TransactionFactory } from "../../helpers/transaction-factory";
@@ -33,9 +33,7 @@ describe("throwIfApplyingFails", () => {
 
         expect(() => poolWalletManager.throwIfApplyingFails(delegateReg)).toThrow(
             JSON.stringify([
-                `Failed to apply transaction, because the username '${
-                    delegateReg.data.asset.delegate.username
-                }' is already registered.`,
+                `Failed to apply transaction, because the username '${delegateReg.data.asset.delegate.username}' is already registered.`,
             ]),
         );
     });

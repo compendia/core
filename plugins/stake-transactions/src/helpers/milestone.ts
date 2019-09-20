@@ -1,4 +1,4 @@
-import { Managers } from "@arkecosystem/crypto";
+import { Managers } from "@nosplatform/crypto";
 
 class Milestone {
     public static getConfig(): any {

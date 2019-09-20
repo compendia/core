@@ -1,4 +1,4 @@
-import { Managers } from "@arkecosystem/crypto";
+import { Managers } from "@nosplatform/crypto";
 import { defaults } from "../../../../packages/core-p2p/src/defaults";
 import * as plugins from "../../../utils/config/testnet/plugins.js";
 import { blockchain } from "./blockchain";

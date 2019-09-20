@@ -1,6 +1,6 @@
 import "jest-extended";
 
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { configManager } from "../../../../packages/crypto/src/managers";
 import { TransactionFactory } from "../../../../packages/crypto/src/transactions";
 

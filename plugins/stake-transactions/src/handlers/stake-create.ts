@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Crypto, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Handlers } from "@nosplatform/core-transactions";
+import { Constants, Crypto, Interfaces, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import {
     NotEnoughBalanceError,

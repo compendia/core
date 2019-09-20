@@ -3,8 +3,8 @@ import "./mocks/core-container";
 
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
-import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Crypto, Identities, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Handlers } from "@nosplatform/core-transactions";
+import { Constants, Crypto, Identities, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import {
     StakeCreateTransactionHandler,
@@ -470,7 +470,7 @@ describe("Staking Transactions", () => {
             },
         ]);
 
-        ExpireHelper.processMonthExpirations(walletManager);
+        ExpireHelper.processExpirations(walletManager);
 
         expect(voter.stakeWeight).toEqual(
             Utils.BigNumber.make(

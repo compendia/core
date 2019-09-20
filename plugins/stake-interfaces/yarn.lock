@@ -8,7 +8,7 @@
   integrity sha512-grG7rNboJVbcXeUS9ucwuLsPaD+jAU1JF0R0Wyl/Lc94Nz0SEF4P48J1jYVjSkmPlX94S+VwJLKaNmgf2ATt3A==
   dependencies:
     "@arkecosystem/core-interfaces" "^2.4.0-next.3"
-    "@arkecosystem/crypto" "^2.4.0-next.3"
+    "@nosplatform/crypto" "^2.4.0-next.3"
     "@hapi/hoek" "^6.2.1"
     "@hapi/joi" "^15.0.1"
     awilix "^4.2.2"
@@ -28,17 +28,17 @@
   resolved "https://registry.yarnpkg.com/@arkecosystem/core-interfaces/-/core-interfaces-2.4.0-next.3.tgz#14726b5b1bc5baa28061b29e0b9c03448d966595"
   integrity sha512-saITCRX6hmOHgoK4Zw1RtxIk5EIHeA0h0kza4e/iWqJ5i7ikM5T4DvSexAx7tMFrVvFQ0UQhnsUjJyEz8GG9vA==
   dependencies:
-    "@arkecosystem/crypto" "^2.4.0-next.3"
+    "@nosplatform/crypto" "^2.4.0-next.3"
     "@faustbrian/dato" "^0.3.0"
     awilix "^4.2.2"
 
-"@arkecosystem/core-transactions@^2.4.0-next.3":
+"@nosplatform/core-transactions@^2.4.0-next.3":
   version "2.4.0-next.3"
-  resolved "https://registry.yarnpkg.com/@arkecosystem/core-transactions/-/core-transactions-2.4.0-next.3.tgz#f943325863c6903b53a4ae31774190d7352671ad"
+  resolved "https://registry.yarnpkg.com/@nosplatform/core-transactions/-/core-transactions-2.4.0-next.3.tgz#f943325863c6903b53a4ae31774190d7352671ad"
   integrity sha512-kbOQgb6nhOZkyvnI6Q5Ky+TRMBldFzvEtcsojs1+AoY893f12RwNuVjfBu0OBNqRid8xu33WmkDNbbOR8moLLg==
   dependencies:
     "@arkecosystem/core-interfaces" "^2.4.0-next.3"
-    "@arkecosystem/crypto" "^2.4.0-next.3"
+    "@nosplatform/crypto" "^2.4.0-next.3"
     bs58check "^2.1.2"
 
 "@arkecosystem/core-utils@^2.4.0-next.3":
@@ -48,16 +48,16 @@
   dependencies:
     "@arkecosystem/core-container" "^2.4.0-next.3"
     "@arkecosystem/core-interfaces" "^2.4.0-next.3"
-    "@arkecosystem/crypto" "^2.4.0-next.3"
+    "@nosplatform/crypto" "^2.4.0-next.3"
     "@faustbrian/dato" "^0.3.0"
     cli-table3 "^0.5.1"
     fast-json-parse "^1.0.3"
     got "^9.6.0"
     immutable "^4.0.0-rc.12"
 
-"@arkecosystem/crypto@^2.4.0-next.3":
+"@nosplatform/crypto@^2.4.0-next.3":
   version "2.4.0-next.3"
-  resolved "https://registry.yarnpkg.com/@arkecosystem/crypto/-/crypto-2.4.0-next.3.tgz#1998cd77fa3f6fc3921c71dfc833393423c5a7be"
+  resolved "https://registry.yarnpkg.com/@nosplatform/crypto/-/crypto-2.4.0-next.3.tgz#1998cd77fa3f6fc3921c71dfc833393423c5a7be"
   integrity sha512-yS6bKYDBwZDkbrUkazwaNjaeS9hrnJzULKNOKzwUvQ2MzV3BXCEwPbFCopSxD88ByEwBjAvQhYkzXIjlSKCcew==
   dependencies:
     "@faustbrian/dato" "^0.3.0"

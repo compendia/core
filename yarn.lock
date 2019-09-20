@@ -7,7 +7,7 @@
   resolved "https://registry.yarnpkg.com/@arkecosystem/exchange-json-rpc/-/exchange-json-rpc-1.0.3.tgz#eb90cbabb155b3e2f6006974b92f5c206f78fb74"
   integrity sha512-IM1QADslU+LyrkxIuQjNE5LOWB8fFHImEZJ1H46dbV3slOAtqYHQkXcWwi0oagJm2DRLIWTrMfNUuKlGV5Mq6g==
   dependencies:
-    "@arkecosystem/crypto" "^2.4 || ^2.5"
+    "@nosplatform/crypto" "^2.4 || ^2.5"
     "@hapi/boom" "^7.4.2"
     "@hapi/hapi" "^18.3.1"
     "@hapist/json-rpc" "^0.2.0"

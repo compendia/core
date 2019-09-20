@@ -5,7 +5,7 @@ import "./mocks/core-container";
 import { blockchain } from "./mocks/blockchain";
 
 import { P2P } from "@arkecosystem/core-interfaces";
-import { Blocks, Transactions } from "@arkecosystem/crypto";
+import { Blocks, Transactions } from "@nosplatform/crypto";
 import { NetworkState } from "../../../packages/core-p2p/src/network-state";
 import { createPeerService, createStubPeer, stubPeer } from "../../helpers/peers";
 import { genesisBlock } from "../../utils/config/unitnet/genesisBlock";
@@ -166,7 +166,6 @@ describe("NetworkMonitor", () => {
             validateAndAcceptPeer.mockReset();
             validatePeerIp.mockRestore();
         });
-
     });
 
     describe("getNetworkHeight", () => {

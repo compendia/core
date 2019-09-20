@@ -1,4 +1,4 @@
-import { Blocks, Utils } from "@arkecosystem/crypto";
+import { Blocks, Utils } from "@nosplatform/crypto";
 
 export const sampleBlocks = [
     Blocks.BlockFactory.fromData({

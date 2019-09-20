@@ -1,5 +1,5 @@
 import { Database } from "@arkecosystem/core-interfaces";
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { IColumnDescriptor } from "../interfaces";
 import { Model } from "./model";
 

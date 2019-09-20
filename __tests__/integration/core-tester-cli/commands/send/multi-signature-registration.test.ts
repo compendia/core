@@ -1,7 +1,7 @@
 import "jest-extended";
 
 import { httpie } from "@arkecosystem/core-utils";
-import { Managers, Transactions } from "@arkecosystem/crypto";
+import { Managers, Transactions } from "@nosplatform/crypto";
 import nock from "nock";
 import { MultiSignatureRegistrationCommand } from "../../../../../packages/core-tester-cli/src/commands/send/multi-signature-registration";
 import { arkToSatoshi, captureTransactions, expectTransactions, toFlags } from "../../shared";

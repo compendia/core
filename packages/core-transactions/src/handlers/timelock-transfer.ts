@@ -1,5 +1,5 @@
 import { Database, State } from "@arkecosystem/core-interfaces";
-import { Interfaces, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Transactions } from "@nosplatform/crypto";
 import { TransactionHandler } from "./transaction";
 
 export class TimelockTransferTransactionHandler extends TransactionHandler {

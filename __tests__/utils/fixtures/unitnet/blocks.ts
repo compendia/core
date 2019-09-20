@@ -1,4 +1,4 @@
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { genesisBlock } from "../../config/unitnet/genesisBlock";
 
 export { genesisBlock };

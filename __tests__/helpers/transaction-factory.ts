@@ -1,4 +1,4 @@
-import { Identities, Interfaces, Managers, Transactions, Types, Utils } from "@arkecosystem/crypto";
+import { Identities, Interfaces, Managers, Transactions, Types, Utils } from "@nosplatform/crypto";
 import { secrets } from "../utils/config/testnet/delegates.json";
 
 const defaultPassphrase: string = secrets[0];

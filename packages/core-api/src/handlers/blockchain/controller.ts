@@ -1,5 +1,5 @@
-import { Utils } from "@arkecosystem/crypto";
 import Hapi from "@hapi/hapi";
+import { Utils } from "@nosplatform/crypto";
 import { Statistic } from "@nosplatform/storage";
 import { Controller } from "../shared/controller";
 

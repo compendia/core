@@ -1,5 +1,5 @@
 import { Wallets } from "@arkecosystem/core-state";
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 
 export const wallet = {
     address: "DTRdbaUW3RQQSL5By4G43JVaeHiqfVp9oh",

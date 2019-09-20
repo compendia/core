@@ -1,6 +1,6 @@
 import { container } from "./mocks/core-container";
 
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { defaults } from "../../../packages/core-transaction-pool/src/defaults";
 import { calculateMinimumFee, dynamicFeeMatcher } from "../../../packages/core-transaction-pool/src/dynamic-fee";
 import { transactions } from "./__fixtures__/transactions";

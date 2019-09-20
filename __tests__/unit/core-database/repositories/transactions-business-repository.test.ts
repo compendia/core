@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, State } from "@arkecosystem/core-interfaces";
-import { Enums } from "@arkecosystem/crypto";
+import { Enums } from "@nosplatform/crypto";
 import { TransactionsBusinessRepository } from "../../../../packages/core-database/src/repositories/transactions-business-repository";
 import { DatabaseConnectionStub } from "../__fixtures__/database-connection-stub";
 import { MockDatabaseModel } from "../__fixtures__/mock-database-model";

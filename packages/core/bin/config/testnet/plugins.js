@@ -34,13 +34,14 @@ module.exports = {
             },
         },
     },
+    "@nosplatform/storage": {},
+    "@nosplatform/supply-tracker": {},
     "@arkecosystem/core-p2p": {
         server: {
             port: process.env.CORE_P2P_PORT || 4000,
         },
         minimumNetworkReach: 5,
     },
-    "@nosplatform/storage": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
@@ -65,6 +66,5 @@ module.exports = {
         allowRemote: false,
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
-    "@arkecosystem/core-snapshots": {},
-    "@nosplatform/supply-tracker": {}
+    "@arkecosystem/core-snapshots": {}
 };

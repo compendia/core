@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Database } from "@arkecosystem/core-interfaces";
-import { Crypto, Managers } from "@arkecosystem/crypto";
 import Hapi from "@hapi/hapi";
+import { Crypto, Managers } from "@nosplatform/crypto";
 import { Controller } from "../shared/controller";
 
 export class NodeController extends Controller {

@@ -1,6 +1,6 @@
-import { Validation } from "@arkecosystem/crypto";
 import Boom from "@hapi/boom";
 import Hapi from "@hapi/hapi";
+import { Validation } from "@nosplatform/crypto";
 
 const name = "hapi-ajv";
 
