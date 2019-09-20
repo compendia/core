@@ -5,8 +5,8 @@ import { utils } from "../utils";
 
 // import { blocks2to100 } from "../../../utils/fixtures/testnet/blocks2to100";
 
-// import { Blocks, Utils } from "@arkecosystem/crypto";
-import { Utils } from "@arkecosystem/crypto";
+// import { Blocks, Utils } from "@nosplatform/crypto";
+import { Utils } from "@nosplatform/crypto";
 // const { BlockFactory } = Blocks;
 
 import { app } from "@arkecosystem/core-container";

@@ -1,6 +1,6 @@
 import { createServer, mountServer } from "@arkecosystem/core-http-utils";
-import { Utils } from "@arkecosystem/crypto";
 import { notFound } from "@hapi/boom";
+import { Utils } from "@nosplatform/crypto";
 import { Round, Statistic } from "./entities";
 
 export const startServer = async config => {

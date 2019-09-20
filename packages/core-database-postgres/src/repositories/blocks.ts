@@ -1,5 +1,5 @@
 import { Database } from "@arkecosystem/core-interfaces";
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Utils } from "@nosplatform/crypto";
 import { Block } from "../models";
 import { queries } from "../queries";
 import { Repository } from "./repository";

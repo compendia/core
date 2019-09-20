@@ -1,4 +1,4 @@
-import { Identities, Managers } from "@arkecosystem/crypto";
+import { Identities, Managers } from "@nosplatform/crypto";
 
 /**
  * Get the unitnet genesis delegates information

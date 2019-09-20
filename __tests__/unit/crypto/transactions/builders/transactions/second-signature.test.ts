@@ -4,7 +4,7 @@ import { configManager } from "../../../../../../packages/crypto/src/managers";
 
 configManager.setFromPreset("testnet");
 
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { TransactionTypes } from "../../../../../../packages/crypto/src/enums";
 import { Keys } from "../../../../../../packages/crypto/src/identities";
 import { feeManager } from "../../../../../../packages/crypto/src/managers/fee";

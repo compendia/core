@@ -2,7 +2,7 @@ import "../mocks/";
 import { container } from "../mocks/container";
 import { logger } from "../mocks/logger";
 
-import { Blocks as cBlocks, Interfaces, Managers } from "@arkecosystem/crypto";
+import { Blocks as cBlocks, Interfaces, Managers } from "@nosplatform/crypto";
 import delay from "delay";
 import { defaults } from "../../../../packages/core-state/src/defaults";
 import { StateStore } from "../../../../packages/core-state/src/stores/state";

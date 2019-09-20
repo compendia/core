@@ -1,6 +1,6 @@
 import "../../mocks/";
 
-import { Blocks } from "@arkecosystem/crypto";
+import { Blocks } from "@nosplatform/crypto";
 import { BlockProcessorResult } from "../../../../../packages/core-blockchain/src/processor";
 import { UnchainedHandler } from "../../../../../packages/core-blockchain/src/processor/handlers";
 import "../../../../utils";

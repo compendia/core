@@ -1,4 +1,4 @@
-import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 
 class VoteWeight {

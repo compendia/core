@@ -1,4 +1,4 @@
-import { Identities } from "@arkecosystem/crypto";
+import { Identities } from "@nosplatform/crypto";
 import { generateMnemonic } from "bip39";
 import { TransactionFactory } from "../../helpers/transaction-factory";
 import { secrets } from "../../utils/config/testnet/delegates.json";

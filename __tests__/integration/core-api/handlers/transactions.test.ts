@@ -1,7 +1,7 @@
 import "../../../utils";
 
-import { Transactions, Utils } from "@arkecosystem/crypto";
-import { ARKTOSHI } from "@arkecosystem/crypto/src/constants";
+import { Transactions, Utils } from "@nosplatform/crypto";
+import { ARKTOSHI } from "@nosplatform/crypto/src/constants";
 import { Address } from "../../../../packages/crypto/src/identities";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { genesisBlock } from "../../../utils/config/testnet/genesisBlock";

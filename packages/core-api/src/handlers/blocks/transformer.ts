@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Utils } from "@nosplatform/crypto";
 
 export const transformBlock = (model, transform) => {
     if (!transform) {

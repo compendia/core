@@ -1,5 +1,5 @@
-import { constants, slots } from "@arkecosystem/crypto";
 import { dato } from "@faustbrian/dato";
+import { constants, slots } from "@nosplatform/crypto";
 import { Repository } from "./repository";
 import { buildFilterQuery } from "./utils/filter-query";
 

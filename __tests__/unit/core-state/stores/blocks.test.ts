@@ -1,4 +1,4 @@
-import { Blocks, Interfaces, Managers } from "@arkecosystem/crypto";
+import { Blocks, Interfaces, Managers } from "@nosplatform/crypto";
 import { BlockStore } from "../../../../packages/core-state/src/stores/blocks";
 import { genesisBlock as GB } from "../../../utils/config/testnet/genesisBlock";
 

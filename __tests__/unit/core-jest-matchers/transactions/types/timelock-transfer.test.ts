@@ -1,6 +1,6 @@
 import "../../../../../packages/core-jest-matchers/src/transactions/types/timelock-transfer";
 
-import { Enums } from "@arkecosystem/crypto";
+import { Enums } from "@nosplatform/crypto";
 const { TransactionTypes } = Enums;
 
 describe(".toBeTimelockTransferType", () => {

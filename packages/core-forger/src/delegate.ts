@@ -1,4 +1,4 @@
-import { Blocks, Crypto, Identities, Interfaces, Types, Utils } from "@arkecosystem/crypto";
+import { Blocks, Crypto, Identities, Interfaces, Types, Utils } from "@nosplatform/crypto";
 import forge from "node-forge";
 import { authenticator } from "otplib";
 import wif from "wif";

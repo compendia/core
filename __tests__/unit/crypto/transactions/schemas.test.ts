@@ -1,4 +1,4 @@
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { ARKTOSHI } from "../../../../packages/crypto/src/constants";
 import { TransactionTypes } from "../../../../packages/crypto/src/enums";
 import { PublicKey } from "../../../../packages/crypto/src/identities";

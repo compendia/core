@@ -1,4 +1,4 @@
-import { Crypto, Interfaces } from "@arkecosystem/crypto";
+import { Crypto, Interfaces } from "@nosplatform/crypto";
 
 export const isBlockChained = (previousBlock: Interfaces.IBlockData, nextBlock: Interfaces.IBlockData): boolean => {
     const followsPrevious: boolean = nextBlock.previousBlock === previousBlock.id;

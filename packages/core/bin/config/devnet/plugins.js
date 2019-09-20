@@ -35,7 +35,6 @@ module.exports = {
         },
     },
     "@nosplatform/storage": {},
-    "@nosplatform/stake-transactions": {},
     "@nosplatform/supply-tracker": {},
     "@arkecosystem/core-p2p": {
         server: {
@@ -43,6 +42,7 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,

@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger } from "@arkecosystem/core-interfaces";
-import { Blocks, Crypto, Transactions, Utils } from "@arkecosystem/crypto";
+import { Blocks, Crypto, Transactions, Utils } from "@nosplatform/crypto";
 import { camelizeKeys } from "xcase";
 
 export const verifyData = (context, data, prevData, verifySignatures) => {

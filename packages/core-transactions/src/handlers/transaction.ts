@@ -2,7 +2,7 @@
 // tslint:disable:member-ordering
 
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Enums, Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Enums, Interfaces, Managers, Transactions } from "@nosplatform/crypto";
 import {
     InsufficientBalanceError,
     InvalidMultiSignatureError,
@@ -174,9 +174,7 @@ export abstract class TransactionHandler implements ITransactionHandler {
             processor.pushError(
                 data,
                 "ERR_PENDING",
-                `Sender ${senderPublicKey} already has a transaction of type '${
-                    Enums.TransactionTypes[type]
-                }' in the pool`,
+                `Sender ${senderPublicKey} already has a transaction of type '${Enums.TransactionTypes[type]}' in the pool`,
             );
 
             return true;

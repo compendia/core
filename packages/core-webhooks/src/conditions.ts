@@ -1,4 +1,4 @@
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 
 const toBoolean = (value): boolean =>
     value

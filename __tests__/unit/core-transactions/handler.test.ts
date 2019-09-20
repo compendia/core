@@ -2,7 +2,7 @@ import "jest-extended";
 
 import { State } from "@arkecosystem/core-interfaces";
 import { Wallets } from "@arkecosystem/core-state";
-import { Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Identities, Interfaces, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import {
     AlreadyVotedError,
     InsufficientBalanceError,

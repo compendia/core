@@ -1,5 +1,5 @@
-import { Interfaces, Managers, Types } from "@arkecosystem/crypto";
 import Joi from "@hapi/joi";
+import { Interfaces, Managers, Types } from "@nosplatform/crypto";
 import get from "lodash.get";
 import set from "lodash.set";
 import { FileLoader } from "./file-loader";
@@ -94,9 +94,7 @@ export class Config {
 
         if (error) {
             throw new Error(
-                `An invalid network configuration was provided or is inaccessible due to it's security settings. ${
-                    error.message
-                }.`,
+                `An invalid network configuration was provided or is inaccessible due to it's security settings. ${error.message}.`,
             );
         }
 

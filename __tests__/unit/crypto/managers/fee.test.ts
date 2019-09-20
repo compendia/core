@@ -1,6 +1,6 @@
 import "jest-extended";
 
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import { TransactionTypes } from "../../../../packages/crypto/src/enums";
 import { ITransactionData } from "../../../../packages/crypto/src/interfaces";
 import { feeManager } from "../../../../packages/crypto/src/managers";

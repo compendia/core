@@ -1,4 +1,4 @@
-import { Transactions } from "@arkecosystem/crypto";
+import { Transactions } from "@nosplatform/crypto";
 import ByteBuffer from "bytebuffer";
 import { IBlockTimeAsset } from "../interfaces";
 

@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Crypto, Interfaces } from "@arkecosystem/crypto";
+import { Crypto, Interfaces } from "@nosplatform/crypto";
 
 export const validateGenerator = async (block: Interfaces.IBlock): Promise<boolean> => {
     const database: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
@@ -24,9 +24,7 @@ export const validateGenerator = async (block: Interfaces.IBlock): Promise<boole
         const forgingUsername = database.walletManager.findByPublicKey(forgingDelegate.publicKey).username;
 
         logger.warn(
-            `Delegate ${generatorUsername} (${
-                block.data.generatorPublicKey
-            }) not allowed to forge, should be ${forgingUsername} (${forgingDelegate.publicKey})`,
+            `Delegate ${generatorUsername} (${block.data.generatorPublicKey}) not allowed to forge, should be ${forgingUsername} (${forgingDelegate.publicKey})`,
         );
 
         return false;

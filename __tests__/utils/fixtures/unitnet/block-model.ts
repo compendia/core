@@ -1,4 +1,4 @@
-import { Blocks, Managers } from "@arkecosystem/crypto";
+import { Blocks, Managers } from "@nosplatform/crypto";
 import { genesisBlock as GB } from "../../config/unitnet/genesisBlock";
 
 Managers.configManager.setFromPreset("unitnet");

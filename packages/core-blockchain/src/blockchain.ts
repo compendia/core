@@ -10,7 +10,7 @@ import {
     State,
     TransactionPool,
 } from "@arkecosystem/core-interfaces";
-import { Blocks, Crypto, Interfaces, Managers } from "@arkecosystem/crypto";
+import { Blocks, Crypto, Interfaces, Managers } from "@nosplatform/crypto";
 
 import { isBlockChained, roundCalculator } from "@arkecosystem/core-utils";
 import async from "async";

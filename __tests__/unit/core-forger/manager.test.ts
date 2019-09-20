@@ -4,7 +4,7 @@ import "./mocks/core-container";
 
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { NetworkState, NetworkStateStatus } from "@arkecosystem/core-p2p";
-import { Crypto, Transactions } from "@arkecosystem/crypto";
+import { Crypto, Transactions } from "@nosplatform/crypto";
 import { defaults } from "../../../packages/core-forger/src/defaults";
 import { Delegate } from "../../../packages/core-forger/src/delegate";
 import { ForgerManager } from "../../../packages/core-forger/src/manager";

@@ -1,7 +1,7 @@
 import "jest-extended";
 
 import { httpie } from "@arkecosystem/core-utils";
-import { Managers } from "@arkecosystem/crypto";
+import { Managers } from "@nosplatform/crypto";
 import nock from "nock";
 import { VoteCommand } from "../../../../../packages/core-tester-cli/src/commands/send/vote";
 import { arkToSatoshi, captureTransactions, expectTransactions, toFlags } from "../../shared";

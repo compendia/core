@@ -1,4 +1,4 @@
-import { Interfaces } from "@arkecosystem/crypto";
+import { Interfaces } from "@nosplatform/crypto";
 import { ISearchPaginate } from "../search";
 import { IParameters } from "./parameters";
 

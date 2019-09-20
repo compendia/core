@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger } from "@arkecosystem/core-interfaces";
-import { Enums, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Enums, Interfaces, Managers, Utils } from "@nosplatform/crypto";
 import camelCase from "lodash.camelcase";
 import { IDynamicFeeMatch } from "./interfaces";
 

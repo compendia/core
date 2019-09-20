@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { EventEmitter, State } from "@arkecosystem/core-interfaces";
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { Stake } from "@nosplatform/storage";
 import { LessThan } from "typeorm";

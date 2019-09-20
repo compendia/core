@@ -1,4 +1,4 @@
-import { Utils } from "@arkecosystem/crypto";
+import { Utils } from "@nosplatform/crypto";
 import "../../../../packages/core-jest-matchers/src/transactions/valid";
 
 const transaction = {

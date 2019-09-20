@@ -3,8 +3,8 @@ import "jest-extended";
 import "./mocks/core-container";
 
 import { P2P } from "@arkecosystem/core-interfaces";
-import { Transactions } from "@arkecosystem/crypto";
-import { getPeerConfig } from '../../../packages/core-p2p/src/socket-server/utils/get-peer-config';
+import { Transactions } from "@nosplatform/crypto";
+import { getPeerConfig } from "../../../packages/core-p2p/src/socket-server/utils/get-peer-config";
 import { createPeerService, createStubPeer } from "../../helpers/peers";
 import { TransactionFactory } from "../../helpers/transaction-factory";
 import { genesisBlock } from "../../utils/config/unitnet/genesisBlock";
@@ -28,8 +28,9 @@ const blockHeader = {
     // tslint:disable-next-line: no-null-keyword
     previousBlock: null,
     generatorPublicKey: "03b47f6b6719c76bad46a302d9cff7be9b1c2b2a20602a0d880f139b5b8901f068",
-    blockSignature: "304402202fe5de5697fa25d3d3c0cb24617ac02ddfb1c915ee9194a89f8392f948c6076402200d07c5244642fe36afa53fb2d048735f1adfa623e8fa4760487e5f72e17d253b"
-}
+    blockSignature:
+        "304402202fe5de5697fa25d3d3c0cb24617ac02ddfb1c915ee9194a89f8392f948c6076402200d07c5244642fe36afa53fb2d048735f1adfa623e8fa4760487e5f72e17d253b",
+};
 
 beforeAll(async () => {
     socketManager = new MockSocketManager();
