@@ -129,7 +129,7 @@ export const plugin: Container.IPluginDescriptor = {
                     processing = false;
                     clearInterval(interval);
                 }
-            }, 10);
+            }, 50);
         });
 
         emitter.on("block.reverted", async block => {
@@ -228,7 +228,7 @@ export const plugin: Container.IPluginDescriptor = {
                     processing = false;
                     clearInterval(interval);
                 }
-            }, 10);
+            }, 50);
         });
 
         // On stake create
@@ -266,7 +266,7 @@ export const plugin: Container.IPluginDescriptor = {
                     processing = false;
                     clearInterval(interval);
                 }
-            }, 10);
+            }, 50);
         });
 
         // On stake create
@@ -305,7 +305,7 @@ export const plugin: Container.IPluginDescriptor = {
                     processing = false;
                     clearInterval(interval);
                 }
-            }, 10);
+            }, 50);
         });
 
         emitter.on(ApplicationEvents.TransactionReverted, async txObj => {

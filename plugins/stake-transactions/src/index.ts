@@ -30,7 +30,7 @@ export const plugin: Container.IPluginDescriptor = {
                 }
                 processing = false;
                 clearInterval(interval);
-            }, 10);
+            }, 50);
         });
     },
     async deregister(container: Container.IContainer, options) {
