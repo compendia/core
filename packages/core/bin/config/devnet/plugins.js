@@ -1,6 +1,7 @@
 module.exports = {
     "@arkecosystem/core-event-emitter": {},
     "@arkecosystem/core-logger-pino": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-database-postgres": {
         connection: {
@@ -13,7 +14,6 @@ module.exports = {
     },
     "@nosplatform/storage": {},
     "@nosplatform/supply-tracker": {},
-    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -43,7 +43,6 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
-    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
