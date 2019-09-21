@@ -3,7 +3,7 @@ import ByteBuffer from "bytebuffer";
 import { IBlockTimeAsset } from "../interfaces";
 
 const { schemas } = Transactions;
-const STAKE_REDEEM_TYPE = 102;
+const STAKE_REDEEM_TYPE = 101;
 
 export class StakeRedeemTransaction extends Transactions.Transaction {
     public static type = STAKE_REDEEM_TYPE;
