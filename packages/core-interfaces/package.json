@@ -23,7 +23,7 @@
         "pretest": "bash ../../scripts/pre-test.sh"
     },
     "dependencies": {
-        "@nosplatform/crypto": "^2.5.24",
+        "@nosplatform/crypto": "^2.5.25-rc.2",
         "awilix": "^4.2.2",
         "dayjs": "^1.8.15",
         "@nosplatform/stake-interfaces": "^0.0.1"
