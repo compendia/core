@@ -6,7 +6,7 @@ import { TransactionBuilder } from "./transaction";
 export class StakeRedeemBuilder extends TransactionBuilder<StakeRedeemBuilder> {
     constructor() {
         super();
-        this.data.type = 102;
+        this.data.type = 101;
         this.data.fee = feeManager.get(this.data.type);
         this.data.amount = BigNumber.ZERO;
         this.data.recipientId = undefined;
