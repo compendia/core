@@ -71,21 +71,25 @@ export class ExpireHelper {
     }
 
     public static async processExpirations(walletManager: State.IWalletManager): Promise<void> {
-        app.resolvePlugin("logger").info("Processing stake expirations.");
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();
         const lastTime = lastBlock.data.timestamp;
-        const expirations = await Stake.find({ where: { redeemableTimestamp: LessThan(lastTime) } });
-        for (const expiration of expirations) {
-            const wallet = walletManager.findByAddress(expiration.address);
-            if (wallet.stake[expiration.stakeKey] && wallet.stake[expiration.stakeKey].halved === false) {
-                this.expireStake(wallet, expiration.stakeKey, walletManager);
-            } else if (wallet.stake[expiration.stakeKey] === undefined) {
-                // If stake isn't found then the chain state has reverted to a point before its stakeCreate.
-                // Delete expiration from db in this case
-                await expiration.remove();
+        const [expirations, expirationsCount] = await Stake.findAndCount({
+            where: { redeemableTimestamp: LessThan(lastTime) },
+        });
+        if (expirationsCount > 0) {
+            app.resolvePlugin("logger").info("Processing stake expirations.");
+            for (const expiration of expirations) {
+                const wallet = walletManager.findByAddress(expiration.address);
+                if (wallet.stake[expiration.stakeKey] && wallet.stake[expiration.stakeKey].halved === false) {
+                    this.expireStake(wallet, expiration.stakeKey, walletManager);
+                } else if (wallet.stake[expiration.stakeKey] === undefined) {
+                    // If stake isn't found then the chain state has reverted to a point before its stakeCreate.
+                    // Delete expiration from db in this case
+                    await expiration.remove();
+                }
             }
         }
     }
