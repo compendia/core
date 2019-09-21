@@ -63,8 +63,9 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(data);
 
         if (
-            data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() > 120 ||
-            data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() < -120
+            !transaction.timestamp &&
+            (data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() > 120 ||
+                data.asset.stakeCreate.timestamp - Crypto.Slots.getTime() < -120)
         ) {
             throw new StakeTimestampError();
         }
