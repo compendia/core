@@ -11,12 +11,12 @@ export class StakeRedeemBuilder extends TransactionBuilder<StakeRedeemBuilder> {
         this.data.amount = BigNumber.ZERO;
         this.data.recipientId = undefined;
         this.data.senderPublicKey = undefined;
-        this.data.asset = { stakeRedeem: { blockTime: 0 } };
+        this.data.asset = { stakeRedeem: { txId: "" } };
         this.signWithSenderAsRecipient = true;
     }
 
-    public stakeAsset(blockTime: number): StakeRedeemBuilder {
-        this.data.asset.stakeRedeem.blockTime = blockTime;
+    public stakeAsset(txId: string): StakeRedeemBuilder {
+        this.data.asset.stakeRedeem.txId = txId;
         return this;
     }
 

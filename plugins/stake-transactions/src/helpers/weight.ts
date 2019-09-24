@@ -14,8 +14,10 @@ class VoteWeight {
             const amount = Utils.BigNumber.make(s.amount);
             const sWeight: Utils.BigNumber = amount.times(multiplier);
             const redeemableTimestamp = s.timestamp + s.duration;
+            const timestamp = s.timestamp;
 
             const o: StakeInterfaces.IStakeObject = {
+                timestamp,
                 amount,
                 duration: s.duration,
                 weight: sWeight,

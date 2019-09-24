@@ -1,6 +1,6 @@
 import { Transactions } from "@nosplatform/crypto";
 import ByteBuffer from "bytebuffer";
-import { IBlockTimeAsset } from "../interfaces";
+import { IStakeRedeemAsset } from "../interfaces";
 
 const { schemas } = Transactions;
 const STAKE_REDEEM_TYPE = 101;
@@ -20,11 +20,13 @@ export class StakeRedeemTransaction extends Transactions.Transaction {
                     properties: {
                         stakeRedeem: {
                             type: "object",
-                            required: ["blockTime"],
+                            required: ["txId"],
                             properties: {
-                                duration: {
-                                    type: "number",
-                                    minimum: 1,
+                                txId: {
+                                    type: "string",
+                                    $ref: "hex",
+                                    minLength: 64,
+                                    maxLength: 64,
                                 },
                             },
                         },
@@ -36,19 +38,20 @@ export class StakeRedeemTransaction extends Transactions.Transaction {
 
     public serialize(): ByteBuffer {
         const { data } = this;
-        const stakeRedeem = data.asset.stakeRedeem as IBlockTimeAsset;
+        const stakeRedeem = data.asset.stakeRedeem as IStakeRedeemAsset;
 
         // TODO: Verify that this works
-        const buffer = new ByteBuffer(24, true);
-        buffer.writeUint64(+stakeRedeem.blockTime);
+        const buffer = new ByteBuffer(64, true);
+        buffer.writeUint8(stakeRedeem.txId.length);
+        buffer.append(stakeRedeem.txId, "hex");
         return buffer;
     }
 
     public deserialize(buf: ByteBuffer): void {
         const { data } = this;
-        const stakeRedeem = {} as IBlockTimeAsset;
+        const stakeRedeem = {} as IStakeRedeemAsset;
 
-        stakeRedeem.blockTime = buf.readUint64().toInt();
+        stakeRedeem.txId = buf.readBytes(64).toString("hex");
 
         data.asset = {
             stakeRedeem,
