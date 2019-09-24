@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { Container, Database, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
+import { Container, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Handlers } from "@nosplatform/core-transactions";
 import { defaults } from "./defaults";
@@ -7,7 +7,6 @@ import { StakeCreateTransactionHandler, StakeRedeemTransactionHandler } from "./
 import * as StakeHelpers from "./helpers";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
-const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -25,7 +24,7 @@ export const plugin: Container.IPluginDescriptor = {
                     processing = true;
                     const isNewRound = roundCalculator.isNewRound(block.height);
                     if (isNewRound) {
-                        await StakeHelpers.ExpireHelper.processExpirations(databaseService.walletManager);
+                        await StakeHelpers.ExpireHelper.processExpirations();
                     }
                 }
                 processing = false;

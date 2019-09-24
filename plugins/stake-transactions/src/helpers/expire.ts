@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { EventEmitter, State } from "@arkecosystem/core-interfaces";
+import { Database, EventEmitter, State } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
 import { Stake } from "@nosplatform/storage";
@@ -7,24 +7,25 @@ import { LessThan } from "typeorm";
 
 export interface IExpirationObject {
     publicKey: string;
-    stakeKey: number;
+    stakeKey: string;
     redeemableTimestamp: number;
 }
 
 export class ExpireHelper {
-    public static expireStake(wallet: State.IWallet, stakeKey: number, walletManager: State.IWalletManager): void {
+    public static async expireStake(wallet: State.IWallet, stakeKey: string): Promise<void> {
         const stake: StakeInterfaces.IStakeObject = wallet.stake[stakeKey];
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();
+        const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
         if (stake && lastBlock.data.timestamp > stake.redeemableTimestamp && !stake.redeemed && !stake.halved) {
             app.resolvePlugin("logger").info(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
 
             let delegate: State.IWallet;
             if (wallet.vote) {
-                delegate = walletManager.findByPublicKey(wallet.vote);
+                delegate = databaseService.walletManager.findByPublicKey(wallet.vote);
             }
             // First deduct previous stakeWeight from from delegate voteBalance
             if (delegate) {
@@ -49,19 +50,26 @@ export class ExpireHelper {
     public static async storeExpiry(
         stake: StakeInterfaces.IStakeObject,
         wallet: State.IWallet,
-        stakeKey: number,
+        stakeKey: string,
     ): Promise<void> {
-        const stakeModel = new Stake();
-        stakeModel.stakeKey = stakeKey;
-        stakeModel.address = wallet.address;
-        stakeModel.redeemableTimestamp = stake.redeemableTimestamp;
-        await stakeModel.save();
+        const stakeModel = await Stake.findOne({
+            address: wallet.address,
+            redeemableTimestamp: stake.redeemableTimestamp,
+            stakeKey,
+        });
+        if (!stakeModel && !wallet.stake[stakeKey].halved) {
+            const stakeModel = new Stake();
+            stakeModel.stakeKey = stakeKey;
+            stakeModel.address = wallet.address;
+            stakeModel.redeemableTimestamp = stake.redeemableTimestamp;
+            await stakeModel.save();
+        }
     }
 
     public static async removeExpiry(
         stake: StakeInterfaces.IStakeObject,
         wallet: State.IWallet,
-        stakeKey: number,
+        stakeKey: string,
     ): Promise<void> {
         const redeemableTimestamp = stake.redeemableTimestamp;
         const stakeModel = await Stake.findOne({ address: wallet.address, redeemableTimestamp, stakeKey });
@@ -70,11 +78,12 @@ export class ExpireHelper {
         }
     }
 
-    public static async processExpirations(walletManager: State.IWalletManager): Promise<void> {
+    public static async processExpirations(): Promise<void> {
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();
+        const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const lastTime = lastBlock.data.timestamp;
         const [expirations, expirationsCount] = await Stake.findAndCount({
             where: { redeemableTimestamp: LessThan(lastTime) },
@@ -82,9 +91,9 @@ export class ExpireHelper {
         if (expirationsCount > 0) {
             app.resolvePlugin("logger").info("Processing stake expirations.");
             for (const expiration of expirations) {
-                const wallet = walletManager.findByAddress(expiration.address);
+                const wallet = databaseService.walletManager.findByAddress(expiration.address);
                 if (wallet.stake[expiration.stakeKey] && wallet.stake[expiration.stakeKey].halved === false) {
-                    this.expireStake(wallet, expiration.stakeKey, walletManager);
+                    this.expireStake(wallet, expiration.stakeKey);
                 } else if (wallet.stake[expiration.stakeKey] === undefined) {
                     // If stake isn't found then the chain state has reverted to a point before its stakeCreate.
                     // Delete expiration from db in this case

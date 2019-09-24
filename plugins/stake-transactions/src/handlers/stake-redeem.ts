@@ -23,8 +23,8 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         for (const t of transactions.rows) {
             const sender: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const s = t.asset.stakeRedeem;
-            const blockTime = s.blockTime;
-            const stake = sender.stake[blockTime];
+            const txId = s.txId;
+            const stake = sender.stake[txId];
             // Refund stake
             const newBalance = sender.balance.plus(stake.amount);
             const redeemed = true;
@@ -32,8 +32,8 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 balance: newBalance,
                 stake: {
                     ...sender.stake,
-                    [blockTime]: {
-                        ...sender.stake[blockTime],
+                    [txId]: {
+                        ...sender.stake[txId],
                         redeemed,
                     },
                 },
@@ -55,17 +55,17 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
 
         stakeArray = wallet.stake;
         const { data }: Interfaces.ITransaction = transaction;
-        const blockTime = data.asset.stakeRedeem.blockTime;
+        const txId = data.asset.stakeRedeem.txId;
 
-        if (!(blockTime in stakeArray)) {
+        if (!(txId in stakeArray)) {
             throw new StakeNotFoundError();
         }
 
-        if (stakeArray[blockTime].redeemed) {
+        if (stakeArray[txId].redeemed) {
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (transaction.data.timestamp < stakeArray[blockTime].redeemableTimestamp && !stakeArray[blockTime].halved) {
+        if (transaction.data.timestamp < stakeArray[txId].redeemableTimestamp && !stakeArray[txId].halved) {
             throw new StakeNotYetRedeemableError();
         }
 
@@ -91,8 +91,8 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
-        const blockTime = t.asset.stakeRedeem.blockTime;
-        const stake = sender.stake[blockTime];
+        const txId = t.asset.stakeRedeem.txId;
+        const stake = sender.stake[txId];
         // Refund stake
         const newBalance = sender.balance.plus(stake.amount);
         const newWeight = sender.stakeWeight.minus(stake.weight);
@@ -102,8 +102,8 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             stakeWeight: newWeight,
             stake: {
                 ...sender.stake,
-                [blockTime]: {
-                    ...sender.stake[blockTime],
+                [txId]: {
+                    ...sender.stake[txId],
                     redeemed,
                 },
             },
@@ -115,8 +115,8 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
-        const blockTime = t.asset.stakeRedeem.blockTime;
-        const stake = sender.stake[blockTime];
+        const txId = t.asset.stakeRedeem.txId;
+        const stake = sender.stake[txId];
         // Revert refund stake
         const newBalance = sender.balance.minus(stake.amount);
         const redeemed = false;
@@ -124,8 +124,8 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             balance: newBalance,
             stake: {
                 ...sender.stake,
-                [blockTime]: {
-                    ...sender.stake[blockTime],
+                [txId]: {
+                    ...sender.stake[txId],
                     redeemed,
                 },
             },

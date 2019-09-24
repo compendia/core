@@ -6,6 +6,6 @@ export interface IStakeCreateAsset {
     timestamp: number;
 }
 
-export interface IBlockTimeAsset {
-    blockTime: number;
+export interface IStakeRedeemAsset {
+    txId: string;
 }

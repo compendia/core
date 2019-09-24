@@ -4,11 +4,10 @@ import { Utils } from "@nosplatform/crypto";
 export const transformWallet = model => {
     const unixStakes = {};
     for (const key of Object.keys(model.stake)) {
-        const timestamp = formatTimestamp(Number(key)).unix;
         const stake = model.stake[key];
         const epochTime = model.stake[key].redeemableTimestamp;
         unixStakes[key] = {
-            timestamp,
+            timestamp: formatTimestamp(stake.timestamp).unix,
             amount: stake.amount,
             duration: stake.duration,
             weight: stake.weight,

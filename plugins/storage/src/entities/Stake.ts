@@ -5,8 +5,8 @@ export class Stake extends BaseEntity {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @Column("integer")
-    public stakeKey: number;
+    @Column({ length: 64 })
+    public stakeKey: string;
 
     @Column({
         length: 34,

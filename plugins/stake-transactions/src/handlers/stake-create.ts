@@ -30,7 +30,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         for (const t of transactions.rows) {
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
-            const blockTime = t.asset.stakeCreate.timestamp;
             const newBalance = wallet.balance.minus(o.amount);
 
             // 2 minute window for time flexibility
@@ -46,11 +45,11 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 stakeWeight: newWeight,
                 stake: {
                     ...wallet.stake,
-                    [blockTime]: o,
+                    [t.id]: o,
                 },
             });
 
-            ExpireHelper.storeExpiry(o, wallet, blockTime);
+            ExpireHelper.storeExpiry(o, wallet, t.id);
         }
     }
 
@@ -112,7 +111,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(transaction.data);
-        const blockTime = transaction.data.asset.stakeCreate.timestamp;
         const newBalance = sender.balance.minus(o.amount);
         const newWeight = sender.stakeWeight.plus(o.weight);
         Object.assign(sender, {
@@ -120,17 +118,16 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             stakeWeight: newWeight,
             stake: {
                 ...sender.stake,
-                [blockTime]: o,
+                [transaction.id]: o,
             },
         });
-        ExpireHelper.storeExpiry(o, sender, blockTime);
+        ExpireHelper.storeExpiry(o, sender, transaction.id);
     }
 
     protected revertForSender(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
         super.revertForSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(transaction.data);
-        const blockTime = transaction.data.asset.stakeCreate.timestamp;
         const newBalance = sender.balance.plus(o.amount);
         const newWeight = sender.stakeWeight.minus(o.weight);
         Object.assign(sender, {
@@ -138,10 +135,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             stakeWeight: newWeight,
             stake: {
                 ...sender.stake,
-                [blockTime]: undefined,
+                [transaction.id]: undefined,
             },
         });
-        ExpireHelper.removeExpiry(o, sender, blockTime);
+        ExpireHelper.removeExpiry(o, sender, transaction.id);
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {

@@ -276,8 +276,8 @@ export const plugin: Container.IPluginDescriptor = {
                     processing = true;
                     const walletManager = app.resolvePlugin("database").walletManager;
                     const sender = walletManager.findByPublicKey(stakeObj.publicKey);
-                    const blockTime = stakeObj.stakeKey;
-                    const stake: StakeInterfaces.IStakeObject = sender.stake[blockTime];
+                    const txId = stakeObj.stakeKey;
+                    const stake: StakeInterfaces.IStakeObject = sender.stake[txId];
                     const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
 
                     supply.value = lastSupply.plus(stake.amount).toString();
