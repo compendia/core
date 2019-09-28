@@ -41,3 +41,5 @@ Based on [Ark Core](https://github.com/ArkEcosystem).
 ## License
 
 [MIT](LICENSE) © [nOS](https://nos.io)
+
+<a href="https://github.com/ArkEcosystem/core"><img src="https://ark.io/storage/63/6.png" alt="Powered by ARK Core" width="250"/></a>
