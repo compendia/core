@@ -29,7 +29,7 @@
         "@arkecosystem/core-state": "^2.5.24",
         "@nosplatform/core-transactions": "^2.5.25-rc.2",
         "@arkecosystem/core-utils": "^2.5.24",
-        "@nosplatform/crypto": "^2.5.25-rc.2",
+        "@nosplatform/crypto": "^2.5.25-rc.3",
         "async": "^3.1.0",
         "delay": "^4.3.0",
         "immutable": "^4.0.0-rc.12",

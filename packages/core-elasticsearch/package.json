@@ -22,7 +22,7 @@
         "@arkecosystem/core-event-emitter": "^2.5.24",
         "@arkecosystem/core-http-utils": "^2.5.24",
         "@arkecosystem/core-interfaces": "^2.5.24",
-        "@nosplatform/crypto": "^2.5.25-rc.2",
+        "@nosplatform/crypto": "^2.5.25-rc.3",
         "@elastic/elasticsearch": "^7.2.0",
         "@hapi/boom": "^7.4.2",
         "@hapi/joi": "^15.1.0",

@@ -2,12 +2,41 @@
 # yarn lockfile v1
 
 
+"@arkecosystem/crypto@^2.4 || ^2.5":
+  version "2.5.25"
+  resolved "https://registry.yarnpkg.com/@arkecosystem/crypto/-/crypto-2.5.25.tgz#3d87538f6a22bf92ba99be8cc780ff2293149dc7"
+  integrity sha512-t4+6wOCbVhNitmtmRM5jVPXREademEwqZOPYsKDul7Qi3ol6Mo3bEeP1jSEF+1QPs+80HlU23gBWjmaXVz812w==
+  dependencies:
+    "@hapi/joi" "^15.1.0"
+    ajv "^6.10.2"
+    ajv-keywords "^3.4.1"
+    bcrypto "^4.1.0"
+    bignumber.js "^9.0.0"
+    bip32 "^2.0.3"
+    bip39 "^3.0.2"
+    browserify-aes "^1.2.0"
+    bs58 "^4.0.1"
+    bs58check "^2.1.2"
+    buffer-xor "^2.0.2"
+    bytebuffer "^5.0.1"
+    dayjs "^1.8.15"
+    deepmerge "^4.0.0"
+    lodash.camelcase "^4.3.0"
+    lodash.get "^4.4.2"
+    lodash.set "^4.3.2"
+    lodash.sumby "^4.6.0"
+    node-forge "^0.9.0"
+    otplib "^11.0.1"
+    pluralize "^8.0.0"
+    tiny-glob "^0.2.6"
+    wif "^2.0.6"
+
 "@arkecosystem/exchange-json-rpc@^1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@arkecosystem/exchange-json-rpc/-/exchange-json-rpc-1.0.3.tgz#eb90cbabb155b3e2f6006974b92f5c206f78fb74"
   integrity sha512-IM1QADslU+LyrkxIuQjNE5LOWB8fFHImEZJ1H46dbV3slOAtqYHQkXcWwi0oagJm2DRLIWTrMfNUuKlGV5Mq6g==
   dependencies:
-    "@nosplatform/crypto" "^2.4 || ^2.5"
+    "@arkecosystem/crypto" "^2.4 || ^2.5"
     "@hapi/boom" "^7.4.2"
     "@hapi/hapi" "^18.3.1"
     "@hapist/json-rpc" "^0.2.0"
@@ -9952,6 +9981,11 @@ node-forge@^0.8.5:
   version "0.8.5"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.8.5.tgz#57906f07614dc72762c84cef442f427c0e1b86ee"
   integrity sha512-vFMQIWt+J/7FLNyKouZ9TazT74PRV3wgv9UT4cRjC8BffxFbKXkgIWR42URCPSnHm/QDz6BOlb2Q0U4+VQT67Q==
+
+node-forge@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.9.0.tgz#d624050edbb44874adca12bb9a52ec63cb782579"
+  integrity sha512-7ASaDa3pD+lJ3WvXFsxekJQelBKRpne+GOVbLbtHYdd7pFspyeuJHnWfLplGf3SwKGbfs/aYl5V/JCIaHVUKKQ==
 
 node-gyp@^4.0.0:
   version "4.0.0"

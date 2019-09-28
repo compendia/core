@@ -32,7 +32,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
             const newBalance = wallet.balance.minus(o.amount);
 
-            // 2 minute window for time flexibility
             if (lastBlock.data.timestamp > o.redeemableTimestamp) {
                 o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
                 o.halved = true;
@@ -49,7 +48,9 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 },
             });
 
-            ExpireHelper.storeExpiry(o, wallet, t.id);
+            if (!o.halved) {
+                ExpireHelper.storeExpiry(o, wallet, t.id);
+            }
         }
     }
 

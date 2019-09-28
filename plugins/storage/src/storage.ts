@@ -1,6 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Container, Logger } from "@arkecosystem/core-interfaces";
 import { Managers } from "@nosplatform/crypto";
+import { asValue } from "awilix";
 import * as path from "path";
 // TypeORM imports
 import "reflect-metadata";
@@ -23,6 +24,7 @@ export const plugin: Container.IPluginDescriptor = {
     async register(container: Container.IContainer, options) {
         logger.info(`Registering Storage Plug-in.`);
         logger.info(`Storage Plug-in Database Path: ${dbPath}`);
+        app.register("storage.processing", asValue(false));
         await createConnection({
             type: "sqlite",
             database: dbPath,

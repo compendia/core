@@ -40,10 +40,12 @@ export class StakeRedeemTransaction extends Transactions.Transaction {
         const { data } = this;
         const stakeRedeem = data.asset.stakeRedeem as IStakeRedeemAsset;
 
-        // TODO: Verify that this works
-        const buffer = new ByteBuffer(64, true);
-        buffer.writeUint8(stakeRedeem.txId.length);
-        buffer.append(stakeRedeem.txId, "hex");
+        const txIdBytes = Buffer.from(stakeRedeem.txId, "utf8");
+        const buffer = new ByteBuffer(txIdBytes.length + 1, true);
+
+        buffer.writeUint8(txIdBytes.length);
+        buffer.append(txIdBytes, "hex");
+
         return buffer;
     }
 
@@ -51,7 +53,8 @@ export class StakeRedeemTransaction extends Transactions.Transaction {
         const { data } = this;
         const stakeRedeem = {} as IStakeRedeemAsset;
 
-        stakeRedeem.txId = buf.readBytes(64).toString("hex");
+        const txIdLength = buf.readUint8();
+        stakeRedeem.txId = buf.readString(txIdLength);
 
         data.asset = {
             stakeRedeem,

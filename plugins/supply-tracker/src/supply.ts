@@ -14,6 +14,7 @@ const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
 import { Round, Statistic } from "@nosplatform/storage";
+import { asValue } from "awilix";
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -21,7 +22,6 @@ export const plugin: Container.IPluginDescriptor = {
     alias: "supply-tracker",
     async register(container: Container.IContainer, options) {
         logger.info(`Registering Supply Tracker.`);
-        let processing = false;
 
         /**
          * Bootstrap Database
@@ -61,8 +61,8 @@ export const plugin: Container.IPluginDescriptor = {
         // On new block
         emitter.on("block.applied", async block => {
             const interval = setInterval(async () => {
-                if (!processing) {
-                    processing = true;
+                if (!app.resolve("storage.processing")) {
+                    app.register("storage.processing", asValue(true));
 
                     const blockData: Interfaces.IBlockData = block;
                     // supply global state
@@ -126,7 +126,7 @@ export const plugin: Container.IPluginDescriptor = {
                             Constants.ARKTOSHI,
                         )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                     );
-                    processing = false;
+                    app.register("storage.processing", asValue(false));
                     clearInterval(interval);
                 }
             }, 50);
@@ -185,8 +185,8 @@ export const plugin: Container.IPluginDescriptor = {
         // All transfers from the mint wallet are added to supply
         emitter.on(ApplicationEvents.TransactionApplied, async txData => {
             const interval = setInterval(async () => {
-                if (!processing) {
-                    processing = true;
+                if (!app.resolve("storage.processing")) {
+                    app.register("storage.processing", asValue(true));
                     const genesisBlock: Interfaces.IBlockData = app.getConfig().all().genesisBlock;
                     const tx: Interfaces.ITransactionData = txData;
                     const senderAddress = Identities.Address.fromPublicKey(tx.senderPublicKey);
@@ -225,7 +225,7 @@ export const plugin: Container.IPluginDescriptor = {
                             await round.save();
                         }
                     }
-                    processing = false;
+                    app.register("storage.processing", asValue(false));
                     clearInterval(interval);
                 }
             }, 50);
@@ -234,8 +234,8 @@ export const plugin: Container.IPluginDescriptor = {
         // On stake create
         emitter.on("stake.created", async txData => {
             const interval = setInterval(async () => {
-                if (!processing) {
-                    processing = true;
+                if (!app.resolve("storage.processing")) {
+                    app.register("storage.processing", asValue(true));
                     const tx: Interfaces.ITransactionData = txData;
 
                     const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(tx);
@@ -263,7 +263,7 @@ export const plugin: Container.IPluginDescriptor = {
                             Constants.ARKTOSHI,
                         )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                     );
-                    processing = false;
+                    app.register("storage.processing", asValue(false));
                     clearInterval(interval);
                 }
             }, 50);
@@ -272,8 +272,8 @@ export const plugin: Container.IPluginDescriptor = {
         // On stake create
         emitter.on("stake.released", async stakeObj => {
             const interval = setInterval(async () => {
-                if (!processing) {
-                    processing = true;
+                if (!app.resolve("storage.processing")) {
+                    app.register("storage.processing", asValue(true));
                     const walletManager = app.resolvePlugin("database").walletManager;
                     const sender = walletManager.findByPublicKey(stakeObj.publicKey);
                     const txId = stakeObj.stakeKey;
@@ -302,7 +302,7 @@ export const plugin: Container.IPluginDescriptor = {
                             Constants.ARKTOSHI,
                         )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                     );
-                    processing = false;
+                    app.register("storage.processing", asValue(false));
                     clearInterval(interval);
                 }
             }, 50);

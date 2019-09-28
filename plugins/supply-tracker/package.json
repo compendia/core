@@ -21,8 +21,8 @@
         "@arkecosystem/core-interfaces": "^2.5.24",
         "@arkecosystem/core-container": "^2.5.24",
         "@nosplatform/core-transactions": "^2.5.25-rc.2",
-        "@nosplatform/crypto": "^2.5.25-rc.2",
-        "@nosplatform/stake-transactions": "^0.0.1",
+        "@nosplatform/crypto": "^2.5.25-rc.3",
+        "@nosplatform/stake-transactions": "^0.0.2-rc.5",
         "bytebuffer": "^5.0.1"
     },
     "devDependencies": {

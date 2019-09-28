@@ -48,12 +48,14 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     ): boolean {
         let stakeArray: StakeInterfaces.IStakeArray;
 
+        const sender = databaseWalletManager.findByPublicKey(wallet.publicKey);
+
         // Get wallet stake if it exists
-        if (wallet.stake === {}) {
+        if (sender.stake === {}) {
             throw new WalletHasNoStakeError();
         }
 
-        stakeArray = wallet.stake;
+        stakeArray = sender.stake;
         const { data }: Interfaces.ITransaction = transaction;
         const txId = data.asset.stakeRedeem.txId;
 
@@ -65,7 +67,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (transaction.data.timestamp < stakeArray[txId].redeemableTimestamp && !stakeArray[txId].halved) {
+        if (!stakeArray[txId].halved) {
             throw new StakeNotYetRedeemableError();
         }
 
