@@ -31,6 +31,9 @@ If you discover a security vulnerability within this package, please send an e-m
 Based on [Ark Core](https://github.com/ArkEcosystem).
 
 -   [All Contributors](../../contributors)
+
+ARK Core contributors:
+
 -   [Alex Barnsley](https://github.com/alexbarnsley)
 -   [Brian Faust](https://github.com/faustbrian)
 -   [François-Xavier Thoorens](https://github.com/fix)
