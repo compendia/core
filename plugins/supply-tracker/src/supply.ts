@@ -145,7 +145,18 @@ export const plugin: Container.IPluginDescriptor = {
             // Save round data
             const lastBlock = await databaseService.getLastBlock();
             const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-            const round = await Round.findOne({ id: roundData.round });
+            let round = await Round.findOne({ id: roundData.round });
+
+            if (!round) {
+                round = new Round();
+                round.id = roundData.round;
+                round.removed = "0";
+                round.staked = "0";
+                round.forged = "0";
+                round.topDelegates = "";
+                round.released = "0";
+            }
+
             round.forged = Utils.BigNumber.make(round.forged)
                 .minus(blockData.reward)
                 .minus(blockData.topReward)
@@ -160,7 +171,17 @@ export const plugin: Container.IPluginDescriptor = {
                 // Save round data
                 const lastBlock = await databaseService.getLastBlock();
                 const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-                const round = await Round.findOne({ id: roundData.round });
+                let round = await Round.findOne({ id: roundData.round });
+
+                if (!round) {
+                    round = new Round();
+                    round.id = roundData.round;
+                    round.removed = "0";
+                    round.staked = "0";
+                    round.forged = "0";
+                    round.topDelegates = "";
+                    round.released = "0";
+                }
                 round.removed = Utils.BigNumber.make(round.removed)
                     .minus(blockData.removedFee)
                     .toString();
@@ -193,8 +214,17 @@ export const plugin: Container.IPluginDescriptor = {
 
                     const lastBlock = await databaseService.getLastBlock();
                     const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-                    const round = await Round.findOne({ id: roundData.round });
+                    let round = await Round.findOne({ id: roundData.round });
 
+                    if (!round) {
+                        round = new Round();
+                        round.id = roundData.round;
+                        round.removed = "0";
+                        round.staked = "0";
+                        round.forged = "0";
+                        round.topDelegates = "";
+                        round.released = "0";
+                    }
                     if (tx.type === Enums.TransactionTypes.Transfer && tx.blockId !== genesisBlock.id) {
                         if (senderAddress === genesisBlock.transactions[0].recipientId) {
                             // Add coins to supply when sent from mint address
@@ -252,7 +282,27 @@ export const plugin: Container.IPluginDescriptor = {
                     // Save round data
                     const lastBlock = await databaseService.getLastBlock();
                     const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-                    const round = await Round.findOne({ id: roundData.round });
+                    let round = await Round.findOne({ id: roundData.round });
+
+                    if (!round) {
+                        round = new Round();
+                        round.id = roundData.round;
+                        round.removed = "0";
+                        round.staked = "0";
+                        round.forged = "0";
+                        round.topDelegates = "";
+                        round.released = "0";
+                    }
+                    if (!round) {
+                        round = new Round();
+                        round.id = roundData.round;
+                        round.removed = "0";
+                        round.staked = "0";
+                        round.forged = "0";
+                        round.topDelegates = "";
+                        round.released = "0";
+                    }
+
                     round.staked = Utils.BigNumber.make(round.staked)
                         .plus(o.amount)
                         .toString();
@@ -291,7 +341,17 @@ export const plugin: Container.IPluginDescriptor = {
                     // Save round data
                     const lastBlock = await databaseService.getLastBlock();
                     const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-                    const round = await Round.findOne({ id: roundData.round });
+                    let round = await Round.findOne({ id: roundData.round });
+
+                    if (!round) {
+                        round = new Round();
+                        round.id = roundData.round;
+                        round.removed = "0";
+                        round.staked = "0";
+                        round.forged = "0";
+                        round.topDelegates = "";
+                        round.released = "0";
+                    }
                     round.released = Utils.BigNumber.make(round.released)
                         .plus(stake.amount)
                         .toString();
@@ -325,7 +385,17 @@ export const plugin: Container.IPluginDescriptor = {
                 // Save round data
                 const lastBlock = await databaseService.getLastBlock();
                 const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-                const round = await Round.findOne({ id: roundData.round });
+                let round = await Round.findOne({ id: roundData.round });
+
+                if (!round) {
+                    round = new Round();
+                    round.id = roundData.round;
+                    round.removed = "0";
+                    round.staked = "0";
+                    round.forged = "0";
+                    round.topDelegates = "";
+                    round.released = "0";
+                }
                 if (round) {
                     round.staked = Utils.BigNumber.make(round.staked)
                         .minus(tx.asset.stakeCreate.amount)
