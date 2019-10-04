@@ -1,5 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { roundCalculator } from "@arkecosystem/core-utils";
 import { Handlers } from "@nosplatform/core-transactions";
 import { Constants, Crypto, Interfaces, Managers, Transactions, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
@@ -26,13 +27,15 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();
+        const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
+        const roundBlock: Interfaces.IBlockData = await databaseService.getBlocksByHeight([roundHeight])[0];
 
         for (const t of transactions.rows) {
             const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
             const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
             const newBalance = wallet.balance.minus(o.amount);
 
-            if (lastBlock.data.timestamp > o.redeemableTimestamp) {
+            if (roundBlock.timestamp > o.redeemableTimestamp) {
                 o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
                 o.halved = true;
             }
