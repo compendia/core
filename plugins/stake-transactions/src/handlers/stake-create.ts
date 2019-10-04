@@ -30,7 +30,9 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         if (lastBlock.data.height > 1) {
             const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
-            const roundBlock: Interfaces.IBlockData = await databaseService.getBlocksByHeight([roundHeight])[0];
+            const roundBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+                roundHeight,
+            );
 
             for (const t of transactions.rows) {
                 const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
