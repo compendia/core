@@ -33,8 +33,6 @@ export class VoteTransactionHandler extends TransactionHandler {
                 wallet.voted = true;
             }
         }
-
-        walletManager.buildVoteBalances();
     }
 
     public canBeApplied(

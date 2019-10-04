@@ -39,6 +39,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 },
             });
         }
+        walletManager.buildVoteBalances();
     }
 
     public canBeApplied(
