@@ -47,10 +47,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     [t.id]: o,
                 },
             });
-
-            if (!o.halved) {
-                ExpireHelper.storeExpiry(o, wallet, t.id);
-            }
         }
     }
 

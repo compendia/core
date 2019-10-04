@@ -13,19 +13,17 @@ export interface IExpirationObject {
 
 export class ExpireHelper {
     public static async expireStake(wallet: State.IWallet, stakeKey: string): Promise<void> {
-        q(async () => {
-            const stake: StakeInterfaces.IStakeObject = wallet.stake[stakeKey];
-            const lastBlock: Interfaces.IBlock = app
-                .resolvePlugin<State.IStateService>("state")
-                .getStore()
-                .getLastBlock();
+        const stake: StakeInterfaces.IStakeObject = wallet.stake[stakeKey];
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
+
+        if (!stake.halved && lastBlock.data.timestamp > stake.redeemableTimestamp) {
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
             const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                 "transaction-pool",
             );
-
-            console.log(`${stakeKey}`);
-            console.log(lastBlock.data.timestamp);
 
             app.resolvePlugin("logger").info(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
 
@@ -79,9 +77,10 @@ export class ExpireHelper {
                 poolDelegate.voteBalance = delegate.voteBalance.plus(wallet.stakeWeight);
             }
 
-            this.removeExpiry(stake, wallet, stakeKey);
             this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey });
-        });
+        }
+
+        this.removeExpiry(stake, wallet, stakeKey);
     }
 
     public static async storeExpiry(
@@ -134,14 +133,11 @@ export class ExpireHelper {
                 app.resolvePlugin("logger").info("Processing stake expirations.");
                 for (const expiration of expirations) {
                     const wallet = databaseService.walletManager.findByAddress(expiration.address);
-
-                    console.log(wallet.stake[expiration.stakeKey]);
-
                     if (
                         wallet.stake[expiration.stakeKey] !== undefined &&
                         wallet.stake[expiration.stakeKey].halved === false
                     ) {
-                        this.expireStake(wallet, expiration.stakeKey);
+                        await this.expireStake(wallet, expiration.stakeKey);
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete expiration from db in this case
