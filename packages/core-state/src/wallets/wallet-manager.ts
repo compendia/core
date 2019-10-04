@@ -411,7 +411,7 @@ export class WalletManager implements State.IWalletManager {
         } else if (transaction.type === 101) {
             if (sender.vote) {
                 const delegate: State.IWallet = this.findByPublicKey(sender.vote);
-                const s = sender.stake[transaction.asset.stakeRedeem.stakeKey];
+                const s = sender.stake[transaction.asset.stakeRedeem.txId];
 
                 delegate.voteBalance = revert
                     ? delegate.voteBalance

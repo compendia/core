@@ -102,7 +102,6 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         // Refund stake
         const newBalance = sender.balance.plus(stake.amount);
         const newWeight = sender.stakeWeight.minus(stake.weight);
-        const redeemed = true;
         Object.assign(sender, {
             balance: newBalance,
             stakeWeight: newWeight,
@@ -110,7 +109,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 ...sender.stake,
                 [txId]: {
                     ...sender.stake[txId],
-                    redeemed,
+                    redeemed: true,
                 },
             },
         });
@@ -125,14 +124,13 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const stake = sender.stake[txId];
         // Revert refund stake
         const newBalance = sender.balance.minus(stake.amount);
-        const redeemed = false;
         Object.assign(sender, {
             balance: newBalance,
             stake: {
                 ...sender.stake,
                 [txId]: {
                     ...sender.stake[txId],
-                    redeemed,
+                    redeemed: false,
                 },
             },
         });

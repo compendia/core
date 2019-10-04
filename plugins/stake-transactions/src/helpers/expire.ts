@@ -19,7 +19,7 @@ export class ExpireHelper {
             .getStore()
             .getLastBlock();
 
-        if (!stake.halved && lastBlock.data.timestamp > stake.redeemableTimestamp) {
+        if (!stake.halved && !stake.redeemed && lastBlock.data.timestamp > stake.redeemableTimestamp) {
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
             const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                 "transaction-pool",
