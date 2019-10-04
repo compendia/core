@@ -408,6 +408,21 @@ export class WalletManager implements State.IWalletManager {
                     ? delegate.voteBalance.minus(sWeight).plus(balanceWithFeeFixed)
                     : delegate.voteBalance.minus(balanceWithFeeFixed).plus(sWeight);
             }
+        } else if (transaction.type === 101) {
+            if (sender.vote) {
+                const delegate: State.IWallet = this.findByPublicKey(sender.vote);
+                const s = sender.stake[transaction.asset.stakeRedeem.stakeKey];
+
+                delegate.voteBalance = revert
+                    ? delegate.voteBalance
+                          .plus(s.weight)
+                          .plus(transaction.fee)
+                          .minus(s.amount.times(balanceMulitiplier))
+                    : delegate.voteBalance
+                          .minus(s.weight)
+                          .minus(transaction.fee)
+                          .plus(s.amount.times(balanceMulitiplier));
+            }
         } else if (transaction.type !== Enums.TransactionTypes.Vote) {
             // Update vote balance of the sender's delegate
             if (sender.vote) {
