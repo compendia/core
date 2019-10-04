@@ -2,7 +2,6 @@ import { app } from "@arkecosystem/core-container";
 import { Container, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Handlers } from "@nosplatform/core-transactions";
-import { asValue } from "awilix";
 import { defaults } from "./defaults";
 import { StakeCreateTransactionHandler, StakeRedeemTransactionHandler } from "./handlers";
 import * as StakeHelpers from "./helpers";
@@ -19,17 +18,10 @@ export const plugin: Container.IPluginDescriptor = {
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Redeem Transaction");
         Handlers.Registry.registerCustomTransactionHandler(StakeRedeemTransactionHandler);
         emitter.on("block.applied", async block => {
-            const interval = setInterval(async () => {
-                if (app.has("storage.processing") && !app.resolve("storage.processing")) {
-                    app.register("storage.processing", asValue(true));
-                    const isNewRound = roundCalculator.isNewRound(block.height);
-                    if (isNewRound) {
-                        await StakeHelpers.ExpireHelper.processExpirations();
-                    }
-                    app.register("storage.processing", asValue(false));
-                    clearInterval(interval);
-                }
-            }, 50);
+            const isNewRound = roundCalculator.isNewRound(block.height);
+            if (isNewRound) {
+                await StakeHelpers.ExpireHelper.processExpirations();
+            }
         });
     },
     async deregister(container: Container.IContainer, options) {
