@@ -27,9 +27,12 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             const stake = sender.stake[txId];
             // Refund stake
             const newBalance = sender.balance.plus(stake.amount);
+            const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
+            const newWeight = wallet.stakeWeight.minus(stake.weight);
             const redeemed = true;
             Object.assign(sender, {
                 balance: newBalance,
+                stakeWeight: newWeight,
                 stake: {
                     ...sender.stake,
                     [txId]: {
