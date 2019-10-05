@@ -38,10 +38,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const wallet: State.IWallet = walletManager.findByPublicKey(t.senderPublicKey);
                 const o: StakeInterfaces.IStakeObject = VoteWeight.stakeObject(t);
                 const newBalance = wallet.balance.minus(o.amount);
+                ExpireHelper.storeExpiry(o, wallet, t.id);
 
                 if (roundBlock.timestamp > o.redeemableTimestamp) {
                     o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
                     o.halved = true;
+                    ExpireHelper.removeExpiry(o, wallet, t.id);
                 }
 
                 const newWeight = wallet.stakeWeight.plus(o.weight);
@@ -74,7 +76,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeTimestampError();
         }
 
-        if (data.asset.stakeCreate.timestamp in wallet.stake) {
+        if (transaction.id in wallet.stake) {
             throw new StakeAlreadyExistsError();
         }
 

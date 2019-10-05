@@ -80,7 +80,10 @@ export class ExpireHelper {
             this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey });
         }
 
-        this.removeExpiry(stake, wallet, stakeKey);
+        // If the stake is somehow still unreleased, don't remove it from db
+        if (!(block.timestamp <= stake.redeemableTimestamp)) {
+            this.removeExpiry(stake, wallet, stakeKey);
+        }
     }
 
     public static async storeExpiry(
@@ -137,7 +140,7 @@ export class ExpireHelper {
                     // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                     // Delete expiration from db in this case
                     app.resolvePlugin("logger").info(
-                        `Unknown ${expiration.stakeKey} of wallet ${wallet.address} deleted from storage.`,
+                        `Unknown or already processed ${expiration.stakeKey} of wallet ${wallet.address}. Deleted from storage.`,
                     );
                     await expiration.remove();
                 }
