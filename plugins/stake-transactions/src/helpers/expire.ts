@@ -12,14 +12,14 @@ export interface IExpirationObject {
 }
 
 export class ExpireHelper {
-    public static async expireStake(wallet: State.IWallet, stakeKey: string): Promise<void> {
+    public static async expireStake(
+        wallet: State.IWallet,
+        stakeKey: string,
+        block: Interfaces.IBlockData,
+    ): Promise<void> {
         const stake: StakeInterfaces.IStakeObject = wallet.stake[stakeKey];
-        const lastBlock: Interfaces.IBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
 
-        if (!stake.halved && !stake.redeemed && lastBlock.data.timestamp > stake.redeemableTimestamp) {
+        if (!stake.halved && !stake.redeemed && block.timestamp > stake.redeemableTimestamp) {
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
             const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                 "transaction-pool",
@@ -118,34 +118,31 @@ export class ExpireHelper {
         });
     }
 
-    public static async processExpirations(): Promise<void> {
-        q(async () => {
-            const lastBlock: Interfaces.IBlock = app
-                .resolvePlugin<State.IStateService>("state")
-                .getStore()
-                .getLastBlock();
-            const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-            const lastTime = lastBlock.data.timestamp;
-            const [expirations, expirationsCount] = await Stake.findAndCount({
-                where: { redeemableTimestamp: LessThan(lastTime) },
-            });
-            if (expirationsCount > 0) {
-                app.resolvePlugin("logger").info("Processing stake expirations.");
-                for (const expiration of expirations) {
-                    const wallet = databaseService.walletManager.findByAddress(expiration.address);
-                    if (
-                        wallet.stake[expiration.stakeKey] !== undefined &&
-                        wallet.stake[expiration.stakeKey].halved === false
-                    ) {
-                        await this.expireStake(wallet, expiration.stakeKey);
-                    } else {
-                        // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
-                        // Delete expiration from db in this case
-                        await expiration.remove();
-                    }
+    public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {
+        const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        const lastTime = block.timestamp;
+        const [expirations, expirationsCount] = await Stake.findAndCount({
+            where: { redeemableTimestamp: LessThan(lastTime) },
+        });
+        if (expirationsCount > 0) {
+            app.resolvePlugin("logger").info("Processing stake expirations.");
+            for (const expiration of expirations) {
+                const wallet = databaseService.walletManager.findByAddress(expiration.address);
+                if (
+                    wallet.stake[expiration.stakeKey] !== undefined &&
+                    wallet.stake[expiration.stakeKey].halved === false
+                ) {
+                    await this.expireStake(wallet, expiration.stakeKey, block);
+                } else {
+                    // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
+                    // Delete expiration from db in this case
+                    app.resolvePlugin("logger").info(
+                        `Unknown ${expiration.stakeKey} of wallet ${wallet.address} deleted from storage.`,
+                    );
+                    await expiration.remove();
                 }
             }
-        });
+        }
     }
 
     private static readonly emitter: EventEmitter.EventEmitter = app.resolvePlugin<EventEmitter.EventEmitter>(

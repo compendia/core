@@ -2,6 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { Container, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Handlers } from "@nosplatform/core-transactions";
+import { q } from "@nosplatform/storage";
 import { defaults } from "./defaults";
 import { StakeCreateTransactionHandler, StakeRedeemTransactionHandler } from "./handlers";
 import * as StakeHelpers from "./helpers";
@@ -20,7 +21,7 @@ export const plugin: Container.IPluginDescriptor = {
         emitter.on("block.applied", async block => {
             const isNewRound = roundCalculator.isNewRound(block.height);
             if (isNewRound) {
-                await StakeHelpers.ExpireHelper.processExpirations();
+                q(async () => await StakeHelpers.ExpireHelper.processExpirations(block));
             }
         });
     },
