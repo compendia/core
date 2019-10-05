@@ -43,7 +43,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 if (roundBlock.timestamp > o.redeemableTimestamp) {
                     o.weight = Utils.BigNumber.make(o.weight.dividedBy(2).toFixed(0, 1));
                     o.halved = true;
-                    ExpireHelper.removeExpiry(o, wallet, t.id);
                 }
 
                 const newWeight = wallet.stakeWeight.plus(o.weight);
@@ -145,7 +144,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 [transaction.id]: undefined,
             },
         });
-        ExpireHelper.removeExpiry(o, sender, transaction.id);
     }
 
     protected applyToRecipient(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): void {
