@@ -71,7 +71,10 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyRedeemedError();
         }
 
-        if (!stakeArray[txId].halved) {
+        if (
+            (!transaction.timestamp && !stakeArray[txId].halved) ||
+            (transaction.timestamp && transaction.timestamp < stakeArray[txId].redeemableTimestamp)
+        ) {
             throw new StakeNotYetRedeemableError();
         }
 

@@ -8,15 +8,15 @@ export class Round extends BaseEntity {
     @Column()
     public topDelegates: string;
 
-    @Column()
-    public forged: string;
+    @Column("bigint")
+    public forged: number;
 
-    @Column()
-    public removed: string;
+    @Column("bigint")
+    public removed: number;
 
-    @Column()
-    public staked: string;
+    @Column("bigint")
+    public staked: number;
 
-    @Column()
-    public released: string;
+    @Column("bigint")
+    public released: number;
 }

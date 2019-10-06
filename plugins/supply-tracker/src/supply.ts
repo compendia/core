@@ -9,6 +9,8 @@ import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { MoreThan } from "typeorm";
 import { defaults } from "./defaults";
 
+import { getConnection } from "typeorm";
+
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
@@ -80,25 +82,21 @@ export const plugin: Container.IPluginDescriptor = {
             // Save round data
             const roundData = roundCalculator.calculateRound(blockData.height);
 
-            let round = await Round.findOne({ id: roundData.round });
-
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
-                round.topDelegates = "";
-                round.released = "0";
-            }
+            const round = new Round();
+            round.id = roundData.round;
+            round.removed = 0;
+            round.staked = 0;
+            round.forged = 0;
+            round.topDelegates = "";
+            round.released = 0;
 
             round.forged = Utils.BigNumber.make(round.forged)
                 .plus(blockData.reward)
                 .plus(blockData.topReward)
-                .toString();
+                .toNumber();
             round.removed = Utils.BigNumber.make(round.removed)
                 .plus(blockData.removedFee)
-                .toString();
+                .toNumber();
 
             // Store round top delegates if not already stored
             if (round.topDelegates === "") {
@@ -116,7 +114,16 @@ export const plugin: Container.IPluginDescriptor = {
                 }
                 round.topDelegates = topDelegates.toString();
             }
-            await round.save();
+
+            await getConnection()
+                .createQueryBuilder()
+                .insert()
+                .into(Round)
+                .values(round)
+                .onConflict(
+                    `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
+                )
+                .execute();
 
             logger.info(
                 `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
