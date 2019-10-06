@@ -23,7 +23,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const transactionsRepository = databaseService.transactionsBusinessRepository;
         const transactions = await transactionsRepository.findAllByType(this.getConstructor().type);
-        const lastBlock: Interfaces.IBlock = app
+        const lastBlock: Interfaces.IBlock = await app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
             .getLastBlock();

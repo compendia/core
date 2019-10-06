@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
-import { Container, Database, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
+import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Enums, Identities, Interfaces, Managers, Utils } from "@nosplatform/crypto";
 import { Constants } from "@nosplatform/crypto";
@@ -212,6 +212,8 @@ export const plugin: Container.IPluginDescriptor = {
                     supply.value = Utils.BigNumber.make(supply.value)
                         .plus(tx.amount)
                         .toString();
+                    await supply.save();
+
                     // Save round data
                     round.forged = Utils.BigNumber.make(round.forged)
                         .plus(tx.amount)
@@ -231,7 +233,6 @@ export const plugin: Container.IPluginDescriptor = {
                             supply.value
                         }`,
                     );
-                    await supply.save();
                 } else if (tx.recipientId === genesisBlock.transactions[0].recipientId) {
                     // Remove coins from supply when sent to mint address
                     supply.value = Utils.BigNumber.make(supply.value)
@@ -321,19 +322,21 @@ export const plugin: Container.IPluginDescriptor = {
             await staked.save();
 
             // Save round data
-            const lastBlock = await databaseService.getLastBlock();
-            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-            let round = await Round.findOne({ id: roundData.round });
+            const lastBlock: Interfaces.IBlock = await app
+                .resolvePlugin<State.IStateService>("state")
+                .getStore()
+                .getLastBlock();
 
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = 0;
-                round.staked = 0;
-                round.forged = 0;
-                round.topDelegates = "";
-                round.released = 0;
-            }
+            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+
+            const round = new Round();
+            round.id = roundData.round;
+            round.removed = 0;
+            round.staked = 0;
+            round.forged = 0;
+            round.topDelegates = "";
+            round.released = 0;
+
             round.released = Utils.BigNumber.make(round.released)
                 .plus(stake.amount)
                 .toNumber();
