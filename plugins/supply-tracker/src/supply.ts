@@ -143,7 +143,11 @@ export const plugin: Container.IPluginDescriptor = {
             await supply.save();
 
             // Save round data
-            const lastBlock = await databaseService.getLastBlock();
+            const lastBlock: Interfaces.IBlock = await app
+                .resolvePlugin<State.IStateService>("state")
+                .getStore()
+                .getLastBlock();
+
             const roundData = roundCalculator.calculateRound(lastBlock.data.height);
             let round = await Round.findOne({ id: roundData.round });
 
@@ -195,9 +199,12 @@ export const plugin: Container.IPluginDescriptor = {
             const tx: Interfaces.ITransactionData = txData;
             const senderAddress = Identities.Address.fromPublicKey(tx.senderPublicKey);
 
-            const lastBlock = await databaseService.getLastBlock();
-            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const lastBlock: Interfaces.IBlock = await app
+                .resolvePlugin<State.IStateService>("state")
+                .getStore()
+                .getLastBlock();
 
+            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
             const round = new Round();
             round.id = roundData.round;
             round.removed = 0;
@@ -273,7 +280,10 @@ export const plugin: Container.IPluginDescriptor = {
             await staked.save();
 
             // Save round data
-            const lastBlock = await databaseService.getLastBlock();
+            const lastBlock: Interfaces.IBlock = await app
+                .resolvePlugin<State.IStateService>("state")
+                .getStore()
+                .getLastBlock();
             const roundData = roundCalculator.calculateRound(lastBlock.data.height);
 
             const round = new Round();
@@ -373,7 +383,11 @@ export const plugin: Container.IPluginDescriptor = {
                 await staked.save();
 
                 // Save round data
-                const lastBlock = await databaseService.getLastBlock();
+                const lastBlock: Interfaces.IBlock = await app
+                    .resolvePlugin<State.IStateService>("state")
+                    .getStore()
+                    .getLastBlock();
+
                 const roundData = roundCalculator.calculateRound(lastBlock.data.height);
                 let round = await Round.findOne({ id: roundData.round });
 
