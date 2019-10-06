@@ -160,7 +160,7 @@ export const plugin: Container.IPluginDescriptor = {
             round.forged = Utils.BigNumber.make(round.forged)
                 .minus(blockData.reward)
                 .minus(blockData.topReward)
-                .toString();
+                .toNumber();
 
             if (blockData.removedFee.isGreaterThan(Utils.BigNumber.ZERO)) {
                 removedFees.value = Utils.BigNumber.make(removedFees.value)
@@ -170,7 +170,7 @@ export const plugin: Container.IPluginDescriptor = {
 
                 round.removed = Utils.BigNumber.make(round.removed)
                     .minus(blockData.removedFee)
-                    .toString();
+                    .toNumber();
             }
 
             await round.save();
@@ -215,7 +215,7 @@ export const plugin: Container.IPluginDescriptor = {
                     // Save round data
                     round.forged = Utils.BigNumber.make(round.forged)
                         .plus(tx.amount)
-                        .toString();
+                        .toNumber();
 
                     await getConnection()
                         .createQueryBuilder()
@@ -241,7 +241,7 @@ export const plugin: Container.IPluginDescriptor = {
                     // Save round data
                     round.forged = Utils.BigNumber.make(round.forged)
                         .minus(tx.amount)
-                        .toString();
+                        .toNumber();
 
                     await getConnection()
                         .createQueryBuilder()
@@ -285,7 +285,7 @@ export const plugin: Container.IPluginDescriptor = {
 
             round.staked = Utils.BigNumber.make(round.staked)
                 .plus(o.amount)
-                .toString();
+                .toNumber();
 
             await getConnection()
                 .createQueryBuilder()
@@ -336,7 +336,7 @@ export const plugin: Container.IPluginDescriptor = {
             }
             round.released = Utils.BigNumber.make(round.released)
                 .plus(stake.amount)
-                .toString();
+                .toNumber();
 
             await getConnection()
                 .createQueryBuilder()
@@ -377,17 +377,17 @@ export const plugin: Container.IPluginDescriptor = {
                 if (!round) {
                     round = new Round();
                     round.id = roundData.round;
-                    round.removed = "0";
-                    round.staked = "0";
-                    round.forged = "0";
+                    round.removed = 0;
+                    round.staked = 0;
+                    round.forged = 0;
                     round.topDelegates = "";
-                    round.released = "0";
+                    round.released = 0;
                 }
 
                 if (round) {
                     round.staked = Utils.BigNumber.make(round.staked)
                         .minus(tx.asset.stakeCreate.amount)
-                        .toString();
+                        .toNumber();
                     await round.save();
                 }
 
