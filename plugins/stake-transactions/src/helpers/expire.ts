@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@nosplatform/crypto";
 import { StakeInterfaces } from "@nosplatform/stake-interfaces";
-import { q, Stake } from "@nosplatform/storage";
+import { Stake } from "@nosplatform/storage";
 import { LessThan } from "typeorm";
 
 export interface IExpirationObject {
@@ -91,20 +91,18 @@ export class ExpireHelper {
         wallet: State.IWallet,
         stakeKey: string,
     ): Promise<void> {
-        q(async () => {
-            const stakeModel = await Stake.findOne({
-                address: wallet.address,
-                redeemableTimestamp: stake.redeemableTimestamp,
-                stakeKey,
-            });
-            if (!stakeModel && !wallet.stake[stakeKey].halved) {
-                const stakeModel = new Stake();
-                stakeModel.stakeKey = stakeKey;
-                stakeModel.address = wallet.address;
-                stakeModel.redeemableTimestamp = stake.redeemableTimestamp;
-                await stakeModel.save();
-            }
+        const stakeModel = await Stake.findOne({
+            address: wallet.address,
+            redeemableTimestamp: stake.redeemableTimestamp,
+            stakeKey,
         });
+        if (!stakeModel && !wallet.stake[stakeKey].halved) {
+            const stakeModel = new Stake();
+            stakeModel.stakeKey = stakeKey;
+            stakeModel.address = wallet.address;
+            stakeModel.redeemableTimestamp = stake.redeemableTimestamp;
+            await stakeModel.save();
+        }
     }
 
     public static async removeExpiry(
@@ -112,13 +110,11 @@ export class ExpireHelper {
         wallet: State.IWallet,
         stakeKey: string,
     ): Promise<void> {
-        q(async () => {
-            const redeemableTimestamp = stake.redeemableTimestamp;
-            const stakeModel = await Stake.findOne({ address: wallet.address, redeemableTimestamp, stakeKey });
-            if (stakeModel) {
-                await stakeModel.remove();
-            }
-        });
+        const redeemableTimestamp = stake.redeemableTimestamp;
+        const stakeModel = await Stake.findOne({ address: wallet.address, redeemableTimestamp, stakeKey });
+        if (stakeModel) {
+            await stakeModel.remove();
+        }
     }
 
     public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {

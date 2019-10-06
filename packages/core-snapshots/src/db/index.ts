@@ -49,7 +49,7 @@ export class Database {
 
     public async truncate() {
         try {
-            const tables: string = "rounds, transactions, blocks";
+            const tables: string = "rounds, transactions, blocks, plugin.round, plugin.stake, plugin.statistic";
 
             logger.info(`Truncating tables: ${tables}`);
 

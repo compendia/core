@@ -34,13 +34,32 @@ export const plugin: Container.IPluginDescriptor = {
     async register(container: Container.IContainer, options) {
         logger.info(`Registering Storage Plug-in.`);
         logger.info(`Storage Plug-in Database Path: ${dbPath}`);
-        await createConnection({
-            type: "sqlite",
-            database: dbPath,
+
+        let connection = await createConnection({
+            type: "postgres",
+            host: process.env.CORE_DB_HOST,
+            port: Number(process.env.CORE_DB_PORT),
+            username: process.env.CORE_DB_USERNAME,
+            password: process.env.CORE_DB_PASSWORD,
+            database: process.env.CORE_DB_DATABASE,
+        });
+
+        await connection.query('CREATE SCHEMA IF NOT EXISTS "plugin"');
+        await connection.close();
+
+        connection = await createConnection({
+            type: "postgres",
+            host: process.env.CORE_DB_HOST,
+            port: Number(process.env.CORE_DB_PORT),
+            username: process.env.CORE_DB_USERNAME,
+            password: process.env.CORE_DB_PASSWORD,
+            database: process.env.CORE_DB_DATABASE,
+            synchronize: true,
+            schema: "plugin",
             // Import entities to connection
             entities: [Stake, Statistic, Round],
-            synchronize: true,
         });
+
         startServer({ host: "0.0.0.0", port: 8000 });
     },
     async deregister(container: Container.IContainer, options) {
