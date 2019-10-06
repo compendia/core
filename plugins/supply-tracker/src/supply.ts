@@ -150,11 +150,11 @@ export const plugin: Container.IPluginDescriptor = {
             if (!round) {
                 round = new Round();
                 round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
+                round.removed = 0;
+                round.staked = 0;
+                round.forged = 0;
                 round.topDelegates = "";
-                round.released = "0";
+                round.released = 0;
             }
 
             round.forged = Utils.BigNumber.make(round.forged)
@@ -168,20 +168,6 @@ export const plugin: Container.IPluginDescriptor = {
                     .toString();
                 removedFees.save();
 
-                // Save round data
-                const lastBlock = await databaseService.getLastBlock();
-                const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-                let round = await Round.findOne({ id: roundData.round });
-
-                if (!round) {
-                    round = new Round();
-                    round.id = roundData.round;
-                    round.removed = "0";
-                    round.staked = "0";
-                    round.forged = "0";
-                    round.topDelegates = "";
-                    round.released = "0";
-                }
                 round.removed = Utils.BigNumber.make(round.removed)
                     .minus(blockData.removedFee)
                     .toString();
@@ -211,17 +197,15 @@ export const plugin: Container.IPluginDescriptor = {
 
             const lastBlock = await databaseService.getLastBlock();
             const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-            let round = await Round.findOne({ id: roundData.round });
 
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
-                round.topDelegates = "";
-                round.released = "0";
-            }
+            const round = new Round();
+            round.id = roundData.round;
+            round.removed = 0;
+            round.staked = 0;
+            round.forged = 0;
+            round.topDelegates = "";
+            round.released = 0;
+
             if (tx.type === Enums.TransactionTypes.Transfer && tx.blockId !== genesisBlock.id) {
                 if (senderAddress === genesisBlock.transactions[0].recipientId) {
                     // Add coins to supply when sent from mint address
@@ -232,7 +216,16 @@ export const plugin: Container.IPluginDescriptor = {
                     round.forged = Utils.BigNumber.make(round.forged)
                         .plus(tx.amount)
                         .toString();
-                    await round.save();
+
+                    await getConnection()
+                        .createQueryBuilder()
+                        .insert()
+                        .into(Round)
+                        .values(round)
+                        .onConflict(
+                            `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
+                        )
+                        .execute();
                     logger.info(
                         `Transaction from mint wallet: ${tx.amount.toString()} added to supply. New supply: ${
                             supply.value
@@ -249,7 +242,16 @@ export const plugin: Container.IPluginDescriptor = {
                     round.forged = Utils.BigNumber.make(round.forged)
                         .minus(tx.amount)
                         .toString();
-                    await round.save();
+
+                    await getConnection()
+                        .createQueryBuilder()
+                        .insert()
+                        .into(Round)
+                        .values(round)
+                        .onConflict(
+                            `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
+                        )
+                        .execute();
                 }
             }
         });
@@ -272,31 +274,28 @@ export const plugin: Container.IPluginDescriptor = {
             // Save round data
             const lastBlock = await databaseService.getLastBlock();
             const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-            let round = await Round.findOne({ id: roundData.round });
 
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
-                round.topDelegates = "";
-                round.released = "0";
-            }
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
-                round.topDelegates = "";
-                round.released = "0";
-            }
+            const round = new Round();
+            round.id = roundData.round;
+            round.removed = 0;
+            round.staked = 0;
+            round.forged = 0;
+            round.topDelegates = "";
+            round.released = 0;
 
             round.staked = Utils.BigNumber.make(round.staked)
                 .plus(o.amount)
                 .toString();
-            await round.save();
+
+            await getConnection()
+                .createQueryBuilder()
+                .insert()
+                .into(Round)
+                .values(round)
+                .onConflict(
+                    `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
+                )
+                .execute();
 
             logger.info(
                 `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
@@ -329,16 +328,25 @@ export const plugin: Container.IPluginDescriptor = {
             if (!round) {
                 round = new Round();
                 round.id = roundData.round;
-                round.removed = "0";
-                round.staked = "0";
-                round.forged = "0";
+                round.removed = 0;
+                round.staked = 0;
+                round.forged = 0;
                 round.topDelegates = "";
-                round.released = "0";
+                round.released = 0;
             }
             round.released = Utils.BigNumber.make(round.released)
                 .plus(stake.amount)
                 .toString();
-            await round.save();
+
+            await getConnection()
+                .createQueryBuilder()
+                .insert()
+                .into(Round)
+                .values(round)
+                .onConflict(
+                    `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
+                )
+                .execute();
 
             logger.info(
                 `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
@@ -375,6 +383,7 @@ export const plugin: Container.IPluginDescriptor = {
                     round.topDelegates = "";
                     round.released = "0";
                 }
+
                 if (round) {
                     round.staked = Utils.BigNumber.make(round.staked)
                         .minus(tx.asset.stakeCreate.amount)
