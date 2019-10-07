@@ -14,6 +14,7 @@ import { getConnection } from "typeorm";
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+const blocksRepository: Database.IBlocksBusinessRepository = databaseService.blocksBusinessRepository;
 
 import { Round, Statistic } from "@nosplatform/storage";
 
@@ -143,12 +144,7 @@ export const plugin: Container.IPluginDescriptor = {
             await supply.save();
 
             // Save round data
-            const lastBlock: Interfaces.IBlock = await app
-                .resolvePlugin<State.IStateService>("state")
-                .getStore()
-                .getLastBlock();
-
-            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const roundData = roundCalculator.calculateRound(blockData.height);
             let round = await Round.findOne({ id: roundData.round });
 
             if (!round) {
@@ -198,13 +194,14 @@ export const plugin: Container.IPluginDescriptor = {
             const genesisBlock: Interfaces.IBlockData = app.getConfig().all().genesisBlock;
             const tx: Interfaces.ITransactionData = txData;
             const senderAddress = Identities.Address.fromPublicKey(tx.senderPublicKey);
-
-            const lastBlock: Interfaces.IBlock = await app
-                .resolvePlugin<State.IStateService>("state")
-                .getStore()
-                .getLastBlock();
-
-            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            let lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+            if (!lastBlock) {
+                lastBlock = await app
+                    .resolvePlugin<State.IStateService>("state")
+                    .getStore()
+                    .getLastBlock().data;
+            }
+            const roundData = roundCalculator.calculateRound(lastBlock.height);
             const round = new Round();
             round.id = roundData.round;
             round.removed = 0;
@@ -278,14 +275,9 @@ export const plugin: Container.IPluginDescriptor = {
 
             await supply.save();
             await staked.save();
-
             // Save round data
-            const lastBlock: Interfaces.IBlock = await app
-                .resolvePlugin<State.IStateService>("state")
-                .getStore()
-                .getLastBlock();
-            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
-
+            const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+            const roundData = roundCalculator.calculateRound(lastBlock.height);
             const round = new Round();
             round.id = roundData.round;
             round.removed = 0;
@@ -309,9 +301,9 @@ export const plugin: Container.IPluginDescriptor = {
                 .execute();
 
             logger.info(
-                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
-                    supply.value,
-                ).dividedBy(Constants.ARKTOSHI)}`,
+                `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
+                    Constants.ARKTOSHI,
+                )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
             );
         });
 
@@ -320,6 +312,7 @@ export const plugin: Container.IPluginDescriptor = {
             const walletManager = app.resolvePlugin("database").walletManager;
             const sender = walletManager.findByPublicKey(stakeObj.publicKey);
             const txId = stakeObj.stakeKey;
+            const block: Interfaces.IBlockData = stakeObj.block;
             const stake: StakeInterfaces.IStakeObject = sender.stake[txId];
             const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
 
@@ -332,12 +325,7 @@ export const plugin: Container.IPluginDescriptor = {
             await staked.save();
 
             // Save round data
-            const lastBlock: Interfaces.IBlock = await app
-                .resolvePlugin<State.IStateService>("state")
-                .getStore()
-                .getLastBlock();
-
-            const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+            const roundData = roundCalculator.calculateRound(block.height);
 
             const round = new Round();
             round.id = roundData.round;
@@ -383,12 +371,9 @@ export const plugin: Container.IPluginDescriptor = {
                 await staked.save();
 
                 // Save round data
-                const lastBlock: Interfaces.IBlock = await app
-                    .resolvePlugin<State.IStateService>("state")
-                    .getStore()
-                    .getLastBlock();
+                const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
 
-                const roundData = roundCalculator.calculateRound(lastBlock.data.height);
+                const roundData = roundCalculator.calculateRound(lastBlock.height);
                 let round = await Round.findOne({ id: roundData.round });
 
                 if (!round) {

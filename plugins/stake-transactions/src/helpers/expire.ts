@@ -77,7 +77,7 @@ export class ExpireHelper {
                 poolDelegate.voteBalance = delegate.voteBalance.plus(wallet.stakeWeight);
             }
 
-            this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey });
+            this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey, block });
         }
 
         // If the stake is somehow still unreleased, don't remove it from db
