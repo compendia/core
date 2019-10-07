@@ -490,6 +490,22 @@ export class Blockchain implements blockchain.IBlockchain {
         return Crypto.Slots.getTime() - block.timestamp < 3 * config.getMilestone(block.height).blocktime;
     }
 
+    /*
+     * Determine if the custom storage is synced.
+     */
+    public isCustomStorageSynced(block?: Interfaces.IBlockData): boolean {
+        block = block || this.getLastBlock().data;
+
+        let customDbSynced = false;
+        if (app.has("supply.lastblock")) {
+            const customBlockHeight = app.resolve("supply.lastblock");
+            customDbSynced = customBlockHeight === block.height;
+            console.log(`${customBlockHeight} === ${block.height}`);
+        }
+
+        return customDbSynced;
+    }
+
     public async replay(targetHeight?: number): Promise<void> {
         return;
     }

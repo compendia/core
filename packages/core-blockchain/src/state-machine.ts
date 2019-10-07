@@ -45,6 +45,12 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
         return blockchain.dispatch(blockchain.isSynced() ? "SYNCED" : "NOTSYNCED");
     },
 
+    checkCustomStorageSynced() {
+        return blockchain.dispatch(
+            blockchain.isCustomStorageSynced() ? "CUSTOMSTORAGESYNCED" : "CUSTOMSTORAGENOTSYNCED",
+        );
+    },
+
     async checkLastDownloadedBlockSynced() {
         let event = "NOTSYNCED";
         logger.debug(`Queued chunks of blocks (process: ${blockchain.queue.length()})`);

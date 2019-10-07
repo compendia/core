@@ -38,8 +38,15 @@ export const syncWithNetwork = {
         processFinished: {
             onEntry: ["checkLastBlockSynced"],
             on: {
-                SYNCED: "end",
+                SYNCED: "customStorageSynced",
                 NOTSYNCED: "downloadBlocks",
+            },
+        },
+        customStorageSynced: {
+            onEntry: ["checkCustomStorageSynced"],
+            on: {
+                CUSTOMSTORAGESYNCED: "end",
+                CUSTOMSTORAGENOTNOTSYNCED: "downloadBlocks",
             },
         },
         end: {

@@ -9,14 +9,13 @@ import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { MoreThan } from "typeorm";
 import { defaults } from "./defaults";
 
-import { getConnection } from "typeorm";
-
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 const blocksRepository: Database.IBlocksBusinessRepository = databaseService.blocksBusinessRepository;
 
-import { Round, Statistic } from "@nosplatform/storage";
+import { q, Round, Statistic } from "@nosplatform/storage";
+import { asValue } from "awilix";
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -56,81 +55,87 @@ export const plugin: Container.IPluginDescriptor = {
             await staked.save();
         }
 
+        async function findOrCreate(model, id) {
+            let res;
+            if (model === "Round") {
+                let round = await Round.findOne(id);
+                if (!round) {
+                    round = new Round();
+                    round.id = id;
+                    round.removed = 0;
+                    round.staked = 0;
+                    round.forged = 0;
+                    round.topDelegates = "";
+                    round.released = 0;
+                }
+                res = round;
+            }
+            return res;
+        }
+
         /**
          * Event Listeners
          */
 
         // On new block
         emitter.on("block.applied", async block => {
-            const blockData: Interfaces.IBlockData = block;
-            // supply global state
-            const lastSupply = Utils.BigNumber.make(supply.value);
-            supply.value = lastSupply
-                .plus(blockData.reward)
-                .plus(blockData.topReward)
-                .minus(blockData.removedFee)
-                .toString();
-            await supply.save();
-
-            // fees.removed global state
-            if (Utils.BigNumber.make(blockData.removedFee).isGreaterThan(Utils.BigNumber.ZERO)) {
-                removedFees.value = Utils.BigNumber.make(removedFees.value)
-                    .plus(blockData.removedFee)
+            q(async () => {
+                const blockData: Interfaces.IBlockData = block;
+                // supply global state
+                const lastSupply = Utils.BigNumber.make(supply.value);
+                supply.value = lastSupply
+                    .plus(blockData.reward)
+                    .plus(blockData.topReward)
+                    .minus(blockData.removedFee)
                     .toString();
-                await removedFees.save();
-            }
+                await supply.save();
 
-            // Save round data
-            const roundData = roundCalculator.calculateRound(blockData.height);
-
-            const round = new Round();
-            round.id = roundData.round;
-            round.removed = 0;
-            round.staked = 0;
-            round.forged = 0;
-            round.topDelegates = "";
-            round.released = 0;
-
-            round.forged = Utils.BigNumber.make(round.forged)
-                .plus(blockData.reward)
-                .plus(blockData.topReward)
-                .toNumber();
-            round.removed = Utils.BigNumber.make(round.removed)
-                .plus(blockData.removedFee)
-                .toNumber();
-
-            // Store round top delegates if not already stored
-            if (round.topDelegates === "") {
-                const delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
-                const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
-                const topDelegates = [];
-                let i = 0;
-                for (const delegate of delegates) {
-                    if (i < topDelegateCount) {
-                        topDelegates.push(delegate.address);
-                    } else {
-                        break;
-                    }
-                    i++;
+                // fees.removed global state
+                if (Utils.BigNumber.make(blockData.removedFee).isGreaterThan(Utils.BigNumber.ZERO)) {
+                    removedFees.value = Utils.BigNumber.make(removedFees.value)
+                        .plus(blockData.removedFee)
+                        .toString();
+                    await removedFees.save();
                 }
-                round.topDelegates = topDelegates.toString();
-            }
 
-            await getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(Round)
-                .values(round)
-                .onConflict(
-                    `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
-                )
-                .execute();
+                // Save round data
+                const roundData = roundCalculator.calculateRound(blockData.height);
+                const round = await findOrCreate("Round", roundData.round);
+                round.forged = Utils.BigNumber.make(round.forged)
+                    .plus(blockData.reward)
+                    .plus(blockData.topReward)
+                    .toNumber();
+                round.removed = Utils.BigNumber.make(round.removed)
+                    .plus(blockData.removedFee)
+                    .toNumber();
 
-            logger.info(
-                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
-                    supply.value,
-                ).dividedBy(Constants.ARKTOSHI)}`,
-            );
+                // Store round top delegates if not already stored
+                if (round.topDelegates === "") {
+                    const delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
+                    const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
+                    const topDelegates = [];
+                    let i = 0;
+                    for (const delegate of delegates) {
+                        if (i < topDelegateCount) {
+                            topDelegates.push(delegate.address);
+                        } else {
+                            break;
+                        }
+                        i++;
+                    }
+                    round.topDelegates = topDelegates.toString();
+                }
+
+                await round.save();
+
+                logger.info(
+                    `Block ${blockData.height} applied. Supply updated. Previous: ${lastSupply.dividedBy(
+                        Constants.ARKTOSHI,
+                    )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                );
+                console.log(`store block ${blockData.height}`);
+                app.register("supply.lastblock", asValue(blockData.height));
+            });
         });
 
         emitter.on("block.reverted", async block => {
@@ -145,17 +150,7 @@ export const plugin: Container.IPluginDescriptor = {
 
             // Save round data
             const roundData = roundCalculator.calculateRound(blockData.height);
-            let round = await Round.findOne({ id: roundData.round });
-
-            if (!round) {
-                round = new Round();
-                round.id = roundData.round;
-                round.removed = 0;
-                round.staked = 0;
-                round.forged = 0;
-                round.topDelegates = "";
-                round.released = 0;
-            }
+            const round = await findOrCreate("Round", roundData.round);
 
             round.forged = Utils.BigNumber.make(round.forged)
                 .minus(blockData.reward)
@@ -191,169 +186,119 @@ export const plugin: Container.IPluginDescriptor = {
 
         // All transfers from the mint wallet are added to supply
         emitter.on(ApplicationEvents.TransactionApplied, async txData => {
-            const genesisBlock: Interfaces.IBlockData = app.getConfig().all().genesisBlock;
-            const tx: Interfaces.ITransactionData = txData;
-            const senderAddress = Identities.Address.fromPublicKey(tx.senderPublicKey);
-            let lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
-            if (!lastBlock) {
-                lastBlock = await app
-                    .resolvePlugin<State.IStateService>("state")
-                    .getStore()
-                    .getLastBlock().data;
-            }
-            const roundData = roundCalculator.calculateRound(lastBlock.height);
-            const round = new Round();
-            round.id = roundData.round;
-            round.removed = 0;
-            round.staked = 0;
-            round.forged = 0;
-            round.topDelegates = "";
-            round.released = 0;
-
-            if (tx.type === Enums.TransactionTypes.Transfer && tx.blockId !== genesisBlock.id) {
-                if (senderAddress === genesisBlock.transactions[0].recipientId) {
-                    // Add coins to supply when sent from mint address
-                    supply.value = Utils.BigNumber.make(supply.value)
-                        .plus(tx.amount)
-                        .toString();
-                    await supply.save();
-
-                    // Save round data
-                    round.forged = Utils.BigNumber.make(round.forged)
-                        .plus(tx.amount)
-                        .toNumber();
-
-                    await getConnection()
-                        .createQueryBuilder()
-                        .insert()
-                        .into(Round)
-                        .values(round)
-                        .onConflict(
-                            `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
-                        )
-                        .execute();
-                    logger.info(
-                        `Transaction from mint wallet: ${tx.amount.toString()} added to supply. New supply: ${
-                            supply.value
-                        }`,
-                    );
-                } else if (tx.recipientId === genesisBlock.transactions[0].recipientId) {
-                    // Remove coins from supply when sent to mint address
-                    supply.value = Utils.BigNumber.make(supply.value)
-                        .minus(tx.amount)
-                        .toString();
-                    await supply.save();
-                    // Save round data
-                    round.forged = Utils.BigNumber.make(round.forged)
-                        .minus(tx.amount)
-                        .toNumber();
-
-                    await getConnection()
-                        .createQueryBuilder()
-                        .insert()
-                        .into(Round)
-                        .values(round)
-                        .onConflict(
-                            `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
-                        )
-                        .execute();
+            q(async () => {
+                const genesisBlock: Interfaces.IBlockData = app.getConfig().all().genesisBlock;
+                const tx: Interfaces.ITransactionData = txData;
+                const senderAddress = Identities.Address.fromPublicKey(tx.senderPublicKey);
+                let lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+                if (!lastBlock) {
+                    lastBlock = await app
+                        .resolvePlugin<State.IStateService>("state")
+                        .getStore()
+                        .getLastBlock().data;
                 }
-            }
+                const roundData = roundCalculator.calculateRound(lastBlock.height);
+                const round = await findOrCreate("Round", roundData.round);
+                if (tx.type === Enums.TransactionTypes.Transfer && tx.blockId !== genesisBlock.id) {
+                    if (senderAddress === genesisBlock.transactions[0].recipientId) {
+                        // Add coins to supply when sent from mint address
+                        supply.value = Utils.BigNumber.make(supply.value)
+                            .plus(tx.amount)
+                            .toString();
+                        await supply.save();
+
+                        // Save round data
+                        round.forged = Utils.BigNumber.make(round.forged)
+                            .plus(tx.amount)
+                            .toNumber();
+
+                        await round.save();
+                        logger.info(
+                            `Transaction from mint wallet: ${tx.amount.toString()} added to supply. New supply: ${
+                                supply.value
+                            }`,
+                        );
+                    } else if (tx.recipientId === genesisBlock.transactions[0].recipientId) {
+                        // Remove coins from supply when sent to mint address
+                        supply.value = Utils.BigNumber.make(supply.value)
+                            .minus(tx.amount)
+                            .toString();
+                        await supply.save();
+                        // Save round data
+                        round.forged = Utils.BigNumber.make(round.forged)
+                            .minus(tx.amount)
+                            .toNumber();
+
+                        await round.save();
+                    }
+                }
+            });
         });
 
         // On stake create
         emitter.on("stake.created", async txData => {
-            const tx: Interfaces.ITransactionData = txData;
+            q(async () => {
+                const tx: Interfaces.ITransactionData = txData;
+                const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(tx);
+                const lastSupply = Utils.BigNumber.make(supply.value);
 
-            const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(tx);
-            const lastSupply = Utils.BigNumber.make(supply.value);
+                supply.value = lastSupply.minus(o.amount).toString();
+                staked.value = Utils.BigNumber.make(staked.value)
+                    .plus(o.amount)
+                    .toString();
 
-            supply.value = lastSupply.minus(o.amount).toString();
-            staked.value = Utils.BigNumber.make(staked.value)
-                .plus(o.amount)
-                .toString();
+                await supply.save();
+                await staked.save();
+                // Save round data
+                const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+                const roundData = roundCalculator.calculateRound(lastBlock.height);
 
-            await supply.save();
-            await staked.save();
-            // Save round data
-            const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
-            const roundData = roundCalculator.calculateRound(lastBlock.height);
-            const round = new Round();
-            round.id = roundData.round;
-            round.removed = 0;
-            round.staked = 0;
-            round.forged = 0;
-            round.topDelegates = "";
-            round.released = 0;
+                const round = await findOrCreate("Round", roundData.round);
+                round.staked = Utils.BigNumber.make(round.staked)
+                    .plus(o.amount)
+                    .toNumber();
+                await round.save();
 
-            round.staked = Utils.BigNumber.make(round.staked)
-                .plus(o.amount)
-                .toNumber();
-
-            await getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(Round)
-                .values(round)
-                .onConflict(
-                    `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
-                )
-                .execute();
-
-            logger.info(
-                `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
-                    Constants.ARKTOSHI,
-                )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
-            );
+                logger.info(
+                    `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
+                        Constants.ARKTOSHI,
+                    )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                );
+            });
         });
 
         // On stake create
         emitter.on("stake.released", async stakeObj => {
-            const walletManager = app.resolvePlugin("database").walletManager;
-            const sender = walletManager.findByPublicKey(stakeObj.publicKey);
-            const txId = stakeObj.stakeKey;
-            const block: Interfaces.IBlockData = stakeObj.block;
-            const stake: StakeInterfaces.IStakeObject = sender.stake[txId];
-            const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
+            q(async () => {
+                const walletManager = app.resolvePlugin("database").walletManager;
+                const sender = walletManager.findByPublicKey(stakeObj.publicKey);
+                const txId = stakeObj.stakeKey;
+                const block: Interfaces.IBlockData = stakeObj.block;
+                const stake: StakeInterfaces.IStakeObject = sender.stake[txId];
+                const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
 
-            supply.value = lastSupply.plus(stake.amount).toString();
-            staked.value = Utils.BigNumber.make(staked.value)
-                .minus(stake.amount)
-                .toString();
+                supply.value = lastSupply.plus(stake.amount).toString();
+                staked.value = Utils.BigNumber.make(staked.value)
+                    .minus(stake.amount)
+                    .toString();
 
-            await supply.save();
-            await staked.save();
+                await supply.save();
+                await staked.save();
 
-            // Save round data
-            const roundData = roundCalculator.calculateRound(block.height);
+                // Save round data
+                const roundData = roundCalculator.calculateRound(block.height);
+                const round = await findOrCreate("Round", roundData.round);
+                round.released = Utils.BigNumber.make(round.released)
+                    .plus(stake.amount)
+                    .toNumber();
+                await round.save();
 
-            const round = new Round();
-            round.id = roundData.round;
-            round.removed = 0;
-            round.staked = 0;
-            round.forged = 0;
-            round.topDelegates = "";
-            round.released = 0;
-
-            round.released = Utils.BigNumber.make(round.released)
-                .plus(stake.amount)
-                .toNumber();
-
-            await getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(Round)
-                .values(round)
-                .onConflict(
-                    `(id) DO UPDATE SET removed=(round.removed + ${round.removed}), staked=(round.staked + ${round.staked}), released=(round.released + ${round.released}), forged=(round.forged + ${round.forged})`,
-                )
-                .execute();
-
-            logger.info(
-                `Supply updated. Previous: ${lastSupply.dividedBy(Constants.ARKTOSHI)} - New: ${Utils.BigNumber.make(
-                    supply.value,
-                ).dividedBy(Constants.ARKTOSHI)}`,
-            );
+                logger.info(
+                    `Supply updated. Previous: ${lastSupply.dividedBy(
+                        Constants.ARKTOSHI,
+                    )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                );
+            });
         });
 
         emitter.on(ApplicationEvents.TransactionReverted, async txObj => {
@@ -374,17 +319,7 @@ export const plugin: Container.IPluginDescriptor = {
                 const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
 
                 const roundData = roundCalculator.calculateRound(lastBlock.height);
-                let round = await Round.findOne({ id: roundData.round });
-
-                if (!round) {
-                    round = new Round();
-                    round.id = roundData.round;
-                    round.removed = 0;
-                    round.staked = 0;
-                    round.forged = 0;
-                    round.topDelegates = "";
-                    round.released = 0;
-                }
+                const round = await findOrCreate("Round", roundData.round);
 
                 if (round) {
                     round.staked = Utils.BigNumber.make(round.staked)
