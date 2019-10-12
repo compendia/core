@@ -497,10 +497,9 @@ export class Blockchain implements blockchain.IBlockchain {
         block = block || this.getLastBlock().data;
 
         let customDbSynced = false;
-        if (app.has("supply.lastblock")) {
+        if (app.has("supply.lastblock") && block.height > 0) {
             const customBlockHeight = app.resolve("supply.lastblock");
             customDbSynced = customBlockHeight === block.height;
-            console.log(`${customBlockHeight} === ${block.height}`);
         }
 
         return customDbSynced;

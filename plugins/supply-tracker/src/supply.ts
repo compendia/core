@@ -133,7 +133,6 @@ export const plugin: Container.IPluginDescriptor = {
                         Constants.ARKTOSHI,
                     )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                 );
-                console.log(`store block ${blockData.height}`);
                 app.register("supply.lastblock", asValue(blockData.height));
             });
         });
