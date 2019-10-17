@@ -3,4 +3,4 @@
 	url = https://github.com/nos/core-stake-plugin
 [submodule "plugins/storage"]
 	path = plugins/storage
-	url = https://github.com/ARKEcosystem/core-storage-plugin
+	url = https://github.com/nos/core-storage-plugin
