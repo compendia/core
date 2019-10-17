@@ -1,6 +1,6 @@
 [submodule "plugins/stake-transactions"]
 	path = plugins/stake-transactions
-	url = https://github.com/nos/core-stake-plugin
+	url = https://github.com/nos/core-plugin-staking
 [submodule "plugins/storage"]
 	path = plugins/storage
-	url = https://github.com/nos/core-storage-plugin
+	url = https://github.com/nos/core-plugin-storage
