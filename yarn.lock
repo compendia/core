@@ -894,7 +894,7 @@
   dependencies:
     "@hapi/hoek" "8.x.x"
 
-"@hapi/boom@^8.0.0":
+"@hapi/boom@8.x.x", "@hapi/boom@^8.0.0":
   version "8.0.1"
   resolved "https://registry.yarnpkg.com/@hapi/boom/-/boom-8.0.1.tgz#13f1f2f2a3abfb0787c79e35e238c8aff6aa1661"
   integrity sha512-SnBM2GzEYEA6AGFKXBqNLWXR3uNBui0bkmklYXX1gYtevVhDTy2uakwkSauxvIWMtlANGRhzChYg95If3FWCwA==
@@ -1200,12 +1200,21 @@
     "@hapi/hoek" "8.x.x"
     "@hapi/joi" "16.x.x"
 
-"@hapi/wreck@15.x.x", "@hapi/wreck@^15.1.0":
+"@hapi/wreck@15.x.x":
   version "15.1.0"
   resolved "https://registry.yarnpkg.com/@hapi/wreck/-/wreck-15.1.0.tgz#7917cd25950ce9b023f7fd2bea6e2ef72c71e59d"
   integrity sha512-tQczYRTTeYBmvhsek/D49En/5khcShaBEmzrAaDjMrFXKJRuF8xA8+tlq1ETLBFwGd6Do6g2OC74rt11kzawzg==
   dependencies:
     "@hapi/boom" "7.x.x"
+    "@hapi/bourne" "1.x.x"
+    "@hapi/hoek" "8.x.x"
+
+"@hapi/wreck@^16.0.0":
+  version "16.0.1"
+  resolved "https://registry.yarnpkg.com/@hapi/wreck/-/wreck-16.0.1.tgz#95cd013b8166db17be88837d6d0a880d8e7cd6b3"
+  integrity sha512-fL6IwZ5nk1jBMLBPugt72u23rw8KnnyupLor7TZihgvAXTulxJprUe9YiCLuGbKsEBh2qDo31ixvLCSaxC2+xQ==
+  dependencies:
+    "@hapi/boom" "8.x.x"
     "@hapi/bourne" "1.x.x"
     "@hapi/hoek" "8.x.x"
 
@@ -2913,13 +2922,6 @@
   version "3.0.6"
   resolved "https://registry.yarnpkg.com/@types/lodash.compact/-/lodash.compact-3.0.6.tgz#a4c356372f51fb39ff48eb4f014a19f39f674ab5"
   integrity sha512-0pDKTX4alTyxH85Y5Al4YzS8oriqBQykADW6zLAHkZwNBMPXFIhdE2ctg0Z2GVcZsABxo5CI/J3vmHrFkdQBfA==
-  dependencies:
-    "@types/lodash" "*"
-
-"@types/lodash.fill@^3.4.6":
-  version "3.4.6"
-  resolved "https://registry.yarnpkg.com/@types/lodash.fill/-/lodash.fill-3.4.6.tgz#f9d23b632af90e123bbd8e8b26585095b5983534"
-  integrity sha512-1QFEsIejhgbsoxFj+jRwGB5kYpTCziFXFV4Ga5z97kbh24O8Pof3Rrh5RDB0LDeOJ/USCt0aeZrWt8LPDZwVVQ==
   dependencies:
     "@types/lodash" "*"
 
