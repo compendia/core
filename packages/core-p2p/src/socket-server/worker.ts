@@ -1,5 +1,10 @@
 import { P2P } from "@arkecosystem/core-interfaces";
+import Ajv from "ajv";
+import { cidr } from "ip";
 import SCWorker from "socketcluster/scworker";
+import { requestSchemas } from "../schemas";
+
+const ajv = new Ajv();
 
 export class Worker extends SCWorker {
     private config: Record<string, any>;
@@ -10,7 +15,11 @@ export class Worker extends SCWorker {
         await this.loadConfiguration();
 
         // @ts-ignore
-        this.scServer.wsServer.on("connection", (ws, req) => this.handlePayload(ws, req));
+        this.scServer.wsServer.on("connection", (ws, req) => {
+            this.handlePayload(ws, req);
+            this.handlePing(ws, req);
+            this.handlePong(ws, req);
+        });
         this.scServer.on("connection", socket => this.handleConnection(socket));
         this.scServer.addMiddleware(this.scServer.MIDDLEWARE_HANDSHAKE_WS, (req, next) =>
             this.handleHandshake(req, next),
@@ -23,13 +32,31 @@ export class Worker extends SCWorker {
         this.config = data;
     }
 
+    private handlePing(ws, req) {
+        ws.on("ping", () => {
+            ws.terminate();
+        });
+    }
+
+    private handlePong(ws, req) {
+        ws.on("pong", () => {
+            ws.terminate();
+        });
+    }
+
     private handlePayload(ws, req) {
+        ws.on("ping", () => {
+            ws.terminate();
+        });
+        ws.on("pong", () => {
+            ws.terminate();
+        });
         ws.on("message", message => {
             try {
                 if (message === "#2") {
                     const timeNow: number = new Date().getTime() / 1000;
                     if (ws._lastPingTime && timeNow - ws._lastPingTime < 1) {
-                        req.socket.terminate();
+                        ws.terminate();
                     }
                     ws._lastPingTime = timeNow;
                 } else {
@@ -40,7 +67,7 @@ export class Worker extends SCWorker {
                         (typeof parsed.cid !== "number" &&
                             (parsed.event === "#disconnect" && typeof parsed.cid !== "undefined"))
                     ) {
-                        req.socket.terminate();
+                        ws.terminate();
                     }
                 }
             } catch (error) {
@@ -80,6 +107,15 @@ export class Worker extends SCWorker {
             return;
         }
 
+        const cidrRemoteAddress = cidr(`${req.socket.remoteAddress}/24`);
+        const sameSubnetSockets = Object.values({ ...this.scServer.clients, ...this.scServer.pendingClients }).filter(
+            client => cidr(`${client.remoteAddress}/24`) === cidrRemoteAddress,
+        );
+        if (sameSubnetSockets.length > this.config.maxSameSubnetPeers) {
+            req.socket.destroy();
+            return;
+        }
+
         next();
     }
 
@@ -111,7 +147,7 @@ export class Worker extends SCWorker {
         }
 
         try {
-            const [prefix, version] = req.event.split(".");
+            const [prefix, version, handler] = req.event.split(".");
 
             if (prefix !== "p2p") {
                 req.socket.terminate();
@@ -121,7 +157,7 @@ export class Worker extends SCWorker {
             // Check that blockchain, tx-pool and p2p are ready
             const isAppReady: boolean = (await this.sendToMasterAsync("p2p.utils.isAppReady")).data.ready;
             if (!isAppReady) {
-                req.socket.terminate();
+                next(new Error("App is not ready."));
                 return;
             }
 
@@ -135,9 +171,28 @@ export class Worker extends SCWorker {
                     return;
                 }
             } else if (version === "peer") {
+                const requestSchema = requestSchemas.peer[handler];
+                if (["postTransactions", "postBlock"].includes(handler)) {
+                    // has to be in the peer list to use the endpoint
+                    const {
+                        data: { isPeerOrForger },
+                    } = await this.sendToMasterAsync("p2p.internal.isPeerOrForger", {
+                        data: { ip: req.socket.remoteAddress },
+                    });
+                    if (!isPeerOrForger) {
+                        req.socket.terminate();
+                        return;
+                    }
+                } else if (requestSchema && !ajv.validate(requestSchema, req.data.data)) {
+                    req.socket.terminate();
+                    return;
+                }
+
                 this.sendToMasterAsync("p2p.internal.acceptNewPeer", {
                     data: { ip: req.socket.remoteAddress },
                     headers: req.data.headers,
+                }).catch(ex => {
+                    this.log(`Failed to accept new peer ${req.socket.remoteAddress}: ${ex.message}`, "debug");
                 });
             } else {
                 req.socket.terminate();

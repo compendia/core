@@ -35,13 +35,13 @@ export class DelegateResignationTransactionHandler extends TransactionHandler {
     }
 
     public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
+        return Managers.configManager.getMilestone().aip11 === true;
     }
 
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         if (!wallet.isDelegate()) {
             throw new WalletNotADelegateError();
@@ -71,7 +71,7 @@ export class DelegateResignationTransactionHandler extends TransactionHandler {
             throw new NotEnoughDelegatesError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -102,7 +102,10 @@ export class DelegateResignationTransactionHandler extends TransactionHandler {
     ): Promise<void> {
         await super.applyToSender(transaction, walletManager);
 
-        walletManager.findByPublicKey(transaction.data.senderPublicKey).setAttribute("delegate.resigned", true);
+        const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
+        sender.setAttribute("delegate.resigned", true);
+
+        walletManager.reindex(sender);
     }
 
     public async revertForSender(

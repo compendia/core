@@ -15,12 +15,12 @@ export interface ITransactionHandler {
 
     verify(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): Promise<boolean>;
 
-    dynamicFee(transaction: Interfaces.ITransaction, addonBytes: number, satoshiPerByte: number): Utils.BigNumber;
+    dynamicFee(context: IDynamicFeeContext): Utils.BigNumber;
 
     throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void>;
     apply(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): Promise<void>;
     revert(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): Promise<void>;
@@ -32,4 +32,11 @@ export interface ITransactionHandler {
     ): Promise<boolean>;
 
     emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void;
+}
+
+export interface IDynamicFeeContext {
+    transaction: Interfaces.ITransaction;
+    addonBytes: number;
+    satoshiPerByte: number;
+    height: number;
 }

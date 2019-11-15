@@ -243,7 +243,7 @@ export class Connection implements TransactionPool.IConnection {
                     }
 
                     this.logger.error(
-                        `Cannot apply transaction ${transaction.id} when trying to accept ` +
+                        `[Pool] Cannot apply transaction ${transaction.id} when trying to accept ` +
                             `block ${block.data.id}: ${error.message}`,
                     );
 
@@ -347,6 +347,26 @@ export class Connection implements TransactionPool.IConnection {
         return false;
     }
 
+    public async replay(transactions: Interfaces.ITransaction[]): Promise<void> {
+        this.flush();
+        this.walletManager.reset();
+
+        for (const transaction of transactions) {
+            try {
+                const handler: Handlers.TransactionHandler = await Handlers.Registry.get(
+                    transaction.type,
+                    transaction.typeGroup,
+                );
+                await handler.applyToSender(transaction, this.walletManager);
+                await handler.applyToRecipient(transaction, this.walletManager);
+
+                this.memory.remember(transaction);
+            } catch (error) {
+                this.logger.error(`[Pool] Transaction (${transaction.id}): ${error.message}`);
+            }
+        }
+    }
+
     private async getValidatedTransactions(
         start: number,
         size: number,
@@ -445,7 +465,7 @@ export class Connection implements TransactionPool.IConnection {
             );
             await handler.applyToSender(transaction, this.walletManager);
         } catch (error) {
-            this.logger.error(error.message);
+            this.logger.error(`[Pool] ${error.message}`);
 
             this.memory.forget(transaction.id);
 
@@ -515,7 +535,7 @@ export class Connection implements TransactionPool.IConnection {
             } catch (error) {
                 this.removeTransactionById(transaction.id);
                 this.logger.error(
-                    `Removed ${transaction.id} before forging because it is no longer valid: ${error.message}`,
+                    `[Pool] Removed ${transaction.id} before forging because it is no longer valid: ${error.message}`,
                 );
             }
         }

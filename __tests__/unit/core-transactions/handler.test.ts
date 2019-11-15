@@ -12,6 +12,7 @@ import {
     InsufficientBalanceError,
     InvalidMultiSignatureError,
     InvalidSecondSignatureError,
+    IpfsHashAlreadyExists,
     LegacyMultiSignatureError,
     MultiSignatureAlreadyRegisteredError,
     MultiSignatureKeyCountMismatchError,
@@ -284,15 +285,15 @@ describe("General Tests", () => {
             const addonBytes = 137;
             const handler = await Handlers.Registry.get(transaction.type);
 
-            expect(handler.dynamicFee(transaction, addonBytes, 3)).toEqual(
+            expect(handler.dynamicFee({ transaction, addonBytes, satoshiPerByte: 3, height: 1 })).toEqual(
                 Utils.BigNumber.make(137 + transaction.serialized.length / 2).times(3),
             );
 
-            expect(handler.dynamicFee(transaction, addonBytes, 6)).toEqual(
+            expect(handler.dynamicFee({ transaction, addonBytes, satoshiPerByte: 6, height: 1 })).toEqual(
                 Utils.BigNumber.make(137 + transaction.serialized.length / 2).times(6),
             );
 
-            expect(handler.dynamicFee(transaction, 0, 9)).toEqual(
+            expect(handler.dynamicFee({ transaction, addonBytes: 0, satoshiPerByte: 9, height: 1 })).toEqual(
                 Utils.BigNumber.make(transaction.serialized.length / 2).times(9),
             );
         });
@@ -300,8 +301,12 @@ describe("General Tests", () => {
         it("should default satoshiPerByte to 1 if value provided is <= 0", async () => {
             const handler = await Handlers.Registry.get(transaction.type);
 
-            expect(handler.dynamicFee(transaction, 0, -50)).toEqual(handler.dynamicFee(transaction, 0, 1));
-            expect(handler.dynamicFee(transaction, 0, 0)).toEqual(handler.dynamicFee(transaction, 0, 1));
+            expect(handler.dynamicFee({ transaction, addonBytes: 0, satoshiPerByte: -50, height: 1 })).toEqual(
+                handler.dynamicFee({ transaction, addonBytes: 0, satoshiPerByte: 1, height: 1 }),
+            );
+            expect(handler.dynamicFee({ transaction, addonBytes: 0, satoshiPerByte: 0, height: 1 })).toEqual(
+                handler.dynamicFee({ transaction, addonBytes: 0, satoshiPerByte: 1, height: 1 }),
+            );
         });
     });
 });
@@ -799,6 +804,14 @@ describe("Ipfs", () => {
                 InsufficientBalanceError,
             );
         });
+
+        it("should throw if hash already exists", async () => {
+            await expect(handler.throwIfCannotBeApplied(instance, senderWallet, walletManager)).toResolve();
+            await expect(handler.apply(instance, walletManager)).toResolve();
+            await expect(handler.throwIfCannotBeApplied(instance, senderWallet, walletManager)).rejects.toThrow(
+                IpfsHashAlreadyExists,
+            );
+        });
     });
 
     describe("apply", () => {
@@ -831,7 +844,7 @@ describe("Ipfs", () => {
 
             await handler.revert(instance, walletManager);
 
-            expect(senderWallet.getAttribute("ipfs.hashes")[transaction.asset.ipfs]).toBeFalsy();
+            expect(senderWallet.getAttribute("ipfs")).toBeFalsy();
             expect(senderWallet.balance).toEqual(balanceBefore);
         });
     });
@@ -1136,7 +1149,7 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc lock - expiration type %i", e
             await handler.apply(instance, walletManager);
 
             expect(senderWallet.getAttribute("htlc.locks")[transaction.id]).toBeDefined();
-            expect(senderWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(transaction.amount);
+            expect(senderWallet.getAttribute("htlc.lockedBalance")).toEqual(transaction.amount);
             expect(senderWallet.balance).toEqual(balanceBefore.minus(transaction.fee).minus(transaction.amount));
         });
     });
@@ -1365,13 +1378,13 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc claim - expiration type %i", 
 
             const balanceBefore = claimWallet.balance;
 
-            expect(lockWallet.getAttribute("htlc.locks", {})[lockTransaction.id]).toBeDefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(lockTransaction.amount);
+            expect(lockWallet.getAttribute("htlc.locks")).toBeDefined();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(lockTransaction.amount);
 
             await handler.apply(instance, walletManager);
 
-            expect(lockWallet.getAttribute("htlc.locks", {})[transaction.id]).toBeUndefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(Utils.BigNumber.ZERO);
+            expect(lockWallet.getAttribute("htlc.locks")).toBeEmpty();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(Utils.BigNumber.ZERO);
             expect(claimWallet.balance).toEqual(balanceBefore.plus(lockTransaction.amount).minus(transaction.fee));
         });
 
@@ -1393,13 +1406,13 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc claim - expiration type %i", 
 
             const balanceBefore = claimWallet.balance;
 
-            expect(lockWallet.getAttribute("htlc.locks", {})[lockTransaction.id]).toBeDefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(lockTransaction.amount);
+            expect(lockWallet.getAttribute("htlc.locks")).not.toBeEmpty();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(lockTransaction.amount);
 
             await handler.apply(instance, walletManager);
 
-            expect(lockWallet.getAttribute("htlc.locks", {})[transaction.id]).toBeUndefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(Utils.BigNumber.ZERO);
+            expect(lockWallet.getAttribute("htlc.locks")).toBeEmpty();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(Utils.BigNumber.ZERO);
             expect(claimWallet.balance).toEqual(balanceBefore.plus(lockTransaction.amount).minus(transaction.fee));
         });
     });
@@ -1413,8 +1426,8 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc claim - expiration type %i", 
 
             await handler.apply(instance, walletManager);
 
-            expect(lockWallet.getAttribute("htlc.locks")[transaction.id]).toBeUndefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(Utils.BigNumber.ZERO);
+            expect(lockWallet.getAttribute("htlc.locks")).toBeEmpty();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(Utils.BigNumber.ZERO);
             expect(claimWallet.balance).toEqual(balanceBefore.plus(lockTransaction.amount).minus(transaction.fee));
 
             await handler.revert(instance, walletManager);
@@ -1427,7 +1440,7 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc claim - expiration type %i", 
                 ...lockTransaction.asset.lock,
             });
 
-            expect(lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO)).toEqual(lockTransaction.amount);
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(lockTransaction.amount);
             expect(claimWallet.balance).toEqual(balanceBefore);
         });
     });
@@ -1614,8 +1627,8 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc refund - expiration type %i",
 
             await handler.apply(instance, walletManager);
 
-            expect(lockWallet.getAttribute("htlc.locks")[transaction.id]).toBeUndefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(undefined);
+            expect(lockWallet.getAttribute("htlc.locks")).toBeEmpty();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(Utils.BigNumber.ZERO);
             expect(lockWallet.balance).toEqual(balanceBefore.plus(lockTransaction.amount).minus(transaction.fee));
         });
 
@@ -1642,8 +1655,8 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc refund - expiration type %i",
 
             await handler.apply(instance, walletManager);
 
-            expect(lockWallet.getAttribute("htlc.locks")[transaction.id]).toBeUndefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(undefined);
+            expect(lockWallet.getAttribute("htlc.locks")).toBeEmpty();
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(Utils.BigNumber.ZERO);
             expect(lockWallet.balance).toEqual(balanceBefore.plus(lockTransaction.amount).minus(transaction.fee));
         });
     });
@@ -1658,7 +1671,7 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc refund - expiration type %i",
             await handler.apply(instance, walletManager);
 
             expect(lockWallet.getAttribute("htlc.locks")[transaction.id]).toBeUndefined();
-            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(undefined);
+            expect(lockWallet.getAttribute("htlc.lockedBalance")).toEqual(Utils.BigNumber.ZERO);
             expect(lockWallet.balance).toEqual(balanceBefore.plus(lockTransaction.amount).minus(transaction.fee));
 
             await handler.revert(instance, walletManager);

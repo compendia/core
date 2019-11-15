@@ -299,16 +299,15 @@ export class Blockchain implements blockchain.IBlockchain {
         );
 
         const removedBlocks: Interfaces.IBlockData[] = [];
+        const removedTransactions: Interfaces.ITransaction[] = [];
+
         const revertLastBlock = async () => {
             // tslint:disable-next-line:no-shadowed-variable
             const lastBlock: Interfaces.IBlock = this.state.getLastBlock();
 
             await this.database.revertBlock(lastBlock);
             removedBlocks.push(lastBlock.data);
-
-            if (this.transactionPool) {
-                await this.transactionPool.addTransactions(lastBlock.transactions);
-            }
+            removedTransactions.push(...[...lastBlock.transactions].reverse());
 
             let newLastBlock: Interfaces.IBlock;
             if (blocksToRemove[blocksToRemove.length - 1].height === 1) {
@@ -351,7 +350,9 @@ export class Blockchain implements blockchain.IBlockchain {
 
         await this.database.deleteBlocks(removedBlocks);
 
-        this.queue.resume();
+        if (this.transactionPool) {
+            await this.transactionPool.replay(removedTransactions.reverse());
+        }
     }
 
     /**
@@ -386,21 +387,28 @@ export class Blockchain implements blockchain.IBlockchain {
         const acceptedBlocks: Interfaces.IBlock[] = [];
         let lastProcessResult: BlockProcessorResult;
 
-        if (blocks[0] &&
+        if (
+            blocks[0] &&
             !isBlockChained(this.getLastBlock().data, blocks[0].data, logger) &&
-            !Utils.isException(blocks[0].data)) {
+            !Utils.isException(blocks[0].data)
+        ) {
             // Discard remaining blocks as it won't go anywhere anyway.
             this.clearQueue();
             this.resetLastDownloadedBlock();
             return callback();
         }
 
+        let forkBlock: Interfaces.IBlock;
         for (const block of blocks) {
             lastProcessResult = await this.blockProcessor.process(block);
 
             if (lastProcessResult === BlockProcessorResult.Accepted) {
                 acceptedBlocks.push(block);
             } else {
+                if (lastProcessResult === BlockProcessorResult.Rollback) {
+                    forkBlock = block;
+                }
+
                 break; // if one block is not accepted, the other ones won't be chained anyway
             }
         }
@@ -448,6 +456,8 @@ export class Blockchain implements blockchain.IBlockchain {
             if (this.state.started && Crypto.Slots.getSlotNumber() * blocktime <= currentBlock.data.timestamp) {
                 this.p2p.getMonitor().broadcastBlock(currentBlock);
             }
+        } else if (forkBlock) {
+            this.forkBlock(forkBlock);
         }
 
         return callback(acceptedBlocks);
@@ -475,6 +485,8 @@ export class Blockchain implements blockchain.IBlockchain {
      */
     public forkBlock(block: Interfaces.IBlock, numberOfBlockToRollback?: number): void {
         this.state.forkedBlock = block;
+
+        this.clearAndStopQueue();
 
         if (numberOfBlockToRollback) {
             this.state.numberOfBlocksToRollback = numberOfBlockToRollback;

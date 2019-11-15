@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
-import { P2P, TransactionPool } from "@arkecosystem/core-interfaces";
+import { P2P, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Enums, Interfaces } from "@arkecosystem/crypto";
+import { Interfaces } from "@arkecosystem/crypto";
 import Boom from "@hapi/boom";
 import Hapi from "@hapi/hapi";
 import { Controller } from "../shared/controller";
@@ -115,12 +115,11 @@ export class TransactionsController extends Controller {
                 const constructor = handler.getConstructor();
 
                 const { type, typeGroup, key } = constructor;
-                const groupName: string | number = Enums.TransactionTypeGroup[typeGroup] || typeGroup;
-                if (typeGroups[groupName] === undefined) {
-                    typeGroups[groupName] = {};
+                if (typeGroups[typeGroup] === undefined) {
+                    typeGroups[typeGroup] = {};
                 }
 
-                typeGroups[groupName][key[0].toUpperCase() + key.slice(1)] = type;
+                typeGroups[typeGroup][key[0].toUpperCase() + key.slice(1)] = type;
             }
 
             return { data: typeGroups };
@@ -153,9 +152,25 @@ export class TransactionsController extends Controller {
 
     public async fees(request: Hapi.Request, h: Hapi.ResponseToolkit) {
         try {
-            return {
-                data: this.config.getMilestone(this.blockchain.getLastHeight()).fees.staticFees,
-            };
+            const currentHeight: number = app
+                .resolvePlugin<State.IStateService>("state")
+                .getStore()
+                .getLastHeight();
+            const activatedTransactionHandlers: Handlers.TransactionHandler[] = await Handlers.Registry.getActivatedTransactionHandlers();
+            const typeGroups: Record<string | number, Record<string, string>> = {};
+
+            for (const handler of activatedTransactionHandlers) {
+                const constructor = handler.getConstructor();
+
+                const { typeGroup, key } = constructor;
+                if (typeGroups[typeGroup] === undefined) {
+                    typeGroups[typeGroup] = {};
+                }
+
+                typeGroups[typeGroup][key] = constructor.staticFee({ height: currentHeight }).toFixed();
+            }
+
+            return { data: typeGroups };
         } catch (error) {
             return Boom.badImplementation(error);
         }

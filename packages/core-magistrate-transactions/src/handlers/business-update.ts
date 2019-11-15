@@ -1,15 +1,19 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
-import { Interfaces as MagistrateInterfaces } from "@arkecosystem/core-magistrate-crypto";
+import {
+    Enums,
+    Interfaces as MagistrateInterfaces,
+    Transactions as MagistrateTransactions,
+} from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Transactions } from "@arkecosystem/crypto";
 import { BusinessIsNotRegisteredError, BusinessIsResignedError } from "../errors";
 import { MagistrateApplicationEvents } from "../events";
 import { IBusinessWalletAttributes } from "../interfaces";
 import { BusinessRegistrationTransactionHandler } from "./business-registration";
+import { MagistrateTransactionHandler } from "./magistrate-handler";
 
-export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandler {
+export class BusinessUpdateTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return MagistrateTransactions.BusinessUpdateTransaction;
     }
@@ -20,10 +24,6 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
 
     public walletAttributes(): ReadonlyArray<string> {
         return [];
-    }
-
-    public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -52,7 +52,7 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         if (!wallet.hasAttribute("business")) {
             throw new BusinessIsNotRegisteredError();
@@ -62,7 +62,7 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
             throw new BusinessIsResignedError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -74,6 +74,22 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
     ): Promise<boolean> {
+        if (
+            await pool.senderHasTransactionsOfType(
+                data.senderPublicKey,
+                Enums.MagistrateTransactionType.BusinessUpdate,
+                Enums.MagistrateTransactionGroup,
+            )
+        ) {
+            const wallet: State.IWallet = pool.walletManager.findByPublicKey(data.senderPublicKey);
+            processor.pushError(
+                data,
+                "ERR_PENDING",
+                `Business update for "${wallet.getAttribute("business")}" already in the pool`,
+            );
+            return false;
+        }
+
         return true;
     }
 
@@ -105,7 +121,7 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
             IBusinessWalletAttributes
         >("business").businessAsset;
 
-        const connection: Database.IConnection = app.resolvePlugin<Database.IConnection>("database");
+        const connection: Database.IConnection = app.resolvePlugin<Database.IDatabaseService>("database").connection;
         let reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
         const updateTransactions: Database.IBootstrapTransaction[] = [];
         while (reader.hasNext()) {

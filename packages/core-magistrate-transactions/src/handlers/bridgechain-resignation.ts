@@ -1,8 +1,11 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
-import { Interfaces as MagistrateInterfaces } from "@arkecosystem/core-magistrate-crypto";
+import {
+    Enums,
+    Interfaces as MagistrateInterfaces,
+    Transactions as MagistrateTransactions,
+} from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Transactions } from "@arkecosystem/crypto";
 import {
     BridgechainIsNotRegisteredError,
     BridgechainIsResignedError,
@@ -12,8 +15,9 @@ import {
 import { MagistrateApplicationEvents } from "../events";
 import { IBridgechainWalletAttributes, IBusinessWalletAttributes } from "../interfaces";
 import { BridgechainRegistrationTransactionHandler } from "./bridgechain-registration";
+import { MagistrateTransactionHandler } from "./magistrate-handler";
 
-export class BridgechainResignationTransactionHandler extends Handlers.TransactionHandler {
+export class BridgechainResignationTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return MagistrateTransactions.BridgechainResignationTransaction;
     }
@@ -23,11 +27,7 @@ export class BridgechainResignationTransactionHandler extends Handlers.Transacti
     }
 
     public walletAttributes(): ReadonlyArray<string> {
-        return ["business.bridgechians.bridgechian.resigned"];
-    }
-
-    public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
+        return ["business.bridgechains.bridgechain.resigned"];
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -55,7 +55,7 @@ export class BridgechainResignationTransactionHandler extends Handlers.Transacti
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         if (!wallet.hasAttribute("business")) {
             throw new WalletIsNotBusinessError();
@@ -80,7 +80,7 @@ export class BridgechainResignationTransactionHandler extends Handlers.Transacti
             throw new BridgechainIsResignedError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -92,15 +92,30 @@ export class BridgechainResignationTransactionHandler extends Handlers.Transacti
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
     ): Promise<boolean> {
-        if (await this.typeFromSenderAlreadyInPool(data, pool, processor)) {
-            const wallet: State.IWallet = pool.walletManager.findByPublicKey(data.senderPublicKey);
+        const { bridgechainId }: { bridgechainId: number } = data.asset.bridgechainResignation;
+
+        const bridgechainResignationsInPool: Interfaces.ITransactionData[] = Array.from(
+            await pool.getTransactionsByType(
+                Enums.MagistrateTransactionType.BridgechainResignation,
+                Enums.MagistrateTransactionGroup,
+            ),
+        ).map((memTx: Interfaces.ITransaction) => memTx.data);
+
+        if (
+            bridgechainResignationsInPool.some(
+                resignation =>
+                    resignation.senderPublicKey === data.senderPublicKey &&
+                    resignation.asset.bridgechainResignation.bridgechainId === bridgechainId,
+            )
+        ) {
             processor.pushError(
                 data,
                 "ERR_PENDING",
-                `Bridgechain resignation for "${wallet.getAttribute("business")}" already in the pool`,
+                `Bridgechain resignation for bridgechainId "${bridgechainId}" already in the pool`,
             );
             return false;
         }
+
         return true;
     }
 
@@ -140,11 +155,11 @@ export class BridgechainResignationTransactionHandler extends Handlers.Transacti
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
-    ): Promise<void> { }
+    ): Promise<void> {}
 
     public async revertForRecipient(
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
         // tslint:disable-next-line:no-empty
-    ): Promise<void> { }
+    ): Promise<void> {}
 }

@@ -429,7 +429,7 @@ export class DatabaseService implements Database.IDatabaseService {
 
     public async revertBlock(block: Interfaces.IBlock): Promise<void> {
         await this.revertRound(block.data.height);
-        this.walletManager.revertBlock(block);
+        await this.walletManager.revertBlock(block);
 
         assert(this.blocksInCurrentRound.pop().data.id === block.data.id);
 
@@ -597,6 +597,16 @@ export class DatabaseService implements Database.IDatabaseService {
         let lastBlock: Interfaces.IBlock;
         let tries = 5;
 
+        // Ensure the config manager is initialized, before attempting to call `fromData`
+        // which otherwise uses potentially wrong milestones.
+        let lastHeight: number = 1;
+        const latest: Interfaces.IBlockData = await this.connection.blocksRepository.latest();
+        if (latest) {
+            lastHeight = latest.height;
+        }
+
+        Managers.configManager.setHeight(lastHeight);
+
         const getLastBlock = async (): Promise<Interfaces.IBlock> => {
             try {
                 return await this.getLastBlock();
@@ -622,10 +632,10 @@ export class DatabaseService implements Database.IDatabaseService {
             this.logger.warn("No block found in database");
 
             lastBlock = await this.createGenesisBlock();
+        }
 
-            if (process.env.CORE_ENV === "test") {
-                Managers.configManager.getMilestone().aip11 = true;
-            }
+        if (process.env.CORE_ENV === "test") {
+            Managers.configManager.getMilestone().aip11 = true;
         }
 
         this.configureState(lastBlock);

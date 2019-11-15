@@ -1,13 +1,14 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
+import { Enums, Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Transactions } from "@arkecosystem/crypto";
 import { BusinessAlreadyRegisteredError } from "../errors";
 import { MagistrateApplicationEvents } from "../events";
 import { IBusinessWalletAttributes } from "../interfaces";
 import { MagistrateIndex } from "../wallet-manager";
+import { MagistrateTransactionHandler } from "./magistrate-handler";
 
-export class BusinessRegistrationTransactionHandler extends Handlers.TransactionHandler {
+export class BusinessRegistrationTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return MagistrateTransactions.BusinessRegistrationTransaction;
     }
@@ -24,10 +25,6 @@ export class BusinessRegistrationTransactionHandler extends Handlers.Transaction
             "business.bridgechains",
             "business.resigned",
         ];
-    }
-
-    public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -52,13 +49,13 @@ export class BusinessRegistrationTransactionHandler extends Handlers.Transaction
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         if (wallet.hasAttribute("business")) {
             throw new BusinessAlreadyRegisteredError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -70,7 +67,13 @@ export class BusinessRegistrationTransactionHandler extends Handlers.Transaction
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
     ): Promise<boolean> {
-        if (await this.typeFromSenderAlreadyInPool(data, pool, processor)) {
+        if (
+            await pool.senderHasTransactionsOfType(
+                data.senderPublicKey,
+                Enums.MagistrateTransactionType.BusinessRegistration,
+                Enums.MagistrateTransactionGroup,
+            )
+        ) {
             const wallet: State.IWallet = pool.walletManager.findByPublicKey(data.senderPublicKey);
             processor.pushError(
                 data,
@@ -122,7 +125,7 @@ export class BusinessRegistrationTransactionHandler extends Handlers.Transaction
         // tslint:disable-next-line:no-empty
     ): Promise<void> {}
 
-    private getBusinessId(walletManager: State.IWalletManager): Utils.BigNumber {
-        return Utils.BigNumber.make(walletManager.getIndex(MagistrateIndex.Businesses).values().length).plus(1);
+    private getBusinessId(walletManager: State.IWalletManager): number {
+        return walletManager.getIndex(MagistrateIndex.Businesses).values().length + 1;
     }
 }

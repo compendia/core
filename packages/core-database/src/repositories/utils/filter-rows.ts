@@ -12,7 +12,7 @@ export = <T = any>(rows: ReadonlyArray<T>, params: Database.IParameters, filters
     return rows.filter(item => {
         if (filters.hasOwnProperty("exact")) {
             for (const elem of filters.exact) {
-                if (params[elem] && getProperty(item, elem) !== params[elem]) {
+                if (params[elem] !== undefined && getProperty(item, elem) !== params[elem]) {
                     return false;
                 }
             }
@@ -64,6 +64,23 @@ export = <T = any>(rows: ReadonlyArray<T>, params: Database.IParameters, filters
                 if (params[elem] && Array.isArray(params[elem])) {
                     // @ts-ignore
                     return params[elem].indexOf(getProperty(item, elem)) > -1;
+                }
+            }
+        }
+
+        if (filters.hasOwnProperty("every")) {
+            for (const elem of filters.every) {
+                if (params[elem] && getProperty(item, elem)) {
+                    if (Array.isArray(item[elem])) {
+                        if (Array.isArray(params[elem])) {
+                            // @ts-ignore
+                            return params[elem].every(a => item[elem].includes(a));
+                        } else {
+                            throw new Error('Filtering by "every" requires an Array');
+                        }
+                    } else {
+                        throw new Error("Property must be an array");
+                    }
                 }
             }
         }

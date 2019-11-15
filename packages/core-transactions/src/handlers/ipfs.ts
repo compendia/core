@@ -1,5 +1,6 @@
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { IpfsHashAlreadyExists } from "../errors";
 import { TransactionReader } from "../transaction-reader";
 import { TransactionHandler, TransactionHandlerConstructor } from "./transaction";
 
@@ -30,25 +31,29 @@ export class IpfsTransactionHandler extends TransactionHandler {
 
                 const ipfsHashes: State.IWalletIpfsAttributes = wallet.getAttribute("ipfs.hashes");
                 ipfsHashes[transaction.asset.ipfs] = true;
+                walletManager.reindex(wallet);
             }
         }
     }
 
     public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
+        return Managers.configManager.getMilestone().aip11 === true;
     }
 
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
-        // TODO implement unique ipfs hash on blockchain (not just on wallet)
-        // if (wallet.ipfsHashes[transaction.data.asset.ipfs]) {
-        //     throw new IpfsHashAlreadyExists();
-        // }
+        if (Utils.isException(transaction.data)) {
+            return;
+        }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        if (walletManager.getIndex("ipfs").has(transaction.data.asset.ipfs)) {
+            throw new IpfsHashAlreadyExists();
+        }
+
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public async canEnterTransactionPool(
@@ -85,6 +90,10 @@ export class IpfsTransactionHandler extends TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const ipfsHashes: State.IWalletIpfsAttributes = sender.getAttribute("ipfs.hashes");
         delete ipfsHashes[transaction.data.asset.ipfs];
+
+        if (!Object.keys(ipfsHashes).length) {
+            sender.forgetAttribute("ipfs");
+        }
 
         walletManager.reindex(sender);
     }
