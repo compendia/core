@@ -229,7 +229,7 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
 
     private searchBusinesses(params: Database.IParameters = {}): ISearchContext<any> {
         const query: Record<string, string[]> = {
-            exact: ["businessId", "vat"],
+            exact: ["publicKey", "vat"],
             like: ["name", "repository", "website"],
         };
 
@@ -238,11 +238,17 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
             .values()
             .map(wallet => {
                 const business: any = wallet.getAttribute("business");
-                return {
+
+                const businessData = {
                     address: wallet.address,
-                    businessId: business.businessId,
+                    publicKey: wallet.publicKey,
                     ...business.businessAsset,
                 };
+                if (business.resigned) {
+                    businessData.isResigned = true;
+                }
+
+                return businessData;
             });
 
         return {
@@ -254,7 +260,7 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
 
     private searchBridgechains(params: Database.IParameters = {}): ISearchContext<any> {
         const query: Record<string, string[]> = {
-            exact: ["bridgechainId", "businessId", "genesisHash"],
+            exact: ["genesisHash", "publicKey"],
             like: ["bridgechainRepository", "name"],
             every: ["seedNodes"],
         };
@@ -262,17 +268,20 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
         const entries: any[] = this.databaseServiceProvider()
             .walletManager.getIndex("bridgechains")
             .entries()
-            .reduce((acc, [bridgechainId, wallet]) => {
-                const business: any = wallet.getAttribute("business");
+            .reduce((acc, [genesisHash, wallet]) => {
                 const bridgechains: any[] = wallet.getAttribute("business.bridgechains");
-                if (bridgechains && bridgechains[bridgechainId]) {
-                    const bridgechain: any = bridgechains[bridgechainId];
+                if (bridgechains && bridgechains[genesisHash]) {
+                    const bridgechain: any = bridgechains[genesisHash];
 
-                    acc.push({
-                        bridgechainId: bridgechain.bridgechainId,
-                        businessId: business.businessId,
+                    const bridgechainData = {
+                        publicKey: wallet.publicKey,
                         ...bridgechain.bridgechainAsset,
-                    });
+                    };
+                    if (bridgechain.resigned) {
+                        bridgechainData.isResigned = true;
+                    }
+
+                    acc.push(bridgechainData);
                 }
 
                 return acc;
