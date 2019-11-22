@@ -11,7 +11,7 @@ export class VerifyCommand extends BaseCommand {
     public static flags: CommandFlags = {
         ...BaseCommand.flagsSnapshot,
         blocks: flags.string({
-            description: "blocks to verify, corelates to folder name",
+            description: "blocks to verify, correlates to folder name",
         }),
         verifySignatures: flags.boolean({
             description: "signature verification",
@@ -19,9 +19,13 @@ export class VerifyCommand extends BaseCommand {
     };
 
     public async run(): Promise<void> {
-        const { flags } = await this.parseWithNetwork(VerifyCommand);
+        const { flags, paths } = await this.parseWithNetwork(VerifyCommand);
 
-        await setUpLite(flags);
+        this.abortRunningProcess(`${flags.token}-core`);
+        this.abortRunningProcess(`${flags.token}-forger`);
+        this.abortRunningProcess(`${flags.token}-relay`);
+
+        await setUpLite(flags, paths);
 
         if (!app.has("snapshots")) {
             this.error("The @arkecosystem/core-snapshots plugin is not installed.");

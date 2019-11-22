@@ -12,11 +12,6 @@ export const startServer = async config => {
         port: config.port,
         routes: {
             cors: true,
-            validate: {
-                async failAction(request, h, err) {
-                    throw err;
-                },
-            },
         },
     });
 
@@ -24,16 +19,19 @@ export const startServer = async config => {
         plugin: plugins.whitelist,
         options: {
             whitelist: config.whitelist,
-            name: "Webhook API",
         },
     });
 
     server.route({
         method: "GET",
         path: "/api/webhooks",
-        handler: request => {
+        handler: () => {
             return {
-                data: database.all(),
+                data: database.all().map(webhook => {
+                    webhook = { ...webhook };
+                    delete webhook.token;
+                    return webhook;
+                }),
             };
         },
     });
@@ -70,7 +68,11 @@ export const startServer = async config => {
         method: "GET",
         path: "/api/webhooks/{id}",
         async handler(request) {
-            const webhook: IWebhook = database.findById(request.params.id);
+            if (!database.hasById(request.params.id)) {
+                return Boom.notFound();
+            }
+
+            const webhook: IWebhook = { ...database.findById(request.params.id) };
             delete webhook.token;
 
             return utils.respondWithResource(webhook);
@@ -84,6 +86,10 @@ export const startServer = async config => {
         method: "PUT",
         path: "/api/webhooks/{id}",
         handler: (request, h) => {
+            if (!database.hasById(request.params.id)) {
+                return Boom.notFound();
+            }
+
             database.update(request.params.id, request.payload as IWebhook);
 
             return h.response(undefined).code(204);
@@ -97,13 +103,13 @@ export const startServer = async config => {
         method: "DELETE",
         path: "/api/webhooks/{id}",
         handler: (request, h) => {
-            try {
-                database.destroy(request.params.id);
-
-                return h.response(undefined).code(204);
-            } catch (error) {
+            if (!database.hasById(request.params.id)) {
                 return Boom.notFound();
             }
+
+            database.destroy(request.params.id);
+
+            return h.response(undefined).code(204);
         },
         options: {
             validate: schema.destroy,

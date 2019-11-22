@@ -1,11 +1,14 @@
+import { Utils } from "@arkecosystem/crypto";
+
 export const database = {
     restoredDatabaseIntegrity: true,
 
     walletManager: {
-        findByPublicKey: pubKey => "username",
+        findByPublicKey: pubKey => ({ getAttribute: () => "username" }),
+        getNonce: (senderPublicKey: string) => Utils.BigNumber.ZERO,
+        revertBlock: () => undefined,
     },
 
-    commitQueuedQueries: () => undefined,
     buildWallets: () => undefined,
     saveWallets: () => undefined,
     getLastBlock: async () => ({ data: { height: 1 } }),
@@ -16,10 +19,11 @@ export const database = {
     applyRound: () => undefined,
     getActiveDelegates: () => [],
     restoreCurrentRound: () => undefined,
-    enqueueDeleteBlock: () => undefined,
     getBlocks: () => [],
+    getBlocksForDownload: () => [],
     getBlock: () => undefined,
     revertBlock: () => undefined,
     applyBlock: () => undefined,
     getForgedTransactionsIds: () => [],
+    loadBlocksFromCurrentRound: () => undefined,
 };

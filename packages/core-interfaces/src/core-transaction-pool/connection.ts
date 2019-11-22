@@ -1,5 +1,4 @@
-import { Enums, Interfaces } from "@arkecosystem/crypto";
-import { Dato } from "@faustbrian/dato";
+import { Interfaces } from "@arkecosystem/crypto";
 import { IProcessor } from "./processor";
 
 export interface IAddTransactionResponse {
@@ -15,33 +14,29 @@ export interface IConnection {
 
     make(): Promise<this>;
     disconnect(): void;
-    getPoolSize(): number;
-    getSenderSize(senderPublicKey: string): number;
+    getPoolSize(): Promise<number>;
+    getSenderSize(senderPublicKey: string): Promise<number>;
     addTransactions(
         transactions: Interfaces.ITransaction[],
-    ): {
+    ): Promise<{
         added: Interfaces.ITransaction[];
         notAdded: IAddTransactionResponse[];
-    };
-    acceptChainedBlock(block: Interfaces.IBlock): void;
-    blockSender(senderPublicKey: string): Dato;
+    }>;
+    acceptChainedBlock(block: Interfaces.IBlock): Promise<void>;
     buildWallets(): Promise<void>;
+    replay(transactions: Interfaces.ITransaction[]): Promise<void>;
     flush(): void;
-    getTransaction(id: string): Interfaces.ITransaction;
-    getTransactionIdsForForging(start: number, size: number): string[];
-    getTransactions(start: number, size: number, maxBytes?: number): Buffer[];
-    getTransactionsByType(type: any): any;
-    getTransactionsData<T>(start: number, size: number, property: string, maxBytes?: number): T[];
-    getTransactionsForForging(blockSize: number): string[];
-    has(transactionId: string): any;
-    hasExceededMaxTransactions(transaction: Interfaces.ITransactionData): boolean;
-    isSenderBlocked(senderPublicKey: string): boolean;
-    purgeByBlock(block: Interfaces.IBlock): void;
+    getTransaction(id: string): Promise<Interfaces.ITransaction>;
+    getTransactionIdsForForging(start: number, size: number): Promise<string[]>;
+    getTransactions(start: number, size: number, maxBytes?: number): Promise<Buffer[]>;
+    getTransactionsByType(type: number, typeGroup?: number): Promise<Set<Interfaces.ITransaction>>;
+    getTransactionsForForging(blockSize: number): Promise<string[]>;
+    has(transactionId: string): Promise<boolean>;
+    hasExceededMaxTransactions(senderPublicKey: string): Promise<boolean>;
     purgeByPublicKey(senderPublicKey: string): void;
-    purgeSendersWithInvalidTransactions(block: Interfaces.IBlock): void;
     removeTransaction(transaction: Interfaces.ITransaction): void;
     removeTransactionById(id: string, senderPublicKey?: string): void;
     removeTransactionsById(ids: string[]): void;
     removeTransactionsForSender(senderPublicKey: string): void;
-    senderHasTransactionsOfType(senderPublicKey: string, transactionType: Enums.TransactionTypes): boolean;
+    senderHasTransactionsOfType(senderPublicKey: string, type: number, typeGroup?: number): Promise<boolean>;
 }

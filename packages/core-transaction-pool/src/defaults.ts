@@ -11,7 +11,7 @@ export const defaults = {
     allowedSenders: [],
     maxTransactionsPerRequest: process.env.CORE_TRANSACTION_POOL_MAX_PER_REQUEST || 40,
     maxTransactionBytes: process.env.CORE_TRANSACTION_POOL_MAX_TRANSACTIONS_SIZE || 1047876,
-    // Max transaction age in number of blocks produced since receiving a transaction.
+    // Max transaction age in number of blocks produced since the transaction was created.
     // If a transaction stays that long in the pool without being included in any block,
     // then it will be removed.
     maxTransactionAge: 2700,
@@ -26,9 +26,11 @@ export const defaults = {
             vote: 100,
             multiSignature: 500,
             ipfs: 250,
-            timelockTransfer: 500,
             multiPayment: 500,
             delegateResignation: 100,
+            htlcLock: 100,
+            htlcClaim: 0,
+            htlcRefund: 0,
         },
     },
 };

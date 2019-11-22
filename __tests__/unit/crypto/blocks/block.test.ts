@@ -1,6 +1,6 @@
 import "jest-extended";
 
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 import { Delegate } from "../../../../packages/core-forger/src/delegate";
 import { Block, BlockFactory } from "../../../../packages/crypto/src/blocks";
@@ -11,7 +11,7 @@ import * as networks from "../../../../packages/crypto/src/networks";
 import { testnet } from "../../../../packages/crypto/src/networks";
 import { NetworkName } from "../../../../packages/crypto/src/types";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
-import { dummyBlock, dummyBlock2 } from "../fixtures/block";
+import { dummyBlock, dummyBlock2, dummyBlockSize } from "../fixtures/block";
 
 const { outlookTable } = configManager.getPreset("mainnet").exceptions;
 
@@ -133,15 +133,29 @@ describe("Block", () => {
                 block: {
                     version: 0,
                     maxTransactions: 200,
-                    maxPayload: 0,
+                    maxPayload: dummyBlockSize - 1,
                 },
                 reward: 200000000,
                 vendorFieldLength: 64,
             }));
-            const block = BlockFactory.fromData(dummyBlock);
+            let block = BlockFactory.fromData(dummyBlock);
 
             expect(block.verification.verified).toBeFalse();
-            expect(block.verification.errors).toContain("Payload is too large");
+            expect(block.verification.errors[0]).toContain("Payload is too large");
+
+            jest.spyOn(configManager, "getMilestone").mockImplementation(height => ({
+                block: {
+                    version: 0,
+                    maxTransactions: 200,
+                    maxPayload: dummyBlockSize,
+                },
+                reward: 200000000,
+                vendorFieldLength: 64,
+            }));
+            block = BlockFactory.fromData(dummyBlock);
+
+            expect(block.verification.verified).toBeTrue();
+            expect(block.verification.errors).toBeEmpty();
 
             jest.restoreAllMocks();
         });
@@ -159,6 +173,7 @@ describe("Block", () => {
             };
             const transactions = TransactionFactory.transfer("DB4gFuDztmdGALMb8i1U4Z4R5SktxpNTAY", 10)
                 .withNetwork("devnet")
+                .withTimestamp(optionsDefault.timestamp)
                 .withPassphrase("super cool passphrase")
                 .create();
 
@@ -181,14 +196,154 @@ describe("Block", () => {
             };
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 10)
                 .withNetwork("testnet")
+                .withVersion(2)
+                .withExpiration(52)
                 .withPassphrase("super cool passphrase")
                 .create();
-
-            transactions[0].expiration = 52;
 
             const block: IBlock = delegate.forge(transactions, optionsDefault);
             expect(block.verification.verified).toBeFalse();
             expect(block.verification.errors).toContain(`Encountered expired transaction: ${transactions[0].id}`);
+        });
+
+        it("should fail to verify a block with expired transaction timestamp", () => {
+            const delegate = new Delegate("super cool passphrase", testnet.network);
+            const optionsDefault = {
+                timestamp: 12345689,
+                previousBlock: {
+                    id: "11111111",
+                    idHex: "11111111",
+                    height: 100,
+                },
+                reward: Utils.BigNumber.make(0),
+            };
+
+            const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
+                .withNetwork("testnet")
+                .withVersion(1)
+                .withTimestamp(optionsDefault.timestamp - 21601)
+                .withPassphrase("super cool passphrase")
+                .create();
+
+            Managers.configManager.getMilestone().aip11 = false;
+            const block: IBlock = delegate.forge(transactions, optionsDefault);
+            expect(block.verification.verified).toBeFalse();
+            expect(block.verification.errors).toContain(`Encountered expired transaction: ${transactions[0].id}`);
+            Managers.configManager.getMilestone().aip11 = true;
+        });
+
+        it("should verify a block with future transaction timestamp if within blocktime", () => {
+            const delegate = new Delegate("super cool passphrase", testnet.network);
+            const optionsDefault = {
+                timestamp: 12345689,
+                previousBlock: {
+                    id: "11111111",
+                    idHex: "11111111",
+                    height: 100,
+                },
+                reward: Utils.BigNumber.make(0),
+            };
+
+            const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
+                .withNetwork("testnet")
+                .withVersion(1)
+                .withTimestamp(
+                    optionsDefault.timestamp +
+                        3600 +
+                        configManager.getMilestone(optionsDefault.previousBlock.height).blocktime,
+                )
+                .withPassphrase("super cool passphrase")
+                .create();
+
+            Managers.configManager.getMilestone().aip11 = false;
+            const block: IBlock = delegate.forge(transactions, optionsDefault);
+            expect(block.verification.verified).toBeTrue();
+            Managers.configManager.getMilestone().aip11 = true;
+        });
+
+        it("should fail to verify a block with future transaction timestamp", () => {
+            const delegate = new Delegate("super cool passphrase", testnet.network);
+            const optionsDefault = {
+                timestamp: 12345689,
+                previousBlock: {
+                    id: "11111111",
+                    idHex: "11111111",
+                    height: 100,
+                },
+                reward: Utils.BigNumber.make(0),
+            };
+
+            const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
+                .withNetwork("testnet")
+                .withVersion(1)
+                .withTimestamp(
+                    optionsDefault.timestamp +
+                        3601 +
+                        configManager.getMilestone(optionsDefault.previousBlock.height).blocktime,
+                )
+                .withPassphrase("super cool passphrase")
+                .create();
+
+            Managers.configManager.getMilestone().aip11 = false;
+            const block: IBlock = delegate.forge(transactions, optionsDefault);
+            expect(block.verification.verified).toBeFalse();
+            expect(block.verification.errors).toContain(`Encountered future transaction: ${transactions[0].id}`);
+            Managers.configManager.getMilestone().aip11 = true;
+        });
+
+        it("should accept block with future transaction timestamp if milestone is active", () => {
+            const delegate = new Delegate("super cool passphrase", testnet.network);
+            const optionsDefault = {
+                timestamp: 12345689,
+                previousBlock: {
+                    id: "11111111",
+                    idHex: "11111111",
+                    height: 100,
+                },
+                reward: Utils.BigNumber.make(0),
+            };
+
+            const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
+                .withNetwork("mainnet")
+                .withVersion(1)
+                .withTimestamp(
+                    optionsDefault.timestamp +
+                        3601 +
+                        configManager.getMilestone(optionsDefault.previousBlock.height).blocktime,
+                )
+                .withPassphrase("super cool passphrase")
+                .create();
+
+            const block: IBlock = delegate.forge(transactions, optionsDefault);
+            expect(block.verification.verified).toBeTrue();
+            expect(block.verification.errors).toBeEmpty();
+        });
+
+        it("should reject block with future transaction timestamp if milestone is not active", () => {
+            const delegate = new Delegate("super cool passphrase", testnet.network);
+            const optionsDefault = {
+                timestamp: 12345689,
+                previousBlock: {
+                    id: "c2fa2d400b4c823873d476f6e0c9e423cf925e9b48f1b5706c7e2771d4095538",
+                    height: 8999999,
+                },
+                reward: Utils.BigNumber.make(0),
+            };
+
+            const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
+                .withNetwork("mainnet")
+                .withVersion(1)
+                .withTimestamp(
+                    optionsDefault.timestamp +
+                        3601 +
+                        configManager.getMilestone(optionsDefault.previousBlock.height).blocktime,
+                )
+                .withPassphrase("super cool passphrase")
+                .create();
+
+            const block: IBlock = delegate.forge(transactions, optionsDefault);
+            expect(block.verification.verified).toBeFalse();
+            expect(block.verification.errors).toContain(`Encountered future transaction: ${transactions[0].id}`);
         });
 
         it("should fail to verify a block if error is thrown", () => {
@@ -397,11 +552,13 @@ describe("Block", () => {
                 "%s",
                 (network: NetworkName, length: number) => {
                     configManager.setFromPreset(network);
+                    configManager.getMilestone().aip11 = false;
 
                     const block: Interfaces.IBlock = BlockFactory.fromJson(networks[network].genesisBlock);
 
                     expect(block.serialized).toHaveLength(length);
                     expect(block.verifySignature()).toBeTrue();
+                    configManager.getMilestone().aip11 = network === "testnet";
                 },
             );
         });

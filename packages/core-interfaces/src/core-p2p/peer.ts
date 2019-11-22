@@ -1,21 +1,28 @@
-import { Dato } from "@faustbrian/dato";
+import { Dayjs } from "dayjs";
 import { IPeerVerificationResult } from "./peer-verifier";
+
+export interface IPeerPorts {
+    [name: string]: number;
+}
+
+export interface IPeerPlugins {
+    [name: string]: { enabled: boolean; port: number };
+}
 
 export interface IPeer {
     readonly url: string;
+    readonly port: number;
 
-    ip: string;
-    port: number;
+    readonly ip: string;
+    readonly ports: IPeerPorts;
 
     version: string;
 
     latency: number;
-    headers: Record<string, string | number>;
     state: IPeerState;
-    lastPinged: Dato | undefined;
+    plugins: IPeerPlugins;
+    lastPinged: Dayjs | undefined;
     verificationResult: IPeerVerificationResult | undefined;
-
-    setHeaders(headers: Record<string, string>): void;
 
     isVerified(): boolean;
     isForked(): boolean;
@@ -26,7 +33,7 @@ export interface IPeer {
 
 export interface IPeerBroadcast {
     ip: string;
-    port: number;
+    ports: IPeerPorts;
     version: string;
     height: number;
     latency: number;
@@ -36,5 +43,5 @@ export interface IPeerState {
     height: number;
     forgingAllowed: boolean;
     currentSlot: number;
-    header: Record<string, any>;
+    header: Record<string, any>; // @TODO: rename, those are block headers but the name is horrible
 }

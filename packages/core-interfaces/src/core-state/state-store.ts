@@ -2,7 +2,7 @@ import { Interfaces } from "@arkecosystem/crypto";
 
 export interface IStateStore {
     blockchain: any;
-    lastDownloadedBlock: Interfaces.IBlock | undefined;
+    lastDownloadedBlock: Interfaces.IBlockData | undefined;
     blockPing: any;
     started: boolean;
     forkedBlock: Interfaces.IBlock | undefined;
@@ -28,6 +28,17 @@ export interface IStateStore {
      * Get the last block height.
      */
     getLastHeight(): number;
+
+    /**
+     * Get the genesis block.
+     */
+    getGenesisBlock(): Interfaces.IBlock | undefined;
+
+    /**
+     * Sets the genesis block.
+     * @returns {void}
+     */
+    setGenesisBlock(block: Interfaces.IBlock): void;
 
     /**
      * Get the last block.
@@ -57,7 +68,7 @@ export interface IStateStore {
      * @param {Number} start
      * @param {Number} end
      */
-    getLastBlocksByHeight(start: number, end?: number): Interfaces.IBlockData[];
+    getLastBlocksByHeight(start: number, end?: number, headersOnly?: boolean): Interfaces.IBlockData[];
 
     /**
      * Get common blocks for the given IDs.
@@ -73,9 +84,9 @@ export interface IStateStore {
     ): { [key in "added" | "notAdded"]: Interfaces.ITransactionData[] };
 
     /**
-     * Remove the given transaction ids from the cache.
+     * Drop all cached transaction ids.
      */
-    removeCachedTransactionIds(transactionIds: string[]): void;
+    clearCachedTransactionIds(): void;
 
     /**
      * Get cached transaction ids.

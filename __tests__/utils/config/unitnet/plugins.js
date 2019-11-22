@@ -1,7 +1,15 @@
 module.exports = {
     "@arkecosystem/core-event-emitter": {},
     "@arkecosystem/core-logger-pino": {},
+    "@arkecosystem/core-p2p": {
+        server: {
+            port: process.env.CORE_P2P_PORT || 4000,
+        },
+        minimumVersions: [">=2.0.0"],
+        minimumNetworkReach: 5,
+    },
     "@arkecosystem/core-state": {},
+    "@arkecosystem/core-magistrate-transactions":{},
     "@arkecosystem/core-database-postgres": {
         connection: {
             host: process.env.CORE_DB_HOST || "localhost",
@@ -15,21 +23,10 @@ module.exports = {
         enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
         allowedSenders: [],
-        // 100+ years in the future to avoid our hardcoded transactions used in the
-        // tests to expire immediately
-        maxTransactionAge: 4036608000,
         dynamicFees: {
             minFeePool: 1000,
             minFeeBroadcast: 1000,
         },
-    },
-    "@arkecosystem/core-p2p": {
-        server: {
-            port: process.env.CORE_P2P_PORT || 4000,
-        },
-        minimumVersions: [">=2.0.0"],
-        minimumNetworkReach: 5,
-        coldStart: 5,
     },
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
@@ -47,10 +44,10 @@ module.exports = {
         },
     },
     "@arkecosystem/core-forger": {},
-    "@arkecosystem/core-json-rpc": {
-        enabled: process.env.CORE_JSON_RPC_ENABLED,
-        host: process.env.CORE_JSON_RPC_HOST || "0.0.0.0",
-        port: process.env.CORE_JSON_RPC_PORT || 8080,
+    "@arkecosystem/core-exchange-json-rpc": {
+        enabled: process.env.CORE_EXCHANGE_JSON_RPC_ENABLED,
+        host: process.env.CORE_EXCHANGE_JSON_RPC_HOST || "0.0.0.0",
+        port: process.env.CORE_EXCHANGE_JSON_RPC_PORT || 8080,
         allowRemote: false,
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },

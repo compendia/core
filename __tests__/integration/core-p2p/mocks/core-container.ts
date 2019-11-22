@@ -1,4 +1,6 @@
 import { Managers } from "@arkecosystem/crypto";
+import { EventEmitter } from "../../../../packages/core-event-emitter/src/emitter";
+import * as plugins from "../../../utils/config/testnet/plugins.js";
 import { blocks2to100 } from "../../../utils/fixtures";
 import { delegates } from "../../../utils/fixtures/testnet/delegates";
 import { genesisBlock } from "../../../utils/fixtures/unitnet/block-model";
@@ -6,19 +8,27 @@ import { defaults } from "./p2p-options";
 
 Managers.configManager.setFromPreset("unitnet");
 
+export const eventEmitter = new EventEmitter();
+
 jest.mock("@arkecosystem/core-container", () => {
     return {
         app: {
             getConfig: () => {
                 return {
-                    config: Managers.configManager.all(),
+                    config: {
+                        plugins,
+                        network: Managers.configManager.get("network"),
+                        exceptions: Managers.configManager.get("exceptions"),
+                        milestones: Managers.configManager.get("milestones"),
+                        genesisBlock: Managers.configManager.get("genesisBlock"),
+                    },
                     get: key => {
                         switch (key) {
                             case "network.nethash":
                                 return "a63b5a3858afbca23edefac885be74d59f1a26985548a4082f4f479e74fcc348";
                         }
 
-                        return undefined;
+                        return Managers.configManager.get(key) || undefined;
                     },
                     getMilestone: () => ({
                         activeDelegates: 51,
@@ -61,9 +71,7 @@ jest.mock("@arkecosystem/core-container", () => {
                 }
 
                 if (name === "event-emitter") {
-                    return {
-                        emit: jest.fn(),
-                    };
+                    return eventEmitter;
                 }
 
                 if (name === "blockchain") {
@@ -77,15 +85,12 @@ jest.mock("@arkecosystem/core-container", () => {
                 }
 
                 if (name === "p2p") {
-                    return {
-                        guard: {},
-                    };
+                    return {};
                 }
 
                 if (name === "transaction-pool") {
                     return {
                         transactionExists: jest.fn().mockReturnValue(false),
-                        isSenderBlocked: jest.fn().mockReturnValue(false),
                         hasExceededMaxTransactions: jest.fn().mockReturnValue(false),
                         addTransactions: jest.fn().mockReturnValue({ added: ["111"], notAdded: [] }),
                         walletManager: {
@@ -106,9 +111,10 @@ jest.mock("@arkecosystem/core-container", () => {
                     return {
                         getStore: () => ({
                             getLastBlock: () => genesisBlock,
+                            getLastBlocks: () => [genesisBlock],
                             getLastHeight: () => genesisBlock.data.height,
                             cacheTransactions: jest.fn().mockImplementation(txs => ({ notAdded: txs, added: [] })),
-                            removeCachedTransactionIds: jest.fn().mockReturnValue(undefined),
+                            clearCachedTransactionIds: jest.fn().mockReturnValue(undefined),
                         }),
                     };
                 }

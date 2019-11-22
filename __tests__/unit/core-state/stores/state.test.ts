@@ -6,6 +6,8 @@ import { Blocks as cBlocks, Interfaces } from "@arkecosystem/crypto";
 import delay from "delay";
 import { defaults } from "../../../../packages/core-state/src/defaults";
 import { StateStore } from "../../../../packages/core-state/src/stores/state";
+import { TransactionFactory } from "../../../helpers";
+import { BlockFactory as TestBlockFactory } from "../../../helpers/block-factory";
 import "../../../utils";
 import { blocks101to155 } from "../../../utils/fixtures/testnet/blocks101to155";
 import { blocks2to100 } from "../../../utils/fixtures/testnet/blocks2to100";
@@ -165,6 +167,22 @@ describe("State Storage", () => {
             expect(lastBlocksByHeight).toHaveLength(1);
             expect(lastBlocksByHeight[0].height).toBe(50);
         });
+
+        it("should return full blocks and block headers", () => {
+            const block = TestBlockFactory.createDummy(TransactionFactory.transfer().create(10));
+
+            stateStorage.setLastBlock(block);
+
+            let lastBlocksByHeight = stateStorage.getLastBlocksByHeight(2, 2, true);
+            expect(lastBlocksByHeight).toHaveLength(1);
+            expect(lastBlocksByHeight[0].height).toBe(2);
+            expect(lastBlocksByHeight[0].transactions).toBeUndefined();
+
+            lastBlocksByHeight = stateStorage.getLastBlocksByHeight(2, 2);
+            expect(lastBlocksByHeight).toHaveLength(1);
+            expect(lastBlocksByHeight[0].height).toBe(2);
+            expect(lastBlocksByHeight[0].transactions).toHaveLength(10);
+        });
     });
 
     describe("getCommonBlocks", () => {
@@ -229,7 +247,7 @@ describe("State Storage", () => {
         });
     });
 
-    describe("removeCachedTransactionIds", () => {
+    describe("clearCachedTransactionIds", () => {
         it("should remove cached transaction ids", () => {
             const transactions = [];
             for (let i = 0; i < 10; i++) {
@@ -242,7 +260,7 @@ describe("State Storage", () => {
             });
 
             expect(stateStorage.getCachedTransactionIds()).toHaveLength(10);
-            stateStorage.removeCachedTransactionIds(transactions.map(tx => tx.id));
+            stateStorage.clearCachedTransactionIds();
             expect(stateStorage.getCachedTransactionIds()).toHaveLength(0);
         });
     });
@@ -322,7 +340,7 @@ describe("State Storage", () => {
             stateStorage.pushPingBlock(blocks2to100[5]);
 
             expect(loggerInfo).toHaveBeenCalledWith(
-                `Block ${blocks2to100[3].height.toLocaleString()} pinged blockchain 1 times`,
+                `Previous block ${blocks2to100[3].height.toLocaleString()} pinged blockchain 1 times`,
             );
             expect(stateStorage.blockPing).toBeObject();
             expect(stateStorage.blockPing.block).toBe(blocks2to100[5]);

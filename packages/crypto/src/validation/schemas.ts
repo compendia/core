@@ -19,7 +19,7 @@ export const schemas = {
 
     transactionId: {
         $id: "transactionId",
-        allOf: [{ minLength: 64, maxLength: 64 }, { $ref: "alphanumeric" }],
+        allOf: [{ minLength: 64, maxLength: 64 }, { $ref: "hex" }],
     },
 
     networkByte: {
@@ -29,7 +29,7 @@ export const schemas = {
 
     address: {
         $id: "address",
-        allOf: [{ minLength: 34, maxLength: 34 }, { $ref: "base58" }, { addressOnNetwork: true }],
+        allOf: [{ minLength: 34, maxLength: 34 }, { $ref: "base58" }],
     },
 
     publicKey: {
@@ -51,8 +51,21 @@ export const schemas = {
         ],
     },
 
-    block: {
-        $id: "block",
+    genericName: {
+        $id: "genericName",
+        allOf: [
+            { type: "string", pattern: "^[a-zA-Z0-9]+([ ._-][a-zA-Z0-9]+)*[.]?$" },
+            { minLength: 1, maxLength: 40 },
+        ],
+    },
+
+    uri: {
+        $id: "uri",
+        allOf: [{ format: "uri" }, { minLength: 4, maxLength: 80 }],
+    },
+
+    blockHeader: {
+        $id: "blockHeader",
         type: "object",
         required: [
             "id",
@@ -65,7 +78,6 @@ export const schemas = {
             "generatorPublicKey",
             "blockSignature",
         ],
-        additionalProperties: false,
         properties: {
             id: { blockId: {} },
             idHex: { blockId: {} },
@@ -82,6 +94,13 @@ export const schemas = {
             payloadHash: { $ref: "hex" },
             generatorPublicKey: { $ref: "publicKey" },
             blockSignature: { $ref: "hex" },
+        },
+    },
+
+    block: {
+        $id: "block",
+        $ref: "blockHeader",
+        properties: {
             transactions: {
                 $ref: "transactions",
                 minItems: { $data: "1/numberOfTransactions" },

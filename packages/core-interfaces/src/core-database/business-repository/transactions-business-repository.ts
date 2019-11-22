@@ -1,5 +1,4 @@
-import { Enums, Interfaces } from "@arkecosystem/crypto";
-import { IWallet } from "../../core-state/wallets";
+import { Interfaces } from "@arkecosystem/crypto";
 import { IParameters } from "./parameters";
 
 export interface ITransactionsPaginated {
@@ -8,11 +7,7 @@ export interface ITransactionsPaginated {
 }
 
 export interface ITransactionsBusinessRepository {
-    findAll(params: IParameters, sequenceOrder?: "asc" | "desc"): Promise<ITransactionsPaginated>;
-
-    findAllLegacy(parameters: IParameters): Promise<void>;
-
-    findAllByWallet(wallet: IWallet, parameters?: IParameters): Promise<ITransactionsPaginated>;
+    search(params: IParameters, sequenceOrder?: "asc" | "desc"): Promise<ITransactionsPaginated>;
 
     findAllBySender(senderPublicKey: string, parameters?: IParameters): Promise<ITransactionsPaginated>;
 
@@ -28,11 +23,21 @@ export interface ITransactionsBusinessRepository {
 
     findByTypeAndId(type: number, id: string): Promise<Interfaces.ITransactionData>;
 
-    getAssetsByType(type: Enums.TransactionTypes | number): Promise<any>;
+    getCountOfType(type: number, typeGroup?: number): Promise<number>;
+
+    getAssetsByType(type: number, typeGroup: number, limit: number, offset: number): Promise<any>;
 
     getReceivedTransactions(): Promise<any>;
 
     getSentTransactions(): Promise<any>;
+
+    getOpenHtlcLocks(): Promise<any>;
+
+    getRefundedHtlcLocks(): Promise<any>;
+
+    getClaimedHtlcLocks(): Promise<any>;
+
+    findByHtlcLocks(lockIds: string[]): Promise<Interfaces.ITransactionData[]>;
 
     getFeeStatistics(
         days: number,
@@ -43,6 +48,4 @@ export interface ITransactionsBusinessRepository {
             timestamp: number;
         }>
     >;
-
-    search(params: IParameters): Promise<ITransactionsPaginated>;
 }

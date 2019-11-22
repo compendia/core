@@ -1,9 +1,12 @@
+import { P2P } from "@arkecosystem/core-interfaces";
+import Ajv from "ajv";
+import { cidr } from "ip";
 import SCWorker from "socketcluster/scworker";
-import { SocketErrors } from "../enums";
-import { validateHeaders } from "./utils/validate-headers";
+import { requestSchemas } from "../schemas";
+
+const ajv = new Ajv();
 
 export class Worker extends SCWorker {
-    private peersMsgTimestamps: Record<string, number[]> = {};
     private config: Record<string, any>;
 
     public async run() {
@@ -11,6 +14,12 @@ export class Worker extends SCWorker {
 
         await this.loadConfiguration();
 
+        // @ts-ignore
+        this.scServer.wsServer.on("connection", (ws, req) => {
+            this.handlePayload(ws, req);
+            this.handlePing(ws, req);
+            this.handlePong(ws, req);
+        });
         this.scServer.on("connection", socket => this.handleConnection(socket));
         this.scServer.addMiddleware(this.scServer.MIDDLEWARE_HANDSHAKE_WS, (req, next) =>
             this.handleHandshake(req, next),
@@ -20,8 +29,51 @@ export class Worker extends SCWorker {
 
     private async loadConfiguration(): Promise<void> {
         const { data } = await this.sendToMasterAsync("p2p.utils.getConfig");
-
         this.config = data;
+    }
+
+    private handlePing(ws, req) {
+        ws.on("ping", () => {
+            ws.terminate();
+        });
+    }
+
+    private handlePong(ws, req) {
+        ws.on("pong", () => {
+            ws.terminate();
+        });
+    }
+
+    private handlePayload(ws, req) {
+        ws.on("ping", () => {
+            ws.terminate();
+        });
+        ws.on("pong", () => {
+            ws.terminate();
+        });
+        ws.on("message", message => {
+            try {
+                if (message === "#2") {
+                    const timeNow: number = new Date().getTime() / 1000;
+                    if (ws._lastPingTime && timeNow - ws._lastPingTime < 1) {
+                        ws.terminate();
+                    }
+                    ws._lastPingTime = timeNow;
+                } else {
+                    const parsed = JSON.parse(message);
+                    if (
+                        typeof parsed.event !== "string" ||
+                        typeof parsed.data !== "object" ||
+                        (typeof parsed.cid !== "number" &&
+                            (parsed.event === "#disconnect" && typeof parsed.cid !== "undefined"))
+                    ) {
+                        ws.terminate();
+                    }
+                }
+            } catch (error) {
+                ws.terminate();
+            }
+        });
     }
 
     private async handleConnection(socket): Promise<void> {
@@ -42,58 +94,71 @@ export class Worker extends SCWorker {
     }
 
     private async handleHandshake(req, next): Promise<void> {
-        if ((this.config.blacklist || []).includes(req.socket.remoteAddress)) {
-            // @ts-ignore
-            req.socket.disconnect(4403, "Forbidden");
+        const { data }: { data: { blocked: boolean } } = await this.sendToMasterAsync(
+            "p2p.internal.isBlockedByRateLimit",
+            {
+                data: { ip: req.socket.remoteAddress },
+            },
+        );
+
+        const isBlacklisted: boolean = (this.config.blacklist || []).includes(req.socket.remoteAddress);
+        if (data.blocked || isBlacklisted) {
+            req.socket.destroy();
             return;
         }
 
-        if (await this.isSuspended(req.socket.remoteAddress)) {
-            return next(new Error("Banned because exceeded rate limit"));
+        const cidrRemoteAddress = cidr(`${req.socket.remoteAddress}/24`);
+        const sameSubnetSockets = Object.values({ ...this.scServer.clients, ...this.scServer.pendingClients }).filter(
+            client => cidr(`${client.remoteAddress}/24`) === cidrRemoteAddress,
+        );
+        if (sameSubnetSockets.length > this.config.maxSameSubnetPeers) {
+            req.socket.destroy();
+            return;
         }
 
         next();
     }
 
     private async handleEmit(req, next): Promise<void> {
-        if (this.hasExceededRateLimit(req.socket.remoteAddress)) {
-            await this.suspendPeer(req.socket.remoteAddress, "tooManyRequests");
-
-            next(this.createError(SocketErrors.RateLimitExceeded, "Rate limit exceeded"));
-
-            req.socket.disconnect(4429, "Rate limit exceeded");
-
+        if (req.event.length > 128) {
+            req.socket.terminate();
             return;
         }
 
-        if (!req.data || !req.data.headers) {
-            return next(this.createError(SocketErrors.HeadersRequired, "Request data and data.headers is mandatory"));
+        const { data }: { data: P2P.IRateLimitStatus } = await this.sendToMasterAsync(
+            "p2p.internal.getRateLimitStatus",
+            {
+                data: {
+                    ip: req.socket.remoteAddress,
+                    endpoint: req.event,
+                },
+            },
+        );
+
+        if (data.exceededLimitOnEndpoint) {
+            req.socket.terminate();
+            return;
+        }
+
+        // ensure basic format of incoming data, req.data must be as { data, headers }
+        if (typeof req.data !== "object" || typeof req.data.data !== "object" || typeof req.data.headers !== "object") {
+            req.socket.terminate();
+            return;
         }
 
         try {
-            const [prefix, version] = req.event.split(".");
+            const [prefix, version, handler] = req.event.split(".");
 
             if (prefix !== "p2p") {
-                return next(this.createError(SocketErrors.WrongEndpoint, `Wrong endpoint: ${req.event}`));
-            }
-
-            const headersValidation = validateHeaders(req.data.headers);
-            if (headersValidation.error) {
-                return next(
-                    this.createError(
-                        SocketErrors.HeadersValidationFailed,
-                        `Headers validation failed: ${headersValidation.error}`,
-                    ),
-                );
+                req.socket.terminate();
+                return;
             }
 
             // Check that blockchain, tx-pool and p2p are ready
-            const isAppReady: any = await this.sendToMasterAsync("p2p.utils.isAppReady");
-
-            for (const [plugin, ready] of Object.entries(isAppReady.data)) {
-                if (!ready) {
-                    return next(this.createError(SocketErrors.AppNotReady, `${plugin} isn't ready!`));
-                }
+            const isAppReady: boolean = (await this.sendToMasterAsync("p2p.utils.isAppReady")).data.ready;
+            if (!isAppReady) {
+                next(new Error("App is not ready."));
+                return;
             }
 
             if (version === "internal") {
@@ -102,18 +167,36 @@ export class Worker extends SCWorker {
                 });
 
                 if (!data.authorized) {
-                    return next(
-                        this.createError(
-                            SocketErrors.ForgerNotAuthorized,
-                            "Not authorized: internal endpoint is only available for whitelisted forger",
-                        ),
-                    );
+                    req.socket.terminate();
+                    return;
                 }
             } else if (version === "peer") {
-                await this.sendToMasterAsync("p2p.peer.acceptNewPeer", {
+                const requestSchema = requestSchemas.peer[handler];
+                if (["postTransactions", "postBlock"].includes(handler)) {
+                    // has to be in the peer list to use the endpoint
+                    const {
+                        data: { isPeerOrForger },
+                    } = await this.sendToMasterAsync("p2p.internal.isPeerOrForger", {
+                        data: { ip: req.socket.remoteAddress },
+                    });
+                    if (!isPeerOrForger) {
+                        req.socket.terminate();
+                        return;
+                    }
+                } else if (requestSchema && !ajv.validate(requestSchema, req.data.data)) {
+                    req.socket.terminate();
+                    return;
+                }
+
+                this.sendToMasterAsync("p2p.internal.acceptNewPeer", {
                     data: { ip: req.socket.remoteAddress },
                     headers: req.data.headers,
+                }).catch(ex => {
+                    this.log(`Failed to accept new peer ${req.socket.remoteAddress}: ${ex.message}`, "debug");
                 });
+            } else {
+                req.socket.terminate();
+                return;
             }
 
             // some handlers need this remoteAddress info
@@ -123,28 +206,11 @@ export class Worker extends SCWorker {
         } catch (e) {
             this.log(e.message, "error");
 
-            if (e.name === SocketErrors.Validation) {
-                return next(e);
-            }
-
-            return next(this.createError(SocketErrors.Unknown, "Unknown error"));
+            req.socket.terminate();
+            return;
         }
 
         next();
-    }
-
-    private async suspendPeer(remoteAddress: string, punishment: string): Promise<void> {
-        await this.sendToMasterAsync("p2p.utils.suspendPeer", {
-            data: { remoteAddress, punishment },
-        });
-    }
-
-    private async isSuspended(remoteAddress: string): Promise<boolean> {
-        const { data } = await this.sendToMasterAsync("p2p.utils.isSuspended", {
-            data: { remoteAddress },
-        });
-
-        return data.suspended;
     }
 
     private async log(message: string, level: string = "info"): Promise<void> {
@@ -167,38 +233,6 @@ export class Worker extends SCWorker {
                 (err, res) => (err ? reject(err) : resolve(res)),
             );
         });
-    }
-
-    private hasExceededRateLimit(remoteAddress: string): boolean {
-        if ([...this.config.whitelist, ...this.config.remoteAccess].includes(remoteAddress)) {
-            return false;
-        }
-
-        this.peersMsgTimestamps[remoteAddress] = this.peersMsgTimestamps[remoteAddress] || [];
-        this.peersMsgTimestamps[remoteAddress].push(new Date().getTime());
-
-        const requestCount = this.peersMsgTimestamps[remoteAddress].length;
-
-        if (requestCount < this.config.rateLimit) {
-            return false;
-        }
-
-        this.peersMsgTimestamps[remoteAddress] = this.peersMsgTimestamps[remoteAddress].slice(
-            requestCount - this.config.rateLimit,
-        );
-
-        return (
-            this.peersMsgTimestamps[remoteAddress][this.config.rateLimit - 1] -
-                this.peersMsgTimestamps[remoteAddress][0] <
-            1000
-        );
-    }
-
-    private createError(name, message): Error {
-        const error: Error = new Error(message);
-        error.name = name;
-
-        return error;
     }
 }
 

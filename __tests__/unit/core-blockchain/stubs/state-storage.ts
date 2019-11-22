@@ -4,13 +4,14 @@ import { Blocks, Interfaces } from "@arkecosystem/crypto";
 
 export class StateStoreStub implements State.IStateStore {
     public blockchain: any;
-    public lastDownloadedBlock: Interfaces.IBlock | undefined;
+    public lastDownloadedBlock: Interfaces.IBlockData | undefined;
+    public genesisBlock: Interfaces.IBlock | undefined;
     public blockPing: any;
     public started: boolean;
     public forkedBlock: Interfaces.IBlock | undefined;
     public wakeUpTimeout: any;
-    public noBlockCounter: number;
-    public p2pUpdateCounter: number;
+    public noBlockCounter: number = 0;
+    public p2pUpdateCounter: number = 0;
     public numberOfBlocksToRollback: number | undefined;
     public networkStart: boolean;
 
@@ -38,8 +39,16 @@ export class StateStoreStub implements State.IStateStore {
         return lastBlock ? lastBlock.data.height : 1;
     }
 
+    public getGenesisBlock(): Interfaces.IBlock {
+        return this.genesisBlock;
+    }
+
+    public setGenesisBlock(block: Interfaces.IBlock): void {
+        this.genesisBlock = block;
+    }
+
     public getLastBlock(): Interfaces.IBlock | undefined {
-        return this.lastDownloadedBlock || undefined;
+        return Blocks.BlockFactory.fromData(this.lastDownloadedBlock) || undefined;
     }
 
     public getLastBlockIds(): string[] {
@@ -50,7 +59,7 @@ export class StateStoreStub implements State.IStateStore {
         return [];
     }
 
-    public getLastBlocksByHeight(start: number, end?: number): Interfaces.IBlockData[] {
+    public getLastBlocksByHeight(start: number, end?: number, headersOnly?: boolean): Interfaces.IBlockData[] {
         return [];
     }
 
@@ -67,12 +76,12 @@ export class StateStoreStub implements State.IStateStore {
         };
     }
 
-    public removeCachedTransactionIds(transactionIds: string[]): void {}
+    public clearCachedTransactionIds(): void {}
 
     public reset(): void {}
 
     public setLastBlock(block: Blocks.Block): void {
-        this.lastDownloadedBlock = block;
+        this.lastDownloadedBlock = block.data;
     }
 }
 

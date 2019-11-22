@@ -7,6 +7,7 @@ import zlib from "zlib";
 
 import { app } from "@arkecosystem/core-container";
 import { EventEmitter, Logger } from "@arkecosystem/core-interfaces";
+import { Managers } from "@arkecosystem/crypto";
 
 import * as utils from "../utils";
 import { Codec } from "./codec";
@@ -14,6 +15,19 @@ import { canImportRecord, verifyData } from "./verification";
 
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+
+const fixData = (table, data) => {
+    if (table === "blocks" && data.height === 1) {
+        data.id = Managers.configManager.get("genesisBlock").id;
+    }
+
+    // For version=1 transactions the nonce is set automatically at database level (by a trigger
+    // on the transactions table). However, the database library we use is upset if we don't
+    // provide it, so supply a dummy value here.
+    if (table === "transactions" && data.version === 1) {
+        data.nonce = "0";
+    }
+};
 
 export const exportTable = async (table, options) => {
     const snapFileName = utils.getFilePath(table, options.meta.folder);
@@ -83,15 +97,18 @@ export const importTable = async (table, options) => {
     };
 
     emitter.emit("start", { count: options.meta[table].count });
-    // @ts-ignore
+
+    // tslint:disable-next-line: await-promise
     for await (const record of readStream) {
         counter++;
+
+        fixData(table, record);
 
         if (!verifyData(table, record, prevData, options.verifySignatures)) {
             app.forceExit(`Error verifying data. Payload ${JSON.stringify(record, undefined, 2)}`);
         }
 
-        if (canImportRecord(table, record, options.lastBlock)) {
+        if (canImportRecord(table, record, options)) {
             values.push(record);
         }
 
@@ -123,6 +140,7 @@ export const verifyTable = async (table, options) => {
     let prevData;
 
     decodeStream.on("data", data => {
+        fixData(table, data);
         if (!verifyData(table, data, prevData, options.verifySignatures)) {
             app.forceExit(`Error verifying data. Payload ${JSON.stringify(data, undefined, 2)}`);
         }
@@ -130,7 +148,7 @@ export const verifyTable = async (table, options) => {
     });
 
     readStream.on("finish", () => {
-        logger.info(`Snapshot file ${sourceFile} succesfully verified`);
+        logger.info(`Snapshot file ${sourceFile} successfully verified`);
     });
 };
 

@@ -1,21 +1,14 @@
 import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, Logger, P2P, TransactionPool } from "@arkecosystem/core-interfaces";
+import { isBlockChained } from "@arkecosystem/core-utils";
 import { Crypto, Interfaces } from "@arkecosystem/crypto";
 import pluralize from "pluralize";
-import { isBlockChained } from "../../../../core-utils/dist";
 import { MissingCommonBlockError } from "../../errors";
+import { IPeerPingResponse } from "../../interfaces";
 import { isWhitelisted } from "../../utils";
 import { InvalidTransactionsError, UnchainedBlockError } from "../errors";
-
-export const acceptNewPeer = async ({ service, req }: { service: P2P.IPeerService; req }): Promise<void> => {
-    const peer = { ip: req.data.ip };
-
-    for (const key of ["version", "port"]) {
-        peer[key] = req.headers[key];
-    }
-
-    await service.getProcessor().validateAndAcceptPeer(peer);
-};
+import { getPeerConfig } from "../utils/get-peer-config";
+import { mapAddr } from "../utils/map-addr";
 
 export const getPeers = ({ service }: { service: P2P.IPeerService }): P2P.IPeerBroadcast[] => {
     return service
@@ -44,14 +37,17 @@ export const getCommonBlocks = async ({
     };
 };
 
-export const getStatus = async (): Promise<P2P.IPeerState> => {
-    const lastBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
+export const getStatus = async (): Promise<IPeerPingResponse> => {
+    const lastBlock: Interfaces.IBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
 
     return {
-        height: lastBlock ? lastBlock.data.height : 0,
-        forgingAllowed: Crypto.Slots.isForgingAllowed(),
-        currentSlot: Crypto.Slots.getSlotNumber(),
-        header: lastBlock ? lastBlock.getHeader() : {},
+        state: {
+            height: lastBlock ? lastBlock.data.height : 0,
+            forgingAllowed: Crypto.Slots.isForgingAllowed(),
+            currentSlot: Crypto.Slots.getSlotNumber(),
+            header: lastBlock ? lastBlock.getHeader() : {},
+        },
+        config: getPeerConfig(),
     };
 };
 
@@ -66,14 +62,22 @@ export const postBlock = async ({ req }): Promise<void> => {
             return;
         }
 
-        const lastDownloadedBlock: Interfaces.IBlock = blockchain.getLastDownloadedBlock();
+        const lastDownloadedBlock: Interfaces.IBlockData = blockchain.getLastDownloadedBlock();
 
-        if (!isBlockChained(lastDownloadedBlock.data, block)) {
-            throw new UnchainedBlockError(lastDownloadedBlock.data.height, block.height);
+        if (!isBlockChained(lastDownloadedBlock, block)) {
+            throw new UnchainedBlockError(lastDownloadedBlock.height, block.height);
         }
     }
 
-    blockchain.handleIncomingBlock(block, req.headers.remoteAddress, fromForger);
+    app.resolvePlugin<Logger.ILogger>("logger").info(
+        `Received new block at height ${block.height.toLocaleString()} with ${pluralize(
+            "transaction",
+            block.numberOfTransactions,
+            true,
+        )} from ${mapAddr(req.headers.remoteAddress)}`,
+    );
+
+    blockchain.handleIncomingBlock(block, fromForger);
 };
 
 export const postTransactions = async ({ service, req }: { service: P2P.IPeerService; req }): Promise<string[]> => {
@@ -94,31 +98,26 @@ export const postTransactions = async ({ service, req }: { service: P2P.IPeerSer
     return result.accept;
 };
 
-export const getBlocks = async ({ req }): Promise<Interfaces.IBlockData[]> => {
+export const getBlocks = async ({ req }): Promise<Interfaces.IBlockData[] | Database.IDownloadBlock[]> => {
     const database: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-    const blockchain: Blockchain.IBlockchain = app.resolvePlugin<Blockchain.IBlockchain>("blockchain");
 
     const reqBlockHeight: number = +req.data.lastBlockHeight + 1;
-    let blocks: Interfaces.IBlockData[] = [];
+    const reqBlockLimit: number = +req.data.blockLimit || 400;
+    const reqHeadersOnly: boolean = !!req.data.headersOnly;
 
-    if (!req.data.lastBlockHeight || isNaN(reqBlockHeight)) {
-        const lastBlock: Interfaces.IBlock = blockchain.getLastBlock();
-
-        if (lastBlock) {
-            blocks.push(lastBlock.data);
-        }
-    } else {
-        blocks = await database.getBlocks(reqBlockHeight, 400);
-    }
-
-    app.resolvePlugin<Logger.ILogger>("logger").info(
-        `${req.headers.remoteAddress} has downloaded ${pluralize("block", blocks.length, true)} from height ${(!isNaN(
-            reqBlockHeight,
-        )
-            ? reqBlockHeight
-            : blocks[0].height
-        ).toLocaleString()}`,
+    const blocks: Database.IDownloadBlock[] = await database.getBlocksForDownload(
+        reqBlockHeight,
+        reqBlockLimit,
+        reqHeadersOnly,
     );
 
-    return blocks || [];
+    app.resolvePlugin<Logger.ILogger>("logger").info(
+        `${mapAddr(req.headers.remoteAddress)} has downloaded ${pluralize(
+            "block",
+            blocks.length,
+            true,
+        )} from height ${reqBlockHeight.toLocaleString()}`,
+    );
+
+    return blocks;
 };

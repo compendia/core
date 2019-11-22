@@ -1,17 +1,16 @@
 /* tslint:disable:jsdoc-format max-line-length */
 
 import { app } from "@arkecosystem/core-container";
+import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
-
 import { isBlockChained, roundCalculator } from "@arkecosystem/core-utils";
-import { Blocks, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Utils } from "@arkecosystem/crypto";
 
 import pluralize from "pluralize";
 import { blockchainMachine } from "./machines/blockchain";
 
 import { Blockchain } from "./blockchain";
 
-const { BlockFactory } = Blocks;
 const config = app.getConfig();
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
@@ -31,7 +30,7 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
     blockchainReady: () => {
         if (!stateStorage.started) {
             stateStorage.started = true;
-            emitter.emit("state:started", true);
+            emitter.emit(ApplicationEvents.StateStarted, true);
         }
     },
 
@@ -47,14 +46,14 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
 
     async checkLastDownloadedBlockSynced() {
         let event = "NOTSYNCED";
-        logger.debug(`Queued blocks (process: ${blockchain.queue.length()})`);
+        logger.debug(`Queued chunks of blocks (process: ${blockchain.queue.length()})`);
 
-        if (blockchain.queue.length() > 10000) {
+        if (blockchain.queue.length() > 100) {
             event = "PAUSED";
         }
 
         // tried to download but no luck after 5 tries (looks like network missing blocks)
-        if (stateStorage.noBlockCounter > 5 && blockchain.queue.length() === 0) {
+        if (stateStorage.noBlockCounter > 5 && blockchain.queue.idle()) {
             logger.info("Tried to sync 5 times to different nodes, looks like the network is missing blocks");
 
             stateStorage.noBlockCounter = 0;
@@ -73,9 +72,7 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             } else {
                 stateStorage.p2pUpdateCounter++;
             }
-        }
-
-        if (blockchain.isSynced(stateStorage.lastDownloadedBlock)) {
+        } else if (stateStorage.lastDownloadedBlock && blockchain.isSynced(stateStorage.lastDownloadedBlock)) {
             stateStorage.noBlockCounter = 0;
             stateStorage.p2pUpdateCounter = 0;
 
@@ -101,7 +98,7 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             stateStorage.networkStart = false;
 
             blockchain.dispatch("SYNCFINISHED");
-        } else if (blockchain.queue.length() === 0) {
+        } else if (blockchain.queue.idle()) {
             blockchain.dispatch("PROCESSFINISHED");
         }
     },
@@ -123,7 +120,7 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
 
     async init() {
         try {
-            const block: Interfaces.IBlock = await blockchain.database.getLastBlock();
+            const block: Interfaces.IBlock = blockchain.state.getLastBlock();
 
             if (!blockchain.database.restoredDatabaseIntegrity) {
                 logger.info("Verifying database integrity");
@@ -152,23 +149,16 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
              *  state machine data init      *
              ******************************* */
             stateStorage.setLastBlock(block);
-            stateStorage.lastDownloadedBlock = block;
 
-            // NOTE: if the node is shutdown between round, the round has already been applied
-            if (roundCalculator.isNewRound(block.data.height + 1)) {
-                const { round } = roundCalculator.calculateRound(block.data.height + 1);
-
-                logger.info(
-                    `New round ${round.toLocaleString()} detected. Cleaning calculated data before restarting!`,
-                );
-
-                await blockchain.database.deleteRound(round);
-            }
+            // Delete all rounds from the future due to shutdown before processBlocks finished writing the blocks.
+            const roundInfo = roundCalculator.calculateRound(block.data.height);
+            await blockchain.database.deleteRound(roundInfo.round + 1);
 
             if (stateStorage.networkStart) {
                 await blockchain.database.buildWallets();
-                await blockchain.database.applyRound(block.data.height);
+                await blockchain.database.restoreCurrentRound(block.data.height);
                 await blockchain.transactionPool.buildWallets();
+                await blockchain.p2p.getMonitor().start();
 
                 return blockchain.dispatch("STARTED");
             }
@@ -176,8 +166,8 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             if (process.env.NODE_ENV === "test") {
                 logger.verbose("TEST SUITE DETECTED! SYNCING WALLETS AND STARTING IMMEDIATELY.");
 
-                stateStorage.setLastBlock(BlockFactory.fromJson(config.get("genesisBlock")));
                 await blockchain.database.buildWallets();
+                await blockchain.p2p.getMonitor().start();
 
                 return blockchain.dispatch("STARTED");
             }
@@ -193,6 +183,8 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             await blockchain.database.restoreCurrentRound(block.data.height);
             await blockchain.transactionPool.buildWallets();
 
+            await blockchain.p2p.getMonitor().start();
+
             return blockchain.dispatch("STARTED");
         } catch (error) {
             logger.error(error.stack);
@@ -202,23 +194,24 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
     },
 
     async downloadBlocks() {
-        const lastDownloadedBlock: Interfaces.IBlock = stateStorage.lastDownloadedBlock || stateStorage.getLastBlock();
+        const lastDownloadedBlock: Interfaces.IBlockData =
+            stateStorage.lastDownloadedBlock || stateStorage.getLastBlock().data;
         const blocks: Interfaces.IBlockData[] = await blockchain.p2p
             .getMonitor()
-            .syncWithNetwork(lastDownloadedBlock.data.height);
+            .downloadBlocksFromHeight(lastDownloadedBlock.height);
 
         if (blockchain.isStopped) {
             return;
         }
 
         // Could have changed since entering this function, e.g. due to a rollback.
-        if (lastDownloadedBlock.data.id !== stateStorage.lastDownloadedBlock.data.id) {
+        if (stateStorage.lastDownloadedBlock && lastDownloadedBlock.id !== stateStorage.lastDownloadedBlock.id) {
             return;
         }
 
         const empty: boolean = !blocks || blocks.length === 0;
         const chained: boolean =
-            !empty && (isBlockChained(lastDownloadedBlock.data, blocks[0]) || Utils.isException(blocks[0]));
+            !empty && (isBlockChained(lastDownloadedBlock, blocks[0]) || Utils.isException(blocks[0]));
 
         if (chained) {
             logger.info(
@@ -232,9 +225,6 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
                 )}`,
             );
 
-            stateStorage.noBlockCounter = 0;
-            stateStorage.p2pUpdateCounter = 0;
-
             try {
                 blockchain.enqueueBlocks(blocks);
                 blockchain.dispatch("DOWNLOADED");
@@ -247,51 +237,48 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             }
         } else {
             if (empty) {
-                logger.info("No new block found on this peer");
+                logger.info(
+                    `Could not download any blocks from any peer from height ${lastDownloadedBlock.height + 1}`,
+                );
             } else {
                 logger.warn(`Downloaded block not accepted: ${JSON.stringify(blocks[0])}`);
-                logger.warn(`Last downloaded block: ${JSON.stringify(lastDownloadedBlock.data)}`);
+                logger.warn(`Last downloaded block: ${JSON.stringify(lastDownloadedBlock)}`);
 
                 blockchain.clearQueue();
             }
 
             if (blockchain.queue.length() === 0) {
                 stateStorage.noBlockCounter++;
-                stateStorage.lastDownloadedBlock = stateStorage.getLastBlock();
+                stateStorage.lastDownloadedBlock = stateStorage.getLastBlock().data;
             }
 
             blockchain.dispatch("NOBLOCK");
         }
     },
 
-    async analyseFork() {
-        logger.info("Analysing fork");
-    },
-
     async startForkRecovery() {
         logger.info("Starting fork recovery");
-
         blockchain.clearAndStopQueue();
 
-        await blockchain.database.commitQueuedQueries();
-
         const random: number = 4 + Math.floor(Math.random() * 99); // random int inside [4, 102] range
+        const blocksToRemove: number = stateStorage.numberOfBlocksToRollback || random;
 
-        await blockchain.removeBlocks(stateStorage.numberOfBlocksToRollback || random);
+        await blockchain.removeBlocks(blocksToRemove);
+
         stateStorage.numberOfBlocksToRollback = undefined;
 
-        logger.info(`Removed ${pluralize("block", random, true)}`);
+        logger.info(`Removed ${pluralize("block", blocksToRemove, true)}`);
 
-        await blockchain.transactionPool.buildWallets();
         await blockchain.p2p.getMonitor().refreshPeersAfterFork();
 
         blockchain.dispatch("SUCCESS");
+        blockchain.queue.resume();
     },
 
     async rollbackDatabase() {
         logger.info("Trying to restore database integrity");
 
-        const { maxBlockRewind, steps } = app.resolveOptions("p2p").databaseRollback;
+        const { maxBlockRewind, steps } = app.resolveOptions("blockchain").databaseRollback;
 
         for (let i = maxBlockRewind; i >= 0; i -= steps) {
             await blockchain.removeTopBlocks(steps);

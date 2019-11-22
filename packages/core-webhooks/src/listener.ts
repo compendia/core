@@ -19,10 +19,14 @@ export const startListeners = (): void => {
                 }
 
                 for (const condition of webhook.conditions) {
-                    const satisfies = conditions[condition.condition];
+                    try {
+                        const satisfies = conditions[condition.condition];
 
-                    if (satisfies(payload[condition.key], condition.value)) {
-                        return true;
+                        if (satisfies(payload[condition.key], condition.value)) {
+                            return true;
+                        }
+                    } catch (error) {
+                        return false;
                     }
                 }
 
@@ -40,12 +44,11 @@ export const startListeners = (): void => {
                         headers: {
                             Authorization: webhook.token,
                         },
+                        timeout: app.resolveOptions("webhooks").timeout,
                     });
 
                     app.resolvePlugin<Logger.ILogger>("logger").debug(
-                        `Webhooks Job ${webhook.id} completed! Event [${webhook.event}] has been transmitted to [${
-                            webhook.target
-                        }] with a status of [${status}].`,
+                        `Webhooks Job ${webhook.id} completed! Event [${webhook.event}] has been transmitted to [${webhook.target}] with a status of [${status}].`,
                     );
                 } catch (error) {
                     app.resolvePlugin<Logger.ILogger>("logger").error(

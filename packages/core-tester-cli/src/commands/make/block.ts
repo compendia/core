@@ -16,6 +16,10 @@ export class BlockCommand extends BaseCommand {
             description: "number of blocks to generate",
             default: 1,
         }),
+        nonce: flags.integer({
+            description: "nonce to use for offline creation",
+            default: 1,
+        }),
         transactions: flags.integer({
             description: "number of transactions to generate",
             default: 0,
@@ -72,7 +76,7 @@ export class BlockCommand extends BaseCommand {
                 );
             }
 
-            const newBlock = await delegate.forge(transactions, {
+            const newBlock = delegate.forge(transactions, {
                 previousBlock,
                 timestamp: Crypto.Slots.getSlotNumber(Crypto.Slots.getTime()) * milestone.blocktime,
                 reward: milestone.reward,

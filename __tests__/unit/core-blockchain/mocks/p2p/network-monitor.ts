@@ -3,7 +3,8 @@ export const getMonitor = {
     updateNetworkStatus: () => undefined,
     // tslint:disable-next-line: no-empty
     checkNetworkHealth: () => {},
-    syncWithNetwork: () => [],
+    downloadBlocksFromHeight: () => [],
+    start: () => undefined,
     refreshPeersAfterFork: () => undefined,
     broadcastBlock: () => undefined,
     hasPeers: () => false,

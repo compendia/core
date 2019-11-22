@@ -71,21 +71,18 @@ export class UnchainedHandler extends BlockHandler {
         switch (status) {
             case UnchainedBlockStatus.DoubleForging: {
                 const roundInfo: Shared.IRoundInfo = roundCalculator.calculateRound(this.block.data.height);
-                const delegates: State.IDelegateWallet[] = await app
-                    .resolvePlugin("database")
-                    .getActiveDelegates(roundInfo);
+                const delegates: State.IWallet[] = await app.resolvePlugin("database").getActiveDelegates(roundInfo);
 
                 if (delegates.some(delegate => delegate.publicKey === this.block.data.generatorPublicKey)) {
-                    this.blockchain.forkBlock(this.block);
+                    return BlockProcessorResult.Rollback;
                 }
 
                 return BlockProcessorResult.Rejected;
             }
 
             case UnchainedBlockStatus.ExceededNotReadyToAcceptNewHeightMaxAttempts: {
-                this.blockchain.forkBlock(this.block, 5000); // TODO: find a better heuristic based on peer information
-
-                return BlockProcessorResult.DiscardedButCanBeBroadcasted;
+                this.blockchain.state.numberOfBlocksToRollback = 5000; // TODO: find a better heuristic based on peer information
+                return BlockProcessorResult.Rollback;
             }
 
             case UnchainedBlockStatus.GeneratorMismatch:
@@ -112,7 +109,7 @@ export class UnchainedHandler extends BlockHandler {
             // NOTE: This isn't really elegant, but still better than spamming the log with
             //       useless `not ready to accept` messages.
             if (this.blockchain.queue.length() > 0) {
-                this.logger.debug(`Discarded ${this.blockchain.queue.length()} downloaded blocks.`);
+                this.logger.debug(`Discarded ${this.blockchain.queue.length()} chunks of downloaded blocks.`);
             }
 
             // If we consecutively fail to accept the same block, our chain is likely forked. In this
@@ -150,9 +147,7 @@ export class UnchainedHandler extends BlockHandler {
             }
 
             this.logger.info(
-                `Forked block disregarded because it is not allowed to be forged. Caused by delegate: ${
-                    this.block.data.generatorPublicKey
-                }`,
+                `Forked block disregarded because it is not allowed to be forged. Caused by delegate: ${this.block.data.generatorPublicKey}`,
             );
 
             return UnchainedBlockStatus.GeneratorMismatch;

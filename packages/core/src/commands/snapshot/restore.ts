@@ -13,7 +13,7 @@ export class RestoreCommand extends BaseCommand {
     public static flags: CommandFlags = {
         ...BaseCommand.flagsSnapshot,
         blocks: flags.string({
-            description: "blocks to import, corelates to folder name",
+            description: "blocks to import, correlates to folder name",
         }),
         truncate: flags.boolean({
             description: "empty all tables before running import",
@@ -27,9 +27,13 @@ export class RestoreCommand extends BaseCommand {
     };
 
     public async run(): Promise<void> {
-        const { flags } = await this.parseWithNetwork(RestoreCommand);
+        const { flags, paths } = await this.parseWithNetwork(RestoreCommand);
 
-        await setUpLite(flags);
+        this.abortRunningProcess(`${flags.token}-core`);
+        this.abortRunningProcess(`${flags.token}-forger`);
+        this.abortRunningProcess(`${flags.token}-relay`);
+
+        await setUpLite(flags, paths);
 
         if (!app.has("snapshots")) {
             this.error("The @arkecosystem/core-snapshots plugin is not installed.");

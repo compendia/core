@@ -2,7 +2,8 @@
 import "./mocks/";
 import { container } from "./mocks/container";
 
-import { Blocks, Crypto, Interfaces } from "@arkecosystem/crypto";
+import * as Utils from "@arkecosystem/core-utils";
+import { Blocks, Crypto, Interfaces, Managers } from "@arkecosystem/crypto";
 import delay from "delay";
 import { Blockchain } from "../../../packages/core-blockchain/src/blockchain";
 import { stateMachine } from "../../../packages/core-blockchain/src/state-machine";
@@ -26,8 +27,9 @@ describe("Blockchain", () => {
     beforeAll(async () => {
         // Create the genesis block after the setup has finished or else it uses a potentially
         // wrong network config.
+        Managers.configManager.getMilestone().aip11 = false;
         genesisBlock = BlockFactory.fromData(GB);
-
+        Managers.configManager.getMilestone().aip11 = true;
         // Workaround: Add genesis transactions to the exceptions list, because they have a fee of 0
         // and otherwise don't pass validation.
         config["exceptions.transactions"] = genesisBlock.transactions.map(tx => tx.id);
@@ -85,8 +87,9 @@ describe("Blockchain", () => {
         });
 
         it("should enqueue the blocks provided", async () => {
-            const processQueuePush = jest.spyOn(blockchain.queue, "push");
+            blockchain.state.lastDownloadedBlock = blocks101to155[54];
 
+            const processQueuePush = jest.spyOn(blockchain.queue, "push");
             const blocksToEnqueue = [blocks101to155[54]];
             blockchain.enqueueBlocks(blocksToEnqueue);
             expect(processQueuePush).toHaveBeenCalledWith({ blocks: blocksToEnqueue });
@@ -146,7 +149,6 @@ describe("Blockchain", () => {
             const mockCallback = jest.fn(() => true);
             blockchain.state.blockchain = {};
             jest.spyOn(database, "saveBlocks").mockRejectedValueOnce(new Error("oops saveBlocks"));
-            jest.spyOn(database, "getLastBlock").mockRejectedValueOnce(new Error("oops getLastBlock"));
             jest.spyOn(blockchain, "removeTopBlocks").mockReturnValueOnce(undefined);
 
             await blockchain.processBlocks([BlockFactory.fromData(blocks2to100[2])], mockCallback);
@@ -157,6 +159,7 @@ describe("Blockchain", () => {
 
         it("should broadcast a block if (Crypto.Slots.getSlotNumber() * blocktime <= block.data.timestamp)", async () => {
             blockchain.state.started = true;
+            jest.spyOn(Utils, "isBlockChained").mockReturnValueOnce(true);
 
             const mockCallback = jest.fn(() => true);
             const lastBlock = blockchain.getLastBlock();
@@ -179,9 +182,10 @@ describe("Blockchain", () => {
                 state: { maxLastBlocks: 50 },
             });
 
-            blockchain.state.setLastBlock(genesisBlock);
+            const block = Blocks.BlockFactory.fromData(blocks2to100[0]);
+            blockchain.state.setLastBlock(block);
 
-            expect(blockchain.getLastBlock()).toEqual(genesisBlock);
+            expect(blockchain.getLastBlock()).toEqual(block);
         });
     });
 
@@ -199,7 +203,7 @@ describe("Blockchain", () => {
             };
 
             // @ts-ignore
-            blockchain.handleIncomingBlock(block, "127.0.0.1");
+            blockchain.handleIncomingBlock(block);
 
             expect(blockchain.dispatch).toHaveBeenCalled();
             expect(blockchain.enqueueBlocks).toHaveBeenCalled();
@@ -221,7 +225,7 @@ describe("Blockchain", () => {
             };
 
             // @ts-ignore
-            blockchain.handleIncomingBlock(block, "127.0.0.1");
+            blockchain.handleIncomingBlock(block);
 
             expect(blockchain.dispatch).not.toHaveBeenCalled();
             expect(blockchain.enqueueBlocks).not.toHaveBeenCalled();
@@ -239,7 +243,7 @@ describe("Blockchain", () => {
                 .mockReturnValueOnce(1)
                 .mockReturnValueOnce(1);
 
-            await blockchain.handleIncomingBlock(blocks101to155[54], "127.0.0.1");
+            await blockchain.handleIncomingBlock(blocks101to155[54]);
 
             expect(loggerInfo).toHaveBeenCalledWith("Block disregarded because blockchain is not ready");
             blockchain.state.started = true;
@@ -269,11 +273,9 @@ describe("Blockchain", () => {
             it("should be ok", () => {
                 expect(
                     blockchain.isSynced({
-                        data: {
-                            timestamp: Crypto.Slots.getTime(),
-                            height: genesisBlock.height,
-                        },
-                    } as Interfaces.IBlock),
+                        timestamp: Crypto.Slots.getTime(),
+                        height: genesisBlock.height,
+                    } as Interfaces.IBlockData),
                 ).toBeTrue();
             });
         });

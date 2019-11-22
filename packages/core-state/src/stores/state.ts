@@ -2,7 +2,7 @@
 
 import { app } from "@arkecosystem/core-container";
 import { EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Managers } from "@arkecosystem/crypto";
 import assert from "assert";
 import { OrderedMap, OrderedSet, Seq } from "immutable";
 
@@ -13,7 +13,8 @@ import { OrderedMap, OrderedSet, Seq } from "immutable";
 export class StateStore implements State.IStateStore {
     // @TODO: make all properties private and expose them one-by-one through a getter if used outside of this class
     public blockchain: any = {};
-    public lastDownloadedBlock: Interfaces.IBlock | undefined = undefined;
+    public genesisBlock: Interfaces.IBlock | undefined = undefined;
+    public lastDownloadedBlock: Interfaces.IBlockData | undefined = undefined;
     public blockPing: any = undefined;
     public started: boolean = false;
     public forkedBlock: Interfaces.IBlock | undefined = undefined;
@@ -63,6 +64,20 @@ export class StateStore implements State.IStateStore {
     }
 
     /**
+     * Get the genesis block.
+     */
+    public getGenesisBlock(): Interfaces.IBlock | undefined {
+        return this.genesisBlock;
+    }
+
+    /**
+     * Sets the genesis block.
+     */
+    public setGenesisBlock(block: Interfaces.IBlock): void {
+        this.genesisBlock = block;
+    }
+
+    /**
      * Get the last block.
      */
     public getLastBlock(): Interfaces.IBlock | undefined {
@@ -87,12 +102,13 @@ export class StateStore implements State.IStateStore {
             app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit("internal.milestone.changed");
         }
 
-        Transactions.TransactionRegistry.updateStaticFees(block.data.height);
-
         // Delete oldest block if size exceeds the maximum
         if (this.lastBlocks.size > app.resolveOptions("state").storage.maxLastBlocks) {
             this.lastBlocks = this.lastBlocks.delete(this.lastBlocks.first<Interfaces.IBlock>().data.height);
         }
+
+        this.noBlockCounter = 0;
+        this.p2pUpdateCounter = 0;
     }
 
     /**
@@ -108,8 +124,8 @@ export class StateStore implements State.IStateStore {
     /**
      * Get the last blocks data.
      */
-    public getLastBlocksData(): Seq<number, Interfaces.IBlockData> {
-        return this.mapToBlockData(this.lastBlocks.valueSeq().reverse());
+    public getLastBlocksData(headersOnly?: boolean): Seq<number, Interfaces.IBlockData> {
+        return this.mapToBlockData(this.lastBlocks.valueSeq().reverse(), headersOnly);
     }
 
     /**
@@ -128,14 +144,14 @@ export class StateStore implements State.IStateStore {
      * @param {Number} start
      * @param {Number} end
      */
-    public getLastBlocksByHeight(start: number, end?: number): Interfaces.IBlockData[] {
+    public getLastBlocksByHeight(start: number, end?: number, headersOnly?: boolean): Interfaces.IBlockData[] {
         end = end || start;
 
         const blocks = this.lastBlocks
             .valueSeq()
             .filter(block => block.data.height >= start && block.data.height <= end);
 
-        return this.mapToBlockData(blocks).toArray() as Interfaces.IBlockData[];
+        return this.mapToBlockData(blocks, headersOnly).toArray() as Interfaces.IBlockData[];
     }
 
     /**
@@ -148,7 +164,7 @@ export class StateStore implements State.IStateStore {
             idsHash[id] = true;
         }
 
-        return this.getLastBlocksData()
+        return this.getLastBlocksData(true)
             .filter(block => idsHash[block.id])
             .toArray() as Interfaces.IBlockData[];
     }
@@ -184,10 +200,10 @@ export class StateStore implements State.IStateStore {
     }
 
     /**
-     * Remove the given transaction ids from the cache.
+     * Drop all cached transaction ids.
      */
-    public removeCachedTransactionIds(transactionIds: string[]): void {
-        this.cachedTransactionIds = this.cachedTransactionIds.subtract(transactionIds);
+    public clearCachedTransactionIds(): void {
+        this.cachedTransactionIds = this.cachedTransactionIds.clear();
     }
 
     /**
@@ -221,7 +237,9 @@ export class StateStore implements State.IStateStore {
     public pushPingBlock(block: Interfaces.IBlockData, fromForger: boolean = false): void {
         if (this.blockPing) {
             app.resolvePlugin<Logger.ILogger>("logger").info(
-                `Block ${this.blockPing.block.height.toLocaleString()} pinged blockchain ${this.blockPing.count} times`,
+                `Previous block ${this.blockPing.block.height.toLocaleString()} pinged blockchain ${
+                    this.blockPing.count
+                } times`,
             );
         }
 
@@ -234,7 +252,13 @@ export class StateStore implements State.IStateStore {
     }
 
     // Map Block instances to block data.
-    private mapToBlockData(blocks: Seq<number, Interfaces.IBlock>): Seq<number, Interfaces.IBlockData> {
-        return blocks.map(block => ({ ...block.data, transactions: block.transactions.map(tx => tx.data) }));
+    private mapToBlockData(
+        blocks: Seq<number, Interfaces.IBlock>,
+        headersOnly?: boolean,
+    ): Seq<number, Interfaces.IBlockData> {
+        return blocks.map(block => ({
+            ...block.data,
+            transactions: headersOnly ? undefined : block.transactions.map(tx => tx.data),
+        }));
     }
 }

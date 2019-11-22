@@ -5,13 +5,11 @@ import "../mocks/core-container";
 import { Database, State } from "@arkecosystem/core-interfaces";
 import { delegateCalculator } from "@arkecosystem/core-utils";
 import { Utils } from "@arkecosystem/crypto";
-import { DelegatesBusinessRepository, WalletsBusinessRepository } from "../../../../packages/core-database/src";
+import { WalletsBusinessRepository } from "../../../../packages/core-database/src";
 import { DatabaseService } from "../../../../packages/core-database/src/database-service";
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
 import { Address } from "../../../../packages/crypto/src/identities";
 import { genesisBlock } from "../../../utils/fixtures/testnet/block-model";
-
-let repository;
 
 let walletsRepository: Database.IWalletsBusinessRepository;
 let walletManager: State.IWalletManager;
@@ -20,17 +18,8 @@ let databaseService: Database.IDatabaseService;
 beforeEach(async () => {
     walletManager = new WalletManager();
 
-    repository = new DelegatesBusinessRepository(() => databaseService);
     walletsRepository = new WalletsBusinessRepository(() => databaseService);
-    databaseService = new DatabaseService(
-        undefined,
-        undefined,
-        walletManager,
-        walletsRepository,
-        repository,
-        undefined,
-        undefined,
-    );
+    databaseService = new DatabaseService(undefined, undefined, walletManager, walletsRepository, undefined, undefined);
 });
 
 const generateWallets = (): Wallet[] => {
@@ -38,21 +27,24 @@ const generateWallets = (): Wallet[] => {
         // @TODO: switch to unitnet
         const address: string = Address.fromPublicKey(transaction.data.senderPublicKey, 23);
 
-        return {
-            address,
-            publicKey: `publicKey-${address}`,
-            secondPublicKey: `secondPublicKey-${address}`,
-            vote: `vote-${address}`,
-            username: `username-${address}`,
+        return Object.assign(new Wallet(address), {
             balance: Utils.BigNumber.make(100),
-            voteBalance: Utils.BigNumber.make(200),
-            rate: index + 1,
-        } as Wallet;
+            publicKey: `publicKey-${address}`,
+            attributes: {
+                secondPublicKey: `secondPublicKey-${address}`,
+                vote: `vote-${address}`,
+                delegate: {
+                    username: `username-${address}`,
+                    voteBalance: Utils.BigNumber.make(200),
+                    rank: index + 1,
+                },
+            },
+        });
     });
 };
 
-describe("Delegate Repository", () => {
-    describe("getLocalDelegates", () => {
+describe("Wallet Repository - Delegates", () => {
+    describe("search", () => {
         const delegates = [
             { username: "delegate-0", forgedFees: Utils.BigNumber.make(10), forgedRewards: Utils.BigNumber.make(10) },
             { username: "delegate-1", forgedFees: Utils.BigNumber.make(20), forgedRewards: Utils.BigNumber.make(20) },
@@ -61,15 +53,24 @@ describe("Delegate Repository", () => {
 
         const wallets = [delegates[0], {}, delegates[1], { username: "" }, delegates[2], {}].map(delegate => {
             const wallet = new Wallet("");
-            return Object.assign(wallet, delegate);
+            return Object.assign(wallet, { attributes: { delegate } });
+        });
+
+        const search = (params: Database.IParameters = {}): Database.IRowsPaginated<State.IWallet> => {
+            return walletsRepository.search(Database.SearchScope.Delegates, params);
+        };
+
+        beforeEach(() => {
+            const wallets = generateWallets();
+            walletManager.index(wallets);
         });
 
         it("should return the local wallets of the connection that are delegates", () => {
             jest.spyOn(walletManager, "allByUsername").mockReturnValue(wallets);
 
-            const actualDelegates = repository.getLocalDelegates();
+            const { rows } = search();
 
-            expect(actualDelegates).toEqual(expect.arrayContaining(wallets));
+            expect(rows).toEqual(expect.arrayContaining(wallets));
             expect(walletManager.allByUsername).toHaveBeenCalled();
         });
 
@@ -77,41 +78,43 @@ describe("Delegate Repository", () => {
             // @ts-ignore
             jest.spyOn(walletManager, "allByUsername").mockReturnValue(wallets);
 
-            const actualDelegates = repository.getLocalDelegates({ forgedTotal: undefined });
+            const { rows } = search({ forgedTotal: undefined });
 
-            actualDelegates.forEach(delegate => {
-                expect(delegate.hasOwnProperty("forgedTotal"));
-                expect(+delegate.forgedTotal.toFixed()).toBe(delegateCalculator.calculateForgedTotal(delegate));
-            });
+            for (const delegate of rows) {
+                expect(delegate.hasAttribute("delegate.forgedTotal")).toBeTrue();
+                expect(delegate.getAttribute("delegate.forgedTotal")).toBe(
+                    delegateCalculator.calculateForgedTotal(delegate),
+                );
+            }
         });
-    });
 
-    describe("findAll", () => {
         it("should be ok without params", () => {
             const wallets = generateWallets();
             walletManager.index(wallets);
 
-            const { count, rows } = repository.findAll();
+            const { count, rows } = search({});
             expect(count).toBe(52);
             expect(rows).toHaveLength(52);
-            expect(rows.sort((a, b) => a.rate < b.rate)).toEqual(rows);
+            expect(
+                (rows as any).sort((a, b) => a.getAttribute("delegate.rank") < b.getAttribute("delegate.rank")),
+            ).toEqual(rows);
         });
 
         it("should be ok with params", () => {
             const wallets = generateWallets();
             walletManager.index(wallets);
 
-            const { count, rows } = repository.findAll({ offset: 10, limit: 10, orderBy: "rate:desc" });
+            const { count, rows } = search({ offset: 10, limit: 10, orderBy: "rate:desc" });
             expect(count).toBe(52);
             expect(rows).toHaveLength(10);
-            expect(rows.sort((a, b) => a.rate > b.rate)).toEqual(rows);
+            expect((rows as any).sort((a, b) => a.rate > b.rate)).toEqual(rows);
         });
 
         it("should be ok with params (no offset)", () => {
             const wallets = generateWallets();
             walletManager.index(wallets);
 
-            const { count, rows } = repository.findAll({ limit: 10 });
+            const { count, rows } = search({ limit: 10 });
             expect(count).toBe(52);
             expect(rows).toHaveLength(10);
         });
@@ -120,7 +123,7 @@ describe("Delegate Repository", () => {
             const wallets = generateWallets();
             walletManager.index(wallets);
 
-            const { count, rows } = repository.findAll({ offset: 0, limit: 12 });
+            const { count, rows } = search({ offset: 0, limit: 12 });
             expect(count).toBe(52);
             expect(rows).toHaveLength(12);
         });
@@ -129,30 +132,23 @@ describe("Delegate Repository", () => {
             const wallets = generateWallets();
             walletManager.index(wallets);
 
-            const { count, rows } = repository.findAll({ offset: 10 });
+            const { count, rows } = search({ offset: 10 });
             expect(count).toBe(52);
             expect(rows).toHaveLength(42);
-        });
-    });
-
-    describe("search", () => {
-        beforeEach(() => {
-            const wallets = generateWallets();
-            walletManager.index(wallets);
         });
 
         describe("by `username`", () => {
             it("should search by exact match", () => {
                 const username = "username-APnhwwyTbMiykJwYbGhYjNgtHiVJDSEhSn";
-                const { count, rows } = repository.search({ username });
+                const { count, rows } = search({ username });
 
                 expect(count).toBe(1);
                 expect(rows).toHaveLength(1);
-                expect(rows[0].username).toEqual(username);
+                expect(rows[0].getAttribute("delegate.username")).toEqual(username);
             });
 
             it("should search that username contains the string", () => {
-                const { count, rows } = repository.search({ username: "username" });
+                const { count, rows } = search({ username: "username" });
 
                 expect(count).toBe(52);
                 expect(rows).toHaveLength(52);
@@ -161,20 +157,20 @@ describe("Delegate Repository", () => {
             describe('when a username is "undefined"', () => {
                 it("should return it", () => {
                     // Index a wallet with username "undefined"
-                    walletManager.allByAddress()[0].username = "undefined";
+                    walletManager.allByAddress()[0].setAttribute("delegate", { username: "undefined" });
 
                     const username = "undefined";
-                    const { count, rows } = repository.search({ username });
+                    const { count, rows } = search({ username });
 
                     expect(count).toBe(1);
                     expect(rows).toHaveLength(1);
-                    expect(rows[0].username).toEqual(username);
+                    expect(rows[0].getAttribute("delegate.username")).toEqual(username);
                 });
             });
 
             describe("when the username does not exist", () => {
                 it("should return no results", () => {
-                    const { count, rows } = repository.search({
+                    const { count, rows } = search({
                         username: "unknown-dummy-username",
                     });
 
@@ -184,7 +180,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     username: "username",
                     offset: 10,
                     limit: 10,
@@ -194,7 +190,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params (no offset)", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     username: "username",
                     limit: 10,
                 });
@@ -203,7 +199,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params (offset = 0)", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     username: "username",
                     offset: 0,
                     limit: 12,
@@ -213,7 +209,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params (no limit)", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     username: "username",
                     offset: 10,
                 });
@@ -229,33 +225,33 @@ describe("Delegate Repository", () => {
                     "username-AG8kwwk4TsYfA2HdwaWBVAJQBj6VhdcpMo",
                     "username-AHXtmB84sTZ9Zd35h9Y1vfFvPE2Xzqj8ri",
                 ];
-                const { count, rows } = repository.search({ usernames });
+                const { count, rows } = search({ usernames });
 
                 expect(count).toBe(3);
                 expect(rows).toHaveLength(3);
 
-                rows.forEach(row => {
-                    expect(usernames.includes(row.username)).toBeTrue();
-                });
+                for (const row of rows) {
+                    expect(usernames.includes(row.getAttribute("delegate.username"))).toBeTrue();
+                }
             });
 
             describe('when a username is "undefined"', () => {
                 it("should return it", () => {
                     // Index a wallet with username "undefined"
-                    walletManager.allByAddress()[0].username = "undefined";
+                    walletManager.allByAddress()[0].setAttribute("delegate", { username: "undefined" });
 
                     const usernames = ["undefined"];
-                    const { count, rows } = repository.search({ usernames });
+                    const { count, rows } = search({ usernames });
 
                     expect(count).toBe(1);
                     expect(rows).toHaveLength(1);
-                    expect(rows[0].username).toEqual(usernames[0]);
+                    expect(rows[0].getAttribute("delegate.username")).toEqual(usernames[0]);
                 });
             });
 
             describe("when the username does not exist", () => {
                 it("should return no results", () => {
-                    const { count, rows } = repository.search({
+                    const { count, rows } = search({
                         usernames: ["unknown-dummy-username"],
                     });
 
@@ -265,7 +261,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     usernames: [
                         "username-APnhwwyTbMiykJwYbGhYjNgtHiVJDSEhSn",
                         "username-AG8kwwk4TsYfA2HdwaWBVAJQBj6VhdcpMo",
@@ -278,7 +274,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params (no offset)", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     usernames: [
                         "username-APnhwwyTbMiykJwYbGhYjNgtHiVJDSEhSn",
                         "username-AG8kwwk4TsYfA2HdwaWBVAJQBj6VhdcpMo",
@@ -290,7 +286,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params (offset = 0)", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     usernames: [
                         "username-APnhwwyTbMiykJwYbGhYjNgtHiVJDSEhSn",
                         "username-AG8kwwk4TsYfA2HdwaWBVAJQBj6VhdcpMo",
@@ -303,7 +299,7 @@ describe("Delegate Repository", () => {
             });
 
             it("should be ok with params (no limit)", () => {
-                const { count, rows } = repository.search({
+                const { count, rows } = search({
                     usernames: [
                         "username-APnhwwyTbMiykJwYbGhYjNgtHiVJDSEhSn",
                         "username-AG8kwwk4TsYfA2HdwaWBVAJQBj6VhdcpMo",
@@ -323,7 +319,7 @@ describe("Delegate Repository", () => {
                     "username-AHXtmB84sTZ9Zd35h9Y1vfFvPE2Xzqj8ri",
                 ];
 
-                const { count, rows } = repository.search({ username, usernames });
+                const { count, rows } = search({ username, usernames });
 
                 expect(count).toBe(1);
                 expect(rows).toHaveLength(1);
@@ -332,7 +328,7 @@ describe("Delegate Repository", () => {
 
         describe("when searching without params", () => {
             it("should return all results", () => {
-                const { count, rows } = repository.search({});
+                const { count, rows } = search({});
 
                 expect(count).toBe(52);
                 expect(rows).toHaveLength(52);
@@ -341,9 +337,9 @@ describe("Delegate Repository", () => {
             describe('when a username is "undefined"', () => {
                 it("should return all results", () => {
                     // Index a wallet with username "undefined"
-                    walletManager.allByAddress()[0].username = "undefined";
+                    walletManager.allByAddress()[0].setAttribute("delegate", { username: "undefined" });
 
-                    const { count, rows } = repository.search({});
+                    const { count, rows } = search({});
                     expect(count).toBe(52);
                     expect(rows).toHaveLength(52);
                 });
@@ -356,11 +352,13 @@ describe("Delegate Repository", () => {
             const wallets = generateWallets();
             walletManager.index(wallets);
 
-            const wallet = repository.findById(wallets[0][key]);
+            const id: string = key === "username" ? wallets[0].getAttribute("delegate.username") : wallets[0][key];
+
+            const wallet = walletsRepository.findById(Database.SearchScope.Delegates, id);
             expect(wallet).toBeObject();
             expect(wallet.address).toBe(wallets[0].address);
             expect(wallet.publicKey).toBe(wallets[0].publicKey);
-            expect(wallet.username).toBe(wallets[0].username);
+            expect(wallet.getAttribute("delegate.username")).toBe(wallets[0].getAttribute("delegate.username"));
         };
 
         it("should be ok with an address", () => {

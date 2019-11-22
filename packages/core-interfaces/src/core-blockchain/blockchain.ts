@@ -51,16 +51,9 @@ export interface IBlockchain {
     clearAndStopQueue(): void;
 
     /**
-     * Hand the given transactions to the transaction handler.
-     * @param  {Array}   transactions
-     * @return {void}
-     */
-    postTransactions(transactions: Interfaces.ITransaction[]): Promise<void>;
-
-    /**
      * Push a block to the process queue.
      */
-    handleIncomingBlock(block: Interfaces.IBlockData, remoteAddress: string, fromForger?: boolean): void;
+    handleIncomingBlock(block: Interfaces.IBlockData, fromForger?: boolean): void;
 
     /**
      * Remove N number of blocks.
@@ -103,25 +96,11 @@ export interface IBlockchain {
     forkBlock(block: Interfaces.IBlock): void;
 
     /**
-     * Get unconfirmed transactions for the specified block size.
-     * @param  {Number}  blockSize
-     * @param  {Boolean} forForging
-     * @return {Object}
-     */
-    getUnconfirmedTransactions(
-        blockSize: number,
-    ): {
-        transactions: string[];
-        poolSize: number;
-        count: number;
-    };
-
-    /**
      * Determine if the blockchain is synced.
      * @param  {Block} [block=getLastBlock()]  block
      * @return {Boolean}
      */
-    isSynced(block?: Interfaces.IBlock): boolean;
+    isSynced(block?: Interfaces.IBlockData): boolean;
 
     /**
      * Get the last block of the blockchain.
@@ -139,7 +118,7 @@ export interface IBlockchain {
      * Get the last downloaded block of the blockchain.
      * @return {Object}
      */
-    getLastDownloadedBlock(): Interfaces.IBlock;
+    getLastDownloadedBlock(): Interfaces.IBlockData;
 
     /**
      * Get the block ping.

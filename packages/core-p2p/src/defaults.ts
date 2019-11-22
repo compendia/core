@@ -8,19 +8,20 @@ export const defaults = {
     /**
      * The minimum peer version we expect
      */
-    minimumVersions: [">=2.4.0", ">=2.4.0-next.0"],
+    minimumVersions: ["^2.4 || ^2.5 || ^2.6", "^2.4.0-next.0 || ^2.5.0-next.0 || ^2.6.0-next.0"],
     /**
      * The number of peers we expect to be available to start a relay
      */
     minimumNetworkReach: 20,
     /**
-     * The timeout for requests to other peers
+     * The timeout to verify a peer. [milliseconds]
      */
-    globalTimeout: 5000,
+    verifyTimeout: 60000,
     /**
-     * The number of seconds until we allow forging
+     * The timeout to download a batch of blocks (400). Notice that we start
+     * 25 concurrent such downloads, so the network may be saturated. [milliseconds]
      */
-    coldStart: 30,
+    getBlocksTimeout: 600000,
     /**
      * The maximum number of peers we will broadcast data to
      */
@@ -66,5 +67,5 @@ export const defaults = {
     /**
      * Rate limit config, used in socket-server worker / master
      */
-    rateLimit: 20, // max number of messages per second per socket connection
+    rateLimit: process.env.CORE_P2P_RATE_LIMIT || 100, // max number of messages per second per socket connection
 };

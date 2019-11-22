@@ -16,7 +16,7 @@ export abstract class AbstractStartCommand extends BaseCommand {
     protected abstract async runProcess(flags: CommandFlags): Promise<void>;
 
     protected async runWithPm2(options: ProcessOptions, flags: CommandFlags) {
-        const processName = options.name;
+        const processName: string = options.name;
 
         try {
             if (processManager.has(processName)) {
@@ -42,6 +42,7 @@ export abstract class AbstractStartCommand extends BaseCommand {
                     ...options,
                     ...{
                         env: {
+                            NODE_ENV: "production",
                             CORE_ENV: flags.env,
                         },
                     },

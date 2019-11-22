@@ -5,20 +5,22 @@ import { Worker } from "../../../../packages/core-p2p/src/socket-server/worker";
 
 const worker = new Worker();
 
+// @ts-ignore
+worker.scServer.wsServer = { on: () => undefined };
+
 describe("Worker", () => {
     describe("run", () => {
         it("should init the worker", async () => {
-            await worker.run();
+            // @ts-ignore
+            jest.spyOn(worker, "sendToMasterAsync").mockResolvedValue({
+                data: { whitelist: [], remoteAccess: [], rateLimit: 1 },
+            });
 
+            await worker.run();
             await delay(500);
 
-            // initRateLimit calls sendToMaster
-            expect(worker.sendToMaster).toHaveBeenCalledWith(
-                {
-                    endpoint: "p2p.utils.getConfig",
-                },
-                expect.any(Function),
-            );
+            // @ts-ignore
+            expect(worker.sendToMasterAsync).toHaveBeenLastCalledWith("p2p.utils.getConfig");
 
             // registering endpoint on connection
             expect(worker.scServer.on).toHaveBeenCalledWith("connection", expect.any(Function));

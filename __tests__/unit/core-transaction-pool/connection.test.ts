@@ -3,34 +3,54 @@ import "jest-extended";
 import { container } from "./mocks/core-container";
 import { state } from "./mocks/state";
 
+import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
+import { State } from "@arkecosystem/core-interfaces";
 import { Wallets } from "@arkecosystem/core-state";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Blocks, Constants, Enums, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
-import { dato } from "@faustbrian/dato";
+import { Constants, Crypto, Enums, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import assert from "assert";
+import delay from "delay";
 import cloneDeep from "lodash.clonedeep";
+import shuffle from "lodash.shuffle";
 import randomSeed from "random-seed";
 import { Connection } from "../../../packages/core-transaction-pool/src/connection";
 import { defaults } from "../../../packages/core-transaction-pool/src/defaults";
 import { Memory } from "../../../packages/core-transaction-pool/src/memory";
 import { Storage } from "../../../packages/core-transaction-pool/src/storage";
 import { WalletManager } from "../../../packages/core-transaction-pool/src/wallet-manager";
-import { TransactionFactory } from "../../helpers/transaction-factory";
-import { block2, delegates } from "../../utils/fixtures/unitnet";
+import { BlockFactory, TransactionFactory } from "../../helpers";
+import { delegates } from "../../utils/fixtures/unitnet";
 import { transactions as mockData } from "./__fixtures__/transactions";
 import { database as databaseService } from "./mocks/database";
 
-const { BlockFactory } = Blocks;
 const { SATOSHI } = Constants;
-const { TransactionTypes } = Enums;
+const { TransactionType } = Enums;
 
 const delegatesSecrets = delegates.map(d => d.secret);
-const maxTransactionAge = 4036608000;
 
+const maxTransactionAge: number = 2700;
 let connection: Connection;
 let memory: Memory;
 
+const indexWalletWithSufficientBalance = (transaction: Interfaces.ITransaction): void => {
+    // @ts-ignore
+    const walletManager = connection.databaseService.walletManager;
+
+    const wallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
+    wallet.balance = wallet.balance.plus(transaction.data.amount.plus(transaction.data.fee));
+    walletManager.reindex(wallet);
+};
+
+const updateSenderNonce = (transaction: Interfaces.ITransaction) => {
+    (connection as any).databaseService.walletManager.findByPublicKey(
+        transaction.data.senderPublicKey,
+    ).nonce = Utils.BigNumber.make(transaction.data.nonce).minus(1);
+};
+
 beforeAll(async () => {
-    memory = new Memory();
+    memory = new Memory(maxTransactionAge);
+
+    container.app.resolvePlugin("database").walletManager = new Wallets.WalletManager();
 
     connection = new Connection({
         options: defaults,
@@ -38,6 +58,10 @@ beforeAll(async () => {
         memory,
         storage: new Storage(),
     });
+
+    for (const transaction of Object.values(mockData)) {
+        indexWalletWithSufficientBalance(transaction);
+    }
 
     await connection.make();
 });
@@ -47,45 +71,45 @@ beforeEach(() => connection.flush());
 describe("Connection", () => {
     const addTransactions = transactions => {
         for (const t of transactions) {
-            memory.remember(t, maxTransactionAge);
+            memory.remember(t);
         }
     };
 
     describe("getPoolSize", () => {
-        it("should return 0 if no transactions were added", () => {
-            expect(connection.getPoolSize()).toBe(0);
+        it("should return 0 if no transactions were added", async () => {
+            await expect(connection.getPoolSize()).resolves.toBe(0);
         });
 
-        it("should return 2 if transactions were added", () => {
-            expect(connection.getPoolSize()).toBe(0);
+        it("should return 2 if transactions were added", async () => {
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
-            memory.remember(mockData.dummy1, maxTransactionAge);
+            memory.remember(mockData.dummy1);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
 
-            memory.remember(mockData.dummy2, maxTransactionAge);
+            memory.remember(mockData.dummy2);
 
-            expect(connection.getPoolSize()).toBe(2);
+            await expect(connection.getPoolSize()).resolves.toBe(2);
         });
     });
 
     describe("getSenderSize", () => {
-        it("should return 0 if no transactions were added", () => {
-            expect(connection.getSenderSize("undefined")).toBe(0);
+        it("should return 0 if no transactions were added", async () => {
+            expect(await connection.getSenderSize("undefined")).toBe(0);
         });
 
-        it("should return 2 if transactions were added", () => {
+        it("should return 2 if transactions were added", async () => {
             const senderPublicKey = mockData.dummy1.data.senderPublicKey;
 
-            expect(connection.getSenderSize(senderPublicKey)).toBe(0);
+            expect(await connection.getSenderSize(senderPublicKey)).toBe(0);
 
-            memory.remember(mockData.dummy1, maxTransactionAge);
+            memory.remember(mockData.dummy1);
 
-            expect(connection.getSenderSize(senderPublicKey)).toBe(1);
+            expect(await connection.getSenderSize(senderPublicKey)).toBe(1);
 
-            memory.remember(mockData.dummy3, maxTransactionAge);
+            memory.remember(mockData.dummy3);
 
-            expect(connection.getSenderSize(senderPublicKey)).toBe(2);
+            expect(await connection.getSenderSize(senderPublicKey)).toBe(2);
         });
     });
 
@@ -94,34 +118,34 @@ describe("Connection", () => {
         beforeAll(() => {
             const mockWallet = new Wallets.Wallet(delegates[0].address);
             jest.spyOn(connection.walletManager, "findByPublicKey").mockReturnValue(mockWallet);
-            jest.spyOn(connection.walletManager, "throwIfApplyingFails").mockReturnValue();
+            jest.spyOn(connection.walletManager, "throwIfCannotBeApplied").mockReturnValue(undefined);
         });
         afterAll(() => {
             jest.restoreAllMocks();
         });
 
-        it("should add the transaction to the pool", () => {
-            expect(connection.getPoolSize()).toBe(0);
+        it("should add the transaction to the pool", async () => {
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
-            connection.addTransactions([mockData.dummy1]);
+            await connection.addTransactions([mockData.dummy1]);
 
             // Test adding already existent transaction
-            connection.addTransactions([mockData.dummy1]);
+            await connection.addTransactions([mockData.dummy1]);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
         });
 
-        it("should return error when adding 1 more transaction than maxTransactionsInPool", () => {
-            expect(connection.getPoolSize()).toBe(0);
+        it("should return error when adding 1 more transaction than maxTransactionsInPool", async () => {
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
-            connection.addTransactions([mockData.dummy1, mockData.dummy2, mockData.dummy3, mockData.dummy4]);
+            await connection.addTransactions([mockData.dummy1, mockData.dummy2, mockData.dummy3, mockData.dummy4]);
 
-            expect(connection.getPoolSize()).toBe(4);
+            await expect(connection.getPoolSize()).resolves.toBe(4);
 
             const maxTransactionsInPoolOrig = connection.options.maxTransactionsInPool;
             connection.options.maxTransactionsInPool = 4;
 
-            expect(connection.addTransactions([mockData.dummy5])).toEqual({
+            await expect(connection.addTransactions([mockData.dummy5])).toEqual({
                 transaction: mockData.dummy5,
                 type: "ERR_POOL_FULL",
                 message:
@@ -132,23 +156,25 @@ describe("Connection", () => {
             connection.options.maxTransactionsInPool = maxTransactionsInPoolOrig;
         });
 
-        it("should replace lowest fee transaction when adding 1 more transaction than maxTransactionsInPool", () => {
-            expect(connection.getPoolSize()).toBe(0);
+        it("should replace lowest fee transaction when adding 1 more transaction than maxTransactionsInPool", async () => {
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
-            connection.addTransactions([
+            await connection.addTransactions([
                 mockData.dummy1,
                 mockData.dummy2,
                 mockData.dummy3,
                 mockData.dynamicFeeNormalDummy1,
             ]);
 
-            expect(connection.getPoolSize()).toBe(4);
+            await expect(connection.getPoolSize()).resolves.toBe(4);
 
             const maxTransactionsInPoolOrig = connection.options.maxTransactionsInPool;
             connection.options.maxTransactionsInPool = 4;
 
-            expect(connection.addTransactions([mockData.dummy5])).toEqual({});
-            expect(connection.getTransactionIdsForForging(0, 10)).toEqual([
+            expect(await connection.addTransactions([mockData.dummy5])).toEqual({});
+
+            const transactionIds = await connection.getTransactionIdsForForging(0, 10);
+            expect(transactionIds).toEqual([
                 mockData.dummy1.id,
                 mockData.dummy2.id,
                 mockData.dummy3.id,
@@ -164,24 +190,31 @@ describe("Connection", () => {
     });
 
     describe("addTransactions", () => {
+        let mockWallet: Wallets.Wallet;
+
         beforeAll(() => {
-            const mockWallet = new Wallets.Wallet(delegates[0].address);
-            jest.spyOn(connection.walletManager, "findByPublicKey").mockReturnValue(mockWallet);
-            jest.spyOn(connection.walletManager, "throwIfApplyingFails").mockReturnValue();
+            mockWallet = new Wallets.Wallet(delegates[0].address);
+
+            connection.walletManager.reindex(mockWallet);
+            jest.spyOn(connection.walletManager, "throwIfCannotBeApplied").mockResolvedValue(undefined);
         });
         afterAll(() => {
             jest.restoreAllMocks();
         });
 
-        it("should add the transactions to the pool", () => {
-            expect(connection.getPoolSize()).toBe(0);
+        it("should add the transactions to the pool", async () => {
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
-            connection.addTransactions([mockData.dummy1, mockData.dummy2]);
+            const wallet = new Wallets.Wallet(Identities.Address.fromPublicKey(mockData.dummy1.data.senderPublicKey));
+            wallet.balance = Utils.BigNumber.make(1e12);
+            connection.walletManager.reindex(wallet);
 
-            expect(connection.getPoolSize()).toBe(2);
+            await connection.addTransactions([mockData.dummy1, mockData.dummy2]);
+
+            await expect(connection.getPoolSize()).resolves.toBe(2);
         });
 
-        it("should not add not-appliable transactions", () => {
+        it("should not add not-appliable transactions", async () => {
             // This should be skipped due to insufficient funds
             const highFeeTransaction = Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy3.data));
             highFeeTransaction.data.fee = Utils.BigNumber.make(1e9 * SATOSHI);
@@ -189,118 +222,147 @@ describe("Connection", () => {
             highFeeTransaction.data.senderPublicKey =
                 "000000000000000000000000000000000000000420000000000000000000000000";
 
-            jest.spyOn(connection.walletManager, "throwIfApplyingFails").mockImplementation(tx => {
-                throw new Error(JSON.stringify(["Some error in throwIfApplyingFails"]));
+            jest.spyOn(connection.walletManager, "throwIfCannotBeApplied").mockImplementation(tx => {
+                throw new Error(JSON.stringify(["Some error in throwIfCannotBeApplied"]));
             });
-            const { notAdded } = connection.addTransactions([highFeeTransaction]);
+            const { notAdded } = await connection.addTransactions([highFeeTransaction]);
             expect(notAdded[0]).toEqual({
-                message: '["Some error in throwIfApplyingFails"]',
+                message: '["Some error in throwIfCannotBeApplied"]',
                 transaction: highFeeTransaction,
                 type: "ERR_APPLY",
             });
-            expect(connection.getPoolSize()).toBe(0);
+            await expect(connection.getPoolSize()).resolves.toBe(0);
         });
     });
 
     describe("addTransactions with expiration", () => {
         beforeAll(() => {
-            const mockWallet = new Wallets.Wallet(delegates[0].address);
-            jest.spyOn(connection.walletManager, "findByPublicKey").mockReturnValue(mockWallet);
-            jest.spyOn(connection.walletManager, "throwIfApplyingFails").mockReturnValue();
+            jest.spyOn(connection.walletManager, "throwIfCannotBeApplied").mockResolvedValue(undefined);
+            connection.walletManager.reset();
         });
         afterAll(() => {
             jest.restoreAllMocks();
         });
 
-        it("should add the transactions to the pool and they should expire", async () => {
-            const heightAtStart = 42;
+        it.each([1, 2])("should correctly expire transactions (v%i)", async transactionVersion => {
+            const setHeight = height => {
+                jest.spyOn(state, "getStore").mockReturnValue({
+                    ...state.getStore(),
+                    ...{ getLastHeight: () => height },
+                });
+                jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(
+                    height * Managers.configManager.getMilestone(height).blocktime,
+                );
+            };
 
             jest.spyOn(container.app, "has").mockReturnValue(true);
-            jest.spyOn(state, "getStore").mockReturnValue({
-                ...state.getStore(),
-                ...{ getLastHeight: () => heightAtStart },
-            });
 
-            expect(connection.getPoolSize()).toBe(0);
+            const heightAtStart = 42;
+
+            setHeight(heightAtStart);
+
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
             const expireAfterBlocks: number = 3;
             const expiration: number = heightAtStart + expireAfterBlocks;
 
             const transactions: Interfaces.ITransaction[] = [];
 
-            transactions.push(Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummyExp1.data)));
-            transactions[transactions.length - 1].data.expiration = expiration;
+            let nonce: Utils.BigNumber = (connection as any).databaseService.walletManager.findByPublicKey(
+                mockData.dummy1.data.senderPublicKey,
+            ).nonce;
 
-            transactions.push(Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy1.data)));
+            for (const [i, exp] of [0, expiration, expiration + 5].entries()) {
+                transactions.push(
+                    TransactionFactory.transfer(mockData.dummy1.data.recipientId)
+                        .withNetwork("unitnet")
+                        .withPassphrase(delegatesSecrets[0])
+                        .withFee(SATOSHI + i)
+                        .withNonce(nonce)
+                        .withVersion(transactionVersion)
+                        .withExpiration(exp)
+                        .build(1)[0],
+                );
+                nonce = nonce.plus(1);
+            }
 
-            // Workaround: Increase balance of sender wallet to succeed
-            const insufficientBalanceTx: any = Transactions.TransactionFactory.fromData(
-                cloneDeep(mockData.dummyExp2.data),
-            );
-            insufficientBalanceTx.data.expiration = expiration;
-            transactions.push(insufficientBalanceTx);
+            const { added, notAdded } = await connection.addTransactions(transactions);
 
-            transactions.push(mockData.dummy2);
-
-            const { added, notAdded } = connection.addTransactions(transactions);
-
-            expect(added).toHaveLength(4);
             expect(notAdded).toBeEmpty();
+            expect(added).toHaveLength(3);
 
-            expect(connection.getPoolSize()).toBe(4);
+            await expect(connection.getPoolSize()).resolves.toBe(3);
 
-            jest.spyOn(state, "getStore").mockReturnValue({
-                ...state.getStore(),
-                ...{ getLastHeight: () => expiration - 1 },
-            });
+            setHeight(expiration - 1);
 
-            expect(connection.getPoolSize()).toBe(4);
+            await expect(connection.getPoolSize()).resolves.toBe(3);
 
-            jest.spyOn(state, "getStore").mockReturnValue({
-                ...state.getStore(),
-                ...{ getLastHeight: () => expiration },
-            });
+            setHeight(expiration);
 
-            expect(connection.getPoolSize()).toBe(2);
+            switch (transactionVersion) {
+                case 1:
+                    await expect(connection.getPoolSize()).resolves.toBe(3);
+                    break;
+                case 2:
+                    await expect(connection.getPoolSize()).resolves.toBe(1);
+                    break;
+            }
 
-            transactions.forEach(t => connection.removeTransactionById(t.id));
+            setHeight(heightAtStart + maxTransactionAge);
+
+            switch (transactionVersion) {
+                case 1:
+                    await expect(connection.getPoolSize()).resolves.toBe(0);
+                    break;
+                case 2:
+                    await expect(connection.getPoolSize()).resolves.toBe(1); // v2 transactions do not expire
+                    break;
+            }
+
+            for (const t of transactions) {
+                connection.removeTransactionById(t.id);
+            }
+
+            if (transactionVersion === 1) {
+                Managers.configManager.getMilestone().aip11 = true;
+            }
         });
     });
 
     describe("removeTransaction", () => {
-        it("should remove the specified transaction from the pool", () => {
-            memory.remember(mockData.dummy1, maxTransactionAge);
+        it("should remove the specified transaction from the pool", async () => {
+            memory.remember(mockData.dummy1);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
 
             connection.removeTransaction(mockData.dummy1);
 
-            expect(connection.getPoolSize()).toBe(0);
+            await expect(connection.getPoolSize()).resolves.toBe(0);
         });
     });
 
     describe("removeTransactionById", () => {
-        it("should remove the specified transaction from the pool (by id)", () => {
-            memory.remember(mockData.dummy1, maxTransactionAge);
+        it("should remove the specified transaction from the pool (by id)", async () => {
+            memory.remember(mockData.dummy1);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
 
             connection.removeTransactionById(mockData.dummy1.id);
 
-            expect(connection.getPoolSize()).toBe(0);
+            await expect(connection.getPoolSize()).resolves.toBe(0);
         });
 
-        it("should do nothing when asked to delete a non-existent transaction", () => {
-            memory.remember(mockData.dummy1, maxTransactionAge);
+        it("should do nothing when asked to delete a non-existent transaction", async () => {
+            memory.remember(mockData.dummy1);
 
             connection.removeTransactionById("nonexistenttransactionid");
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
         });
     });
 
     describe("removeTransactionsForSender", () => {
-        it("should remove the senders transactions from the pool", () => {
+        it("should remove the senders transactions from the pool", async () => {
             addTransactions([
                 mockData.dummy1,
                 mockData.dummy3,
@@ -310,30 +372,30 @@ describe("Connection", () => {
                 mockData.dummy10,
             ]);
 
-            expect(connection.getPoolSize()).toBe(6);
+            await expect(connection.getPoolSize()).resolves.toBe(6);
 
             connection.removeTransactionsForSender(mockData.dummy1.data.senderPublicKey);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
         });
     });
 
     describe("has", () => {
-        it("should return true if transaction is IN pool", () => {
+        it("should return true if transaction is IN pool", async () => {
             addTransactions([mockData.dummy1, mockData.dummy2]);
 
-            expect(connection.has(mockData.dummy1.id)).toBeTrue();
-            expect(connection.has(mockData.dummy2.id)).toBeTrue();
+            expect(await connection.has(mockData.dummy1.id)).toBeTrue();
+            expect(await connection.has(mockData.dummy2.id)).toBeTrue();
         });
 
-        it("should return false if transaction is NOT pool", () => {
-            expect(connection.has(mockData.dummy1.id)).toBeFalse();
-            expect(connection.has(mockData.dummy2.id)).toBeFalse();
+        it("should return false if transaction is NOT pool", async () => {
+            expect(await connection.has(mockData.dummy1.id)).toBeFalse();
+            expect(await connection.has(mockData.dummy2.id)).toBeFalse();
         });
     });
 
     describe("hasExceededMaxTransactions", () => {
-        it("should be true if exceeded", () => {
+        it("should be true if exceeded", async () => {
             connection.options.maxTransactionsPerSender = 5;
             connection.options.allowedSenders = [];
             addTransactions([
@@ -346,23 +408,23 @@ describe("Connection", () => {
                 mockData.dummy9,
             ]);
 
-            expect(connection.getPoolSize()).toBe(7);
-            const exceeded = connection.hasExceededMaxTransactions(mockData.dummy3.data);
+            await expect(connection.getPoolSize()).resolves.toBe(7);
+            const exceeded = await connection.hasExceededMaxTransactions(mockData.dummy3.data.senderPublicKey);
             expect(exceeded).toBeTrue();
         });
 
-        it("should be falsy if not exceeded", () => {
+        it("should be falsy if not exceeded", async () => {
             connection.options.maxTransactionsPerSender = 7;
             connection.options.allowedSenders = [];
 
             addTransactions([mockData.dummy4, mockData.dummy5, mockData.dummy6]);
 
-            expect(connection.getPoolSize()).toBe(3);
-            const exceeded = connection.hasExceededMaxTransactions(mockData.dummy3.data);
+            await expect(connection.getPoolSize()).resolves.toBe(3);
+            const exceeded = await connection.hasExceededMaxTransactions(mockData.dummy3.data.senderPublicKey);
             expect(exceeded).toBeFalse();
         });
 
-        it("should be allowed to exceed if whitelisted", () => {
+        it("should be allowed to exceed if whitelisted", async () => {
             connection.flush();
             connection.options.maxTransactionsPerSender = 5;
             connection.options.allowedSenders = [delegates[0].publicKey, delegates[1].publicKey];
@@ -376,41 +438,42 @@ describe("Connection", () => {
                 mockData.dummy9,
             ]);
 
-            expect(connection.getPoolSize()).toBe(7);
-            const exceeded = connection.hasExceededMaxTransactions(mockData.dummy3.data);
+            await expect(connection.getPoolSize()).resolves.toBe(7);
+            const exceeded = await connection.hasExceededMaxTransactions(mockData.dummy3.data.senderPublicKey);
             expect(exceeded).toBeFalse();
         });
     });
 
     describe("getTransaction", () => {
-        it("should return the specified transaction", () => {
+        it("should return the specified transaction", async () => {
             addTransactions([mockData.dummy1]);
 
-            const poolTransaction = connection.getTransaction(mockData.dummy1.id);
+            const poolTransaction = await connection.getTransaction(mockData.dummy1.id);
             expect(poolTransaction).toBeObject();
             expect(poolTransaction.id).toBe(mockData.dummy1.id);
         });
 
-        it("should return undefined for nonexisting transaction", () => {
-            const poolTransaction = connection.getTransaction("non existing id");
+        it("should return undefined for nonexisting transaction", async () => {
+            const poolTransaction = await connection.getTransaction("non existing id");
             expect(poolTransaction).toBeFalsy();
         });
     });
 
     describe("getTransactions", () => {
-        it("should return transactions within the specified range", () => {
-            const transactions = [mockData.dummy1, mockData.dummy2];
+        it("should return transactions within the specified range", async () => {
+            const transactions = [mockData.dummy1, mockData.dummyLarge1];
 
             addTransactions(transactions);
+            updateSenderNonce(mockData.dummyLarge1);
 
             if (transactions[1].data.fee > transactions[0].data.fee) {
                 transactions.reverse();
             }
 
             for (const i of [0, 1]) {
-                const retrieved = connection
-                    .getTransactions(i, 1)
-                    .map(serializedTx => Transactions.TransactionFactory.fromBytes(serializedTx));
+                const retrieved = (await connection.getTransactions(i, 1)).map(serializedTx =>
+                    Transactions.TransactionFactory.fromBytes(serializedTx),
+                );
 
                 expect(retrieved.length).toBe(1);
                 expect(retrieved[0]).toBeObject();
@@ -420,247 +483,268 @@ describe("Connection", () => {
     });
 
     describe("getTransactionIdsForForging", () => {
-        it("should return an array of transactions ids", () => {
-            addTransactions([
+        it("should return an array of transactions ids", async () => {
+            const added = [
                 mockData.dummy1,
                 mockData.dummy2,
                 mockData.dummy3,
                 mockData.dummy4,
                 mockData.dummy5,
                 mockData.dummy6,
-            ]);
-
-            const transactionIds = connection.getTransactionIdsForForging(0, 6);
-
-            expect(transactionIds).toBeArray();
-            expect(transactionIds[0]).toBe(mockData.dummy1.id);
-            expect(transactionIds[1]).toBe(mockData.dummy2.id);
-            expect(transactionIds[2]).toBe(mockData.dummy3.id);
-            expect(transactionIds[3]).toBe(mockData.dummy4.id);
-            expect(transactionIds[4]).toBe(mockData.dummy5.id);
-            expect(transactionIds[5]).toBe(mockData.dummy6.id);
-        });
-
-        it("should only return transaction ids for transactions not exceeding the maximum payload size", () => {
-            // @FIXME: Uhm excuse me, what the?
-            mockData.dummyLarge1.data.signatures = mockData.dummyLarge2.data.signatures = [""];
-            for (let i = 0; i < connection.options.maxTransactionBytes * 0.6; i++) {
-                // @ts-ignore
-                mockData.dummyLarge1.data.signatures += "1";
-                // @ts-ignore
-                mockData.dummyLarge2.data.signatures += "2";
-            }
-
-            const transactions = [
-                mockData.dummyLarge1,
-                mockData.dummyLarge2,
-                mockData.dummy3,
-                mockData.dummy4,
-                mockData.dummy5,
-                mockData.dummy6,
-                mockData.dummy7,
             ];
 
-            addTransactions(transactions);
+            addTransactions(added);
 
-            let transactionIds = connection.getTransactionIdsForForging(0, 7);
+            const retrieved = await connection.getTransactionIdsForForging(0, added.length);
+
+            expect(retrieved).toBeArray();
+            expect(retrieved).toHaveLength(added.length);
+            expect(retrieved[0]).toBe(mockData.dummy1.id);
+            expect(retrieved[1]).toBe(mockData.dummy2.id);
+            expect(retrieved[2]).toBe(mockData.dummy3.id);
+            expect(retrieved[3]).toBe(mockData.dummy4.id);
+            expect(retrieved[4]).toBe(mockData.dummy5.id);
+            expect(retrieved[5]).toBe(mockData.dummy6.id);
+        });
+
+        it("should only return transaction ids for transactions not exceeding the maximum payload size", async () => {
+            const transactions = TransactionFactory.transfer().build(5);
+
+            const largeTransactions = TransactionFactory.transfer()
+                .withPassphrase(delegatesSecrets[22])
+                .build(2);
+
+            for (const transaction of transactions) {
+                indexWalletWithSufficientBalance(transaction);
+            }
+
+            for (const transaction of largeTransactions) {
+                indexWalletWithSufficientBalance(transaction);
+            }
+
+            // @FIXME: Uhm excuse me, what the?
+            largeTransactions[0].data.signatures = largeTransactions[1].data.signatures = [""];
+            for (let i = 0; i < connection.options.maxTransactionBytes * 0.6; i++) {
+                // @ts-ignore
+                largeTransactions[0].data.signatures += "1";
+                // @ts-ignore
+                largeTransactions[1].data.signatures += "2";
+            }
+
+            addTransactions([...transactions, ...largeTransactions]);
+
+            let transactionIds = await connection.getTransactionIdsForForging(0, 7);
             expect(transactionIds).toBeArray();
-            expect(transactionIds.length).toBe(6);
-            expect(transactionIds[0]).toBe(mockData.dummyLarge1.id);
-            expect(transactionIds[1]).toBe(mockData.dummy3.id);
-            expect(transactionIds[2]).toBe(mockData.dummy4.id);
-            expect(transactionIds[3]).toBe(mockData.dummy5.id);
-            expect(transactionIds[4]).toBe(mockData.dummy6.id);
-            expect(transactionIds[5]).toBe(mockData.dummy7.id);
+            expect(transactionIds).toHaveLength(5);
+            expect(transactionIds[0]).toBe(transactions[0].id);
+            expect(transactionIds[1]).toBe(transactions[1].id);
+            expect(transactionIds[2]).toBe(transactions[2].id);
+            expect(transactionIds[3]).toBe(transactions[3].id);
+            expect(transactionIds[4]).toBe(transactions[4].id);
 
-            connection.removeTransactionById(mockData.dummyLarge1.id);
-            connection.removeTransactionById(mockData.dummy3.id);
-            connection.removeTransactionById(mockData.dummy4.id);
-            connection.removeTransactionById(mockData.dummy5.id);
-            connection.removeTransactionById(mockData.dummy6.id);
-            connection.removeTransactionById(mockData.dummy7.id);
+            connection.removeTransactionById(transactions[0].id);
+            connection.removeTransactionById(transactions[1].id);
+            connection.removeTransactionById(transactions[2].id);
+            connection.removeTransactionById(transactions[3].id);
+            connection.removeTransactionById(transactions[4].id);
 
-            transactionIds = connection.getTransactionIdsForForging(0, 7);
+            transactionIds = await connection.getTransactionIdsForForging(0, 7);
             expect(transactionIds).toBeArray();
-            expect(transactionIds.length).toBe(1);
-            expect(transactionIds[0]).toBe(mockData.dummyLarge2.id);
+            expect(transactionIds).toHaveLength(0);
         });
     });
 
     describe("getTransactionsForForging", () => {
-        it("should return an array of transactions serialized", () => {
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+        it("should return an array of transactions serialized", async () => {
             const transactions = [mockData.dummy1, mockData.dummy2, mockData.dummy3, mockData.dummy4];
             addTransactions(transactions);
 
-            const transactionsForForging = connection.getTransactionsForForging(4);
+            const handler = await Handlers.Registry.get(0);
+            const spy = jest.spyOn(handler, "throwIfCannotBeApplied").mockResolvedValue();
+            const transactionsForForging = await connection.getTransactionsForForging(4);
+            spy.mockRestore();
 
             expect(transactionsForForging).toEqual(transactions.map(tx => tx.serialized.toString("hex")));
         });
-        it("should only return transactions not exceeding the maximum payload size", () => {
-            // @FIXME: Uhm excuse me, what the?
-            mockData.dummyLarge1.data.signatures = mockData.dummyLarge2.data.signatures = [""];
-            for (let i = 0; i < connection.options.maxTransactionBytes * 0.6; i++) {
-                // @ts-ignore
-                mockData.dummyLarge1.data.signatures += "1";
-                // @ts-ignore
-                mockData.dummyLarge2.data.signatures += "2";
-            }
 
-            const transactions = [
-                mockData.dummyLarge1,
-                mockData.dummyLarge2,
-                mockData.dummy3,
-                mockData.dummy4,
-                mockData.dummy5,
-                mockData.dummy6,
-                mockData.dummy7,
-            ];
+        it("should only return unforged transactions", async () => {
+            const transactions = [mockData.dummy1, mockData.dummy2, mockData.dummyLarge1];
+
+            updateSenderNonce(mockData.dummyLarge1);
 
             addTransactions(transactions);
 
-            let transactionsForForging = connection.getTransactionsForForging(7);
+            jest.spyOn(databaseService, "getForgedTransactionsIds").mockReturnValue([
+                mockData.dummy1.id,
+                mockData.dummy2.id,
+            ]);
+            const handler = await Handlers.Registry.get(0);
+            jest.spyOn(handler, "throwIfCannotBeApplied").mockResolvedValue();
+
+            const transactionsForForging = await connection.getTransactionsForForging(3);
+            expect(transactionsForForging.length).toBe(1);
+            expect(transactionsForForging[0]).toEqual(mockData.dummyLarge1.serialized.toString("hex"));
+        });
+
+        it("should only return transactions not exceeding the maximum payload size", async () => {
+            const transactions = TransactionFactory.transfer().build(5);
+
+            const largeTransactions = TransactionFactory.transfer()
+                .withPassphrase(delegatesSecrets[22])
+                .build(2);
+
+            for (const transaction of transactions) {
+                indexWalletWithSufficientBalance(transaction);
+            }
+
+            for (const transaction of largeTransactions) {
+                indexWalletWithSufficientBalance(transaction);
+            }
+
+            // @FIXME: Uhm excuse me, what the?
+            largeTransactions[0].data.signatures = largeTransactions[1].data.signatures = [""];
+            for (let i = 0; i < connection.options.maxTransactionBytes * 0.6; i++) {
+                // @ts-ignore
+                largeTransactions[0].data.signatures += "1";
+                // @ts-ignore
+                largeTransactions[1].data.signatures += "2";
+            }
+
+            addTransactions([...transactions, ...largeTransactions]);
+
+            const handler = await Handlers.Registry.get(0);
+            jest.spyOn(handler, "throwIfCannotBeApplied").mockResolvedValue();
+            let transactionsForForging = await connection.getTransactionsForForging(7);
 
             expect(transactionsForForging.length).toBe(6);
-            expect(transactionsForForging[0]).toEqual(mockData.dummyLarge1.serialized.toString("hex"));
-            expect(transactionsForForging[1]).toEqual(mockData.dummy3.serialized.toString("hex"));
-            expect(transactionsForForging[2]).toEqual(mockData.dummy4.serialized.toString("hex"));
-            expect(transactionsForForging[3]).toEqual(mockData.dummy5.serialized.toString("hex"));
-            expect(transactionsForForging[4]).toEqual(mockData.dummy6.serialized.toString("hex"));
-            expect(transactionsForForging[5]).toEqual(mockData.dummy7.serialized.toString("hex"));
+            expect(transactionsForForging[0]).toEqual(transactions[0].serialized.toString("hex"));
+            expect(transactionsForForging[1]).toEqual(transactions[1].serialized.toString("hex"));
+            expect(transactionsForForging[2]).toEqual(transactions[2].serialized.toString("hex"));
+            expect(transactionsForForging[3]).toEqual(transactions[3].serialized.toString("hex"));
+            expect(transactionsForForging[4]).toEqual(transactions[4].serialized.toString("hex"));
+            expect(transactionsForForging[5]).toEqual(largeTransactions[0].serialized.toString("hex"));
 
-            connection.removeTransactionById(mockData.dummyLarge1.id);
-            connection.removeTransactionById(mockData.dummy3.id);
-            connection.removeTransactionById(mockData.dummy4.id);
-            connection.removeTransactionById(mockData.dummy5.id);
-            connection.removeTransactionById(mockData.dummy6.id);
-            connection.removeTransactionById(mockData.dummy7.id);
+            connection.removeTransactionById(largeTransactions[0].id);
+            connection.removeTransactionById(transactions[0].id);
+            connection.removeTransactionById(transactions[1].id);
+            connection.removeTransactionById(transactions[2].id);
+            connection.removeTransactionById(transactions[3].id);
+            connection.removeTransactionById(transactions[4].id);
 
-            transactionsForForging = connection.getTransactionsForForging(7);
+            updateSenderNonce(largeTransactions[1]);
+
+            transactionsForForging = await connection.getTransactionsForForging(7);
+
             expect(transactionsForForging.length).toBe(1);
-            expect(transactionsForForging[0]).toEqual(mockData.dummyLarge2.serialized.toString("hex"));
+            expect(transactionsForForging[0]).toEqual(largeTransactions[1].serialized.toString("hex"));
         });
     });
 
     describe("flush", () => {
-        it("should flush the pool", () => {
+        it("should flush the pool", async () => {
             addTransactions([mockData.dummy1]);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
 
             connection.flush();
 
-            expect(connection.getPoolSize()).toBe(0);
-        });
-    });
-
-    describe("isSenderBlocked", () => {
-        it("should return false if sender is not blocked", () => {
-            const publicKey = "thisPublicKeyIsNotBlocked";
-            expect(connection.isSenderBlocked(publicKey)).toBeFalse();
-        });
-
-        it("should return true if sender is blocked", () => {
-            const publicKey = "thisPublicKeyIsBlocked";
-            (connection as any).blockedByPublicKey[publicKey] = dato().addHours(1);
-            expect(connection.isSenderBlocked(publicKey)).toBeTrue();
-        });
-
-        it("should return false and remove blockedByPublicKey[senderPublicKey] when sender is not blocked anymore", async () => {
-            const publicKey = "thisPublicKeyIsNotBlockedAnymore";
-            (connection as any).blockedByPublicKey[publicKey] = dato().subSeconds(1);
-            expect(connection.isSenderBlocked(publicKey)).toBeFalse();
-            expect((connection as any).blockedByPublicKey[publicKey]).toBeUndefined();
-        });
-    });
-
-    describe("blockSender", () => {
-        it("should block sender for 1 hour", () => {
-            const publicKey = "publicKeyToBlock";
-            const plus1HourBefore = dato().addHours(1);
-
-            const blockReleaseTime = connection.blockSender(publicKey);
-
-            const plus1HourAfter = dato().addHours(1);
-            expect((connection as any).blockedByPublicKey[publicKey]).toBe(blockReleaseTime);
-            expect(blockReleaseTime >= plus1HourBefore).toBeTrue();
-            expect(blockReleaseTime <= plus1HourAfter).toBeTrue();
+            await expect(connection.getPoolSize()).resolves.toBe(0);
         });
     });
 
     describe("acceptChainedBlock", () => {
-        let mockWallet;
-        beforeEach(() => {
-            const transactionHandler = Handlers.Registry.get(TransactionTypes.Transfer);
-            jest.spyOn(transactionHandler, "canBeApplied").mockReturnValue(true);
+        let mockPoolWallet: State.IWallet;
+        let mockBlock: Interfaces.IBlock;
+        beforeEach(async () => {
+            const transactionHandler = await Handlers.Registry.get(TransactionType.Transfer);
+            jest.spyOn(transactionHandler, "throwIfCannotBeApplied").mockResolvedValue();
 
-            mockWallet = new Wallets.Wallet(block2.transactions[0].recipientId);
-            mockWallet.balance = Utils.BigNumber.make(1e12);
-            jest.spyOn(connection.walletManager, "has").mockReturnValue(true);
-            jest.spyOn(connection.walletManager, "findByPublicKey").mockImplementation(publicKey => {
-                if (publicKey === block2.generatorPublicKey) {
-                    return new Wallets.Wallet("thisIsTheDelegateGeneratorAddress0");
-                }
-                return mockWallet;
-            });
-            jest.spyOn(connection.walletManager, "findByAddress").mockReturnValue(mockWallet);
+            mockPoolWallet = new Wallets.Wallet(delegates[0].address);
+            mockPoolWallet.publicKey = delegates[0].publicKey;
+
+            mockPoolWallet.balance = Utils.BigNumber.make(1e12);
+
+            const transactions = TransactionFactory.transfer(delegates[1].address, 5 * 1e8)
+                .withPassphrase(delegates[0].passphrase)
+                .create(10);
+
+            mockBlock = BlockFactory.createDummy(transactions);
+
+            connection.walletManager.reindex(mockPoolWallet);
+            connection.walletManager.reindex(new Wallets.Wallet(delegates[1].address));
         });
         afterEach(() => {
             jest.restoreAllMocks();
         });
 
-        it("should update wallet when accepting a chained block", () => {
-            const balanceBefore = mockWallet.balance;
+        it("should update wallet when accepting a chained block", async () => {
+            const balanceBefore = mockPoolWallet.balance;
+            await connection.acceptChainedBlock(mockBlock);
 
-            connection.acceptChainedBlock(BlockFactory.fromData(block2));
-
-            expect(+mockWallet.balance).toBe(+balanceBefore.minus(block2.totalFee));
+            expect(+mockPoolWallet.balance).toBe(+balanceBefore.minus(mockBlock.data.totalAmount));
         });
 
-        it("should remove transaction from pool if it's in the chained block", () => {
+        it("should remove transaction from pool if it's in the chained block", async () => {
+            updateSenderNonce(mockData.dummy2);
+
             addTransactions([mockData.dummy2]);
 
-            expect(connection.getTransactions(0, 10)).toEqual([mockData.dummy2.serialized]);
+            let transactions = await connection.getTransactions(0, 10);
+            expect(transactions).toEqual([mockData.dummy2.serialized]);
 
-            const chainedBlock = BlockFactory.fromData(block2);
-            chainedBlock.transactions.push(mockData.dummy2);
+            mockBlock.transactions.push(mockData.dummy2);
 
-            connection.acceptChainedBlock(chainedBlock);
+            await connection.acceptChainedBlock(mockBlock);
 
-            expect(connection.getTransactions(0, 10)).toEqual([]);
+            transactions = await connection.getTransactions(0, 10);
+            expect(transactions).toEqual([]);
         });
 
-        it("should purge and block sender if throwIfApplyingFails() failed for a transaction in the chained block", () => {
-            const transactionHandler = Handlers.Registry.get(TransactionTypes.Transfer);
-            jest.spyOn(transactionHandler, "canBeApplied").mockImplementation(() => {
+        it("should forget sender if throwIfApplyingFails() failed for a transaction in the chained block", async () => {
+            const transactionHandler = await Handlers.Registry.get(TransactionType.Transfer);
+            jest.spyOn(transactionHandler, "throwIfCannotBeApplied").mockImplementation(() => {
                 throw new Error("test error");
             });
-            const purgeByPublicKey = jest.spyOn(connection, "purgeByPublicKey");
 
-            connection.acceptChainedBlock(BlockFactory.fromData(block2));
+            const { senderPublicKey } = mockBlock.transactions[0].data;
+            const forget = jest.spyOn(connection.walletManager, "forget");
+            const applyToSender = jest.spyOn(transactionHandler, "applyToSender");
 
-            expect(purgeByPublicKey).toHaveBeenCalledTimes(1);
-            expect(connection.isSenderBlocked(block2.transactions[0].senderPublicKey)).toBeTrue();
+            await connection.acceptChainedBlock(mockBlock);
+
+            expect(connection.walletManager.hasByIndex(State.WalletIndexes.PublicKeys, senderPublicKey)).toBeFalse();
+            expect(applyToSender).not.toHaveBeenCalled();
+            expect(forget).toHaveBeenCalled();
         });
 
-        it("should delete wallet of transaction sender if its balance is down to zero", () => {
+        it("should delete wallet of transaction sender if its balance is down to zero", async () => {
             jest.spyOn(connection.walletManager, "canBePurged").mockReturnValue(true);
             const forget = jest.spyOn(connection.walletManager, "forget");
 
-            connection.acceptChainedBlock(BlockFactory.fromData(block2));
+            await connection.acceptChainedBlock(mockBlock);
 
-            expect(forget).toHaveBeenCalledTimes(block2.transactions.length);
+            expect(forget).toHaveBeenCalled();
         });
     });
 
     describe("buildWallets", () => {
         let findByPublicKey;
-        let canBeApplied;
-        let applyToSenderInPool;
-        const findByPublicKeyWallet = new Wallets.Wallet("thisIsAnAddressIMadeUpJustLikeThis");
-        beforeEach(() => {
-            const transactionHandler = Handlers.Registry.get(TransactionTypes.Transfer);
-            canBeApplied = jest.spyOn(transactionHandler, "canBeApplied").mockReturnValue(true);
-            applyToSenderInPool = jest.spyOn(transactionHandler, "applyToSenderInPool").mockReturnValue();
+        let throwIfCannotBeApplied;
+        let applyToSender;
+        const findByPublicKeyWallet = new Wallets.Wallet("ANwc3YQe3EBjuE5sNRacP7fhkngAPaBW4Y");
+        findByPublicKeyWallet.publicKey = "02778aa3d5b332965ea2a5ef6ac479ce2478535bc681a098dff1d683ff6eccc417";
+
+        beforeEach(async () => {
+            const transactionHandler = await Handlers.Registry.get(TransactionType.Transfer);
+            throwIfCannotBeApplied = jest.spyOn(transactionHandler, "throwIfCannotBeApplied").mockResolvedValue();
+            applyToSender = jest.spyOn(transactionHandler, "applyToSender").mockResolvedValue();
+
+            (connection as any).databaseService.walletManager.findByPublicKey(
+                mockData.dummy1.data.senderPublicKey,
+            ).balance = Utils.BigNumber.ZERO;
 
             jest.spyOn(connection.walletManager, "has").mockReturnValue(true);
             findByPublicKey = jest
@@ -677,13 +761,18 @@ describe("Connection", () => {
         it("should build wallets from transactions in the pool", async () => {
             addTransactions([mockData.dummy1]);
 
-            expect(connection.getTransactions(0, 10)).toEqual([mockData.dummy1.serialized]);
+            const transactions = await connection.getTransactions(0, 10);
+            expect(transactions).toEqual([mockData.dummy1.serialized]);
 
             await connection.buildWallets();
 
             expect(findByPublicKey).toHaveBeenCalledWith(mockData.dummy1.data.senderPublicKey);
-            expect(canBeApplied).toHaveBeenCalledWith(mockData.dummy1, findByPublicKeyWallet, undefined);
-            expect(applyToSenderInPool).toHaveBeenCalledWith(mockData.dummy1, connection.walletManager);
+            expect(throwIfCannotBeApplied).toHaveBeenCalledWith(
+                mockData.dummy1,
+                findByPublicKeyWallet,
+                (connection as any).databaseService.walletManager,
+            );
+            expect(applyToSender).toHaveBeenCalledWith(mockData.dummy1, connection.walletManager);
         });
 
         it("should handle getTransaction() not finding transaction", async () => {
@@ -694,47 +783,33 @@ describe("Connection", () => {
 
             expect(getTransaction).toHaveBeenCalled();
             expect(findByPublicKey).not.toHaveBeenCalled();
-            expect(canBeApplied).not.toHaveBeenCalled();
-            expect(applyToSenderInPool).not.toHaveBeenCalled();
-        });
-
-        it("should not apply transaction to wallet if canBeApplied() failed", async () => {
-            const transactionHandler = Handlers.Registry.get(TransactionTypes.Transfer);
-            canBeApplied = jest.spyOn(transactionHandler, "canBeApplied").mockImplementation(() => {
-                throw new Error("throw from test");
-            });
-            const purgeByPublicKey = jest.spyOn(connection, "purgeByPublicKey").mockReturnValue();
-
-            addTransactions([mockData.dummy1]);
-            await connection.buildWallets();
-
-            expect(applyToSenderInPool).not.toHaveBeenCalled();
-            expect(canBeApplied).toHaveBeenCalledWith(mockData.dummy1, findByPublicKeyWallet, undefined);
-            expect(purgeByPublicKey).toHaveBeenCalledWith(mockData.dummy1.data.senderPublicKey);
+            expect(applyToSender).toHaveBeenCalled();
         });
     });
 
     describe("senderHasTransactionsOfType", () => {
-        it("should be false for non-existent sender", () => {
+        it("should be false for non-existent sender", async () => {
             addTransactions([mockData.dummy1]);
 
-            expect(connection.senderHasTransactionsOfType("nonexistent", TransactionTypes.Vote)).toBeFalse();
+            await expect(
+                connection.senderHasTransactionsOfType("nonexistent", TransactionType.Vote),
+            ).resolves.toBeFalse();
         });
 
-        it("should be false for existent sender with no votes", () => {
+        it("should be false for existent sender with no votes", async () => {
             addTransactions([mockData.dummy1]);
 
-            expect(
-                connection.senderHasTransactionsOfType(mockData.dummy1.data.senderPublicKey, TransactionTypes.Vote),
-            ).toBeFalse();
+            await expect(
+                connection.senderHasTransactionsOfType(mockData.dummy1.data.senderPublicKey, TransactionType.Vote),
+            ).resolves.toBeFalse();
         });
 
-        it("should be true for existent sender with votes", () => {
+        it("should be true for existent sender with votes", async () => {
             const tx = mockData.dummy1;
 
             const voteTx = Transactions.TransactionFactory.fromData(cloneDeep(tx.data));
             voteTx.data.id = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-            voteTx.data.type = TransactionTypes.Vote;
+            voteTx.data.type = TransactionType.Vote;
             voteTx.data.amount = Utils.BigNumber.ZERO;
             voteTx.data.asset = { votes: [`+${tx.data.senderPublicKey}`] };
 
@@ -742,51 +817,81 @@ describe("Connection", () => {
 
             addTransactions(transactions);
 
-            expect(connection.senderHasTransactionsOfType(tx.data.senderPublicKey, TransactionTypes.Vote)).toBeTrue();
+            await expect(
+                connection.senderHasTransactionsOfType(tx.data.senderPublicKey, TransactionType.Vote),
+            ).resolves.toBeTrue();
         });
     });
 
     describe("shutdown and start", () => {
         it("save and restore transactions", async () => {
-            expect(connection.getPoolSize()).toBe(0);
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
-            const transactions = [mockData.dummy1, mockData.dummy4];
+            // Reset the senders' nonces to cleanup leftovers from previous tests.
+            updateSenderNonce(mockData.dummy1);
+            updateSenderNonce(mockData.dummy10);
+
+            // Be sure to use transactions with appropriate nonce - can't fire a transaction
+            // with nonce 5 if the sender wallet has nonce 1, for example.
+            const transactions = [mockData.dummy1, mockData.dummy10, mockData.dummyLarge1];
+
+            indexWalletWithSufficientBalance(mockData.dummy1);
+            indexWalletWithSufficientBalance(mockData.dummyLarge1);
 
             addTransactions(transactions);
 
-            expect(connection.getPoolSize()).toBe(2);
+            await expect(connection.getPoolSize()).resolves.toBe(transactions.length);
 
             connection.disconnect();
 
             await connection.make();
 
-            expect(connection.getPoolSize()).toBe(2);
+            container.app.resolvePlugin("event-emitter").emit(ApplicationEvents.StateBuilderFinished);
 
-            transactions.forEach(t => expect(connection.getTransaction(t.id).serialized).toEqual(t.serialized));
+            await delay(200);
+
+            await expect(connection.getPoolSize()).resolves.toBe(transactions.length);
+
+            for (const t of transactions) {
+                expect((await connection.getTransaction(t.id)).serialized).toEqual(t.serialized);
+            }
 
             connection.flush();
         });
 
         it("remove forged when starting", async () => {
-            expect(connection.getPoolSize()).toBe(0);
+            await expect(connection.getPoolSize()).resolves.toBe(0);
 
             jest.spyOn(databaseService, "getForgedTransactionsIds").mockReturnValue([mockData.dummy2.id]);
 
-            const transactions = [mockData.dummy1, mockData.dummy2, mockData.dummy4];
+            indexWalletWithSufficientBalance(mockData.dummy1);
+            indexWalletWithSufficientBalance(mockData.dummy2);
+            indexWalletWithSufficientBalance(mockData.dummy4);
+
+            updateSenderNonce(mockData.dummy1);
+            updateSenderNonce(mockData.dummyLarge1);
+
+            const transactions = [mockData.dummy1, mockData.dummy2, mockData.dummyLarge1];
 
             addTransactions(transactions);
 
-            expect(connection.getPoolSize()).toBe(3);
+            await expect(connection.getPoolSize()).resolves.toBe(3);
 
             connection.disconnect();
 
             await connection.make();
 
-            expect(connection.getPoolSize()).toBe(2);
+            container.app.resolvePlugin("event-emitter").emit(ApplicationEvents.StateBuilderFinished);
+
+            await delay(200);
+
+            await expect(connection.getPoolSize()).resolves.toBe(2);
 
             transactions.splice(1, 1);
 
-            transactions.forEach(t => expect(connection.getTransaction(t.id).serialized).toEqual(t.serialized));
+            for (const t of transactions) {
+                expect((await connection.getTransaction(t.id)).serialized).toEqual(t.serialized);
+            }
 
             connection.flush();
 
@@ -796,32 +901,59 @@ describe("Connection", () => {
 
     describe("stress", () => {
         beforeAll(() => {
-            const mockWallet = new Wallets.Wallet(delegates[0].address);
-            jest.spyOn(connection.walletManager, "findByPublicKey").mockReturnValue(mockWallet);
-            jest.spyOn(connection.walletManager, "throwIfApplyingFails").mockReturnValue();
+            jest.spyOn(connection.walletManager, "throwIfCannotBeApplied").mockResolvedValue();
         });
+
+        beforeEach(() => {
+            connection.walletManager.reset();
+        });
+
         afterAll(() => {
             jest.restoreAllMocks();
         });
 
-        const fakeTransactionId = i => `${String(i)}${"a".repeat(64 - String(i).length)}`;
+        const generateTestTransactions = (n: number, nDifferentSenders?: number): Interfaces.ITransaction[] => {
+            if (nDifferentSenders === undefined) {
+                nDifferentSenders = n;
+            }
 
-        it("multiple additions and retrievals", () => {
+            // We use a predictable random number calculator in order to get
+            // a deterministic test.
+            const rand = randomSeed.create("0");
+
+            const testTransactions: Interfaces.ITransaction[] = [];
+            for (let i = 0; i < n; i++) {
+                const passphrase = String(i % nDifferentSenders);
+
+                const transaction = TransactionFactory.transfer("AFzQCx5YpGg5vKMBg4xbuYbqkhvMkKfKe5", i + 1)
+                    .withNetwork("unitnet")
+                    .withPassphrase(passphrase)
+                    .withFee(rand.intBetween(0.002 * SATOSHI, 2 * SATOSHI))
+                    .build()[0];
+                testTransactions.push(transaction);
+
+                const wallet = new Wallets.Wallet(Identities.Address.fromPassphrase(passphrase));
+                wallet.balance = Utils.BigNumber.make(1e14);
+
+                connection.walletManager.reindex(wallet);
+            }
+
+            return testTransactions;
+        };
+
+        it("multiple additions and retrievals", async () => {
             // Abstract number which decides how many iterations are run by the test.
             // Increase it to run more iterations.
             const testSize = connection.options.syncInterval * 2;
 
-            const usedId = {};
-            for (let i = 0; i < testSize; i++) {
-                const transaction = Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy1.data));
-                transaction.data.id = fakeTransactionId(i);
-                if (usedId[transaction.data.id]) {
-                    console.log("AAAAA");
-                } else {
-                    usedId[transaction.data.id] = true;
-                }
+            const testTransactions: Interfaces.ITransaction[] = generateTestTransactions(testSize);
 
-                connection.addTransactions([transaction]);
+            // console.time("multiple additions and retrievals");
+
+            for (let i = 0; i < testSize; i++) {
+                const transaction = testTransactions[i];
+
+                await connection.addTransactions([transaction]);
 
                 if (i % 27 === 0) {
                     connection.removeTransaction(transaction);
@@ -829,68 +961,68 @@ describe("Connection", () => {
             }
 
             for (let i = 0; i < testSize * 2; i++) {
-                connection.getPoolSize();
-                for (const sender of ["nonexistent", mockData.dummy1.data.senderPublicKey]) {
-                    connection.getSenderSize(sender);
-                    // @FIXME: Uhm excuse me, what the?
-                    // @ts-ignore
-                    connection.hasExceededMaxTransactions(sender);
+                const transaction = testTransactions[i % testSize];
+                await connection.getPoolSize();
+                for (const senderPublicKey of ["nonexistent", transaction.data.senderPublicKey]) {
+                    await connection.getSenderSize(senderPublicKey);
+                    await connection.hasExceededMaxTransactions(senderPublicKey);
                 }
-                connection.getTransaction(fakeTransactionId(i));
-                connection.getTransactions(0, i);
+                await connection.getTransaction(transaction.id);
+                await connection.getTransactions(0, i);
             }
 
             for (let i = 0; i < testSize; i++) {
-                const transaction = Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy1.data));
-                transaction.data.id = fakeTransactionId(i);
-                connection.removeTransaction(transaction);
-            }
-        });
-
-        it("delete + add after sync", () => {
-            for (let i = 0; i < connection.options.syncInterval; i++) {
-                // tslint:disable-next-line:no-shadowed-variable
-                const transaction = Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy1.data));
-                transaction.data.id = fakeTransactionId(i);
-                connection.addTransactions([transaction]);
+                connection.removeTransaction(testTransactions[i]);
             }
 
-            const transaction = Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy1.data));
-            transaction.data.id = fakeTransactionId(0);
-            connection.removeTransaction(transaction);
-            connection.addTransactions([transaction]);
+            // console.timeEnd("multiple additions and retrievals");
         });
 
-        it("add many then get first few", () => {
+        it("delete + add after sync", async () => {
+            const testTransactions: Interfaces.ITransaction[] = generateTestTransactions(
+                connection.options.syncInterval,
+            );
+
+            await connection.addTransactions(testTransactions);
+
+            connection.removeTransaction(testTransactions[0]);
+            await connection.addTransactions([testTransactions[0]]);
+        });
+
+        it("add many then get first few", async () => {
             const nAdd = 2000;
 
             // We use a predictable random number calculator in order to get
             // a deterministic test.
             const rand = randomSeed.create("0");
 
-            const allTransactions: Interfaces.ITransaction[] = [];
+            const testTransactions: Interfaces.ITransaction[] = [];
             for (let i = 0; i < nAdd; i++) {
-                const transaction = Transactions.TransactionFactory.fromData(cloneDeep(mockData.dummy1.data));
-                transaction.data.id = fakeTransactionId(i);
-                transaction.data.fee = Utils.BigNumber.make(rand.intBetween(0.002 * SATOSHI, 2 * SATOSHI));
-                transaction.serialized = Transactions.Utils.toBytes(transaction.data);
-                allTransactions.push(transaction);
+                const transaction = TransactionFactory.transfer("AFzQCx5YpGg5vKMBg4xbuYbqkhvMkKfKe5")
+                    .withNetwork("unitnet")
+                    .withFee(rand.intBetween(0.002 * SATOSHI, 2 * SATOSHI))
+                    .withPassphrase(String(i))
+                    .build()[0];
+
+                testTransactions.push(transaction);
+
+                indexWalletWithSufficientBalance(transaction);
             }
 
             // console.time(`time to add ${nAdd}`)
-            connection.addTransactions(allTransactions);
+            await connection.addTransactions(testTransactions);
             // console.timeEnd(`time to add ${nAdd}`)
 
             const nGet = 150;
 
-            const topFeesExpected = allTransactions
+            const topFeesExpected = testTransactions
                 .map(t => t.data.fee as any)
                 .sort((a, b) => b - a)
                 .slice(0, nGet)
                 .map(f => f.toString());
 
             // console.time(`time to get first ${nGet}`)
-            const topTransactionsSerialized = connection.getTransactions(0, nGet);
+            const topTransactionsSerialized = await connection.getTransactions(0, nGet);
             // console.timeEnd(`time to get first ${nGet}`)
 
             const topFeesReceived = topTransactionsSerialized.map(e =>
@@ -899,69 +1031,99 @@ describe("Connection", () => {
 
             expect(topFeesReceived).toEqual(topFeesExpected);
         });
-    });
 
-    describe("purgeSendersWithInvalidTransactions", () => {
-        it("should purge transactions from sender when invalid", async () => {
-            const transfersA = TransactionFactory.transfer(mockData.dummy1.data.recipientId)
-                .withNetwork("unitnet")
-                .withPassphrase(delegatesSecrets[0])
-                .build(5);
+        it("sort by fee, nonce", async () => {
+            const nTransactions = 1000;
+            const nDifferentSenders = 100;
 
-            const transfersB = TransactionFactory.transfer(mockData.dummy1.data.recipientId)
-                .withNetwork("unitnet")
-                .withPassphrase(delegatesSecrets[1])
-                .build();
+            jest.spyOn(assert, "strictEqual").mockReturnValue();
 
-            const block = {
-                transactions: [...transfersA, ...transfersB],
-            } as any;
+            // Non-randomized nonces, used for each sender. Make sure there are enough
+            // elements in this array, so that each transaction of a given sender gets
+            // an unique nonce for that sender.
+            const nonces = [];
+            for (let i = 0; i < Math.ceil(nTransactions / nDifferentSenders); i++) {
+                nonces.push(Utils.BigNumber.make(i + 1));
+            }
 
-            addTransactions(block.transactions);
+            const testTransactions: Interfaces.ITransaction[] = generateTestTransactions(
+                nTransactions,
+                nDifferentSenders,
+            );
 
-            expect(connection.getPoolSize()).toBe(6);
+            const noncesBySender = {};
 
-            // Last tx has a unique sender
-            block.transactions[5].isVerified = false;
+            for (const t of testTransactions) {
+                const sender = t.data.senderPublicKey;
 
-            connection.purgeSendersWithInvalidTransactions(block);
-            expect(connection.getPoolSize()).toBe(5);
+                if (noncesBySender[sender] === undefined) {
+                    noncesBySender[sender] = shuffle(nonces);
+                }
 
-            // The remaining tx all have the same sender
-            block.transactions[0].isVerified = false;
+                t.data.nonce = noncesBySender[sender].shift();
 
-            connection.purgeSendersWithInvalidTransactions(block);
-            expect(connection.getPoolSize()).toBe(0);
-        });
-    });
+                t.serialized = Transactions.Utils.toBytes(t.data);
+                indexWalletWithSufficientBalance(t);
+            }
 
-    describe("purgeByBlock", () => {
-        it("should purge transactions from block", async () => {
-            const revertTransactionForSender = jest
-                .spyOn(connection.walletManager, "revertTransactionForSender")
-                .mockReturnValue();
+            // const timerLabelAdd = `time to add ${testTransactions.length} transactions`;
+            // console.time(timerLabelAdd);
+            for (const t of testTransactions) {
+                memory.remember(t);
+            }
+            // console.timeEnd(timerLabelAdd);
 
-            const transactions = TransactionFactory.transfer(mockData.dummy1.data.recipientId)
-                .withNetwork("unitnet")
-                .withPassphrase(delegatesSecrets[0])
-                .build(5);
+            // const timerLabelSort = `time to sort ${testTransactions.length} transactions`;
+            // console.time(timerLabelSort);
+            const sortedTransactionsSerialized = await connection.getTransactions(0, nTransactions);
+            // console.timeEnd(timerLabelSort);
 
-            const block = { transactions } as Blocks.Block;
+            const sortedTransactions = sortedTransactionsSerialized.map(serialized =>
+                Transactions.TransactionFactory.fromBytes(serialized),
+            );
 
-            addTransactions(block.transactions);
+            expect(sortedTransactions.length).toEqual(testTransactions.length);
 
-            expect(connection.getPoolSize()).toBe(5);
+            const firstTransaction = sortedTransactions[0];
 
-            connection.purgeByBlock(block);
-            expect(revertTransactionForSender).toHaveBeenCalledTimes(5);
-            expect(connection.getPoolSize()).toBe(0);
+            const lastNonceBySender = {};
+            lastNonceBySender[firstTransaction.data.senderPublicKey] = firstTransaction.data.nonce;
+
+            for (let i = 1; i < sortedTransactions.length; i++) {
+                const prevTransaction = sortedTransactions[i - 1];
+                const prevSender = prevTransaction.data.senderPublicKey;
+
+                const curTransaction = sortedTransactions[i];
+                const curSender = curTransaction.data.senderPublicKey;
+
+                if (prevTransaction.data.fee.isLessThan(curTransaction.data.fee)) {
+                    expect(prevSender).toEqual(curSender);
+                }
+
+                if (prevSender !== curSender) {
+                    let j;
+                    for (j = i - 2; j >= 0 && sortedTransactions[j].data.senderPublicKey === prevSender; j--) {
+                        // Find the leftmost transaction in a sequence of transactions from the same
+                        // sender, ending at prevTransaction. That leftmost transaction's fee must
+                        // be greater or equal to the fee of curTransaction.
+                    }
+                    j++;
+                    expect(sortedTransactions[j].data.fee.isGreaterThanEqual(curTransaction.data.fee)).toBeTrue();
+                }
+
+                if (lastNonceBySender[curSender] !== undefined) {
+                    expect(lastNonceBySender[curSender].isLessThan(curTransaction.data.nonce)).toBeTrue();
+                }
+
+                lastNonceBySender[curSender] = curTransaction.data.nonce;
+            }
 
             jest.restoreAllMocks();
         });
     });
 
     describe("purgeInvalidTransactions", () => {
-        it("should flush the pool", () => {
+        it("should flush the pool", async () => {
             // 64 char vendor field
             Managers.configManager.setHeight(1);
 
@@ -972,11 +1134,11 @@ describe("Connection", () => {
                     .build()[0],
             ]);
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
 
-            connection.purgeInvalidTransactions();
+            await connection.purgeInvalidTransactions();
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
 
             // 255 char vendor field
             Managers.configManager.setHeight(100000);
@@ -988,18 +1150,18 @@ describe("Connection", () => {
                     .build()[0],
             ]);
 
-            connection.purgeInvalidTransactions();
+            await connection.purgeInvalidTransactions();
 
-            expect(connection.getPoolSize()).toBe(2);
+            await expect(connection.getPoolSize()).resolves.toBe(2);
 
             // Invalidate transactions with a vendor field longer then 64 chars
             Managers.configManager.setHeight(1);
 
-            jest.spyOn(connection.walletManager, "revertTransactionForSender").mockReturnValueOnce();
+            jest.spyOn(connection.walletManager, "revertTransactionForSender").mockResolvedValueOnce(undefined);
 
-            connection.purgeInvalidTransactions();
+            await connection.purgeInvalidTransactions();
 
-            expect(connection.getPoolSize()).toBe(1);
+            await expect(connection.getPoolSize()).resolves.toBe(1);
         });
     });
 });

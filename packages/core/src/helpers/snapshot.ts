@@ -1,22 +1,29 @@
 import { app } from "@arkecosystem/core-container";
 import { Container } from "@arkecosystem/core-interfaces";
+import deepmerge from "deepmerge";
+import envPaths from "env-paths";
 import { lstatSync, readdirSync } from "fs";
 import prompts from "prompts";
 import { CommandFlags } from "../types";
+import { getCliConfig } from "../utils";
 
 // tslint:disable-next-line:no-var-requires
 const { version } = require("../../package.json");
 
-export const setUpLite = async (options): Promise<Container.IContainer> => {
-    await app.setUp(version, options, {
-        include: [
-            "@arkecosystem/core-event-emitter",
-            "@arkecosystem/core-logger-pino",
-            "@arkecosystem/core-state",
-            "@arkecosystem/core-database-postgres",
-            "@arkecosystem/core-snapshots",
-        ],
-    });
+export const setUpLite = async (options, paths: envPaths.Paths): Promise<Container.IContainer> => {
+    await app.setUp(
+        version,
+        options,
+        deepmerge(getCliConfig(options, paths), {
+            include: [
+                "@arkecosystem/core-event-emitter",
+                "@arkecosystem/core-logger-pino",
+                "@arkecosystem/core-state",
+                "@arkecosystem/core-database-postgres",
+                "@arkecosystem/core-snapshots",
+            ],
+        }),
+    );
 
     return app;
 };
@@ -51,7 +58,7 @@ export const chooseSnapshot = async (flags: CommandFlags, message: string) => {
         },
     ]);
 
-    if (!response.blocks) {
+    if (!response.blocks || !response.confirm) {
         throw new Error("Please select a snapshot and try again.");
     }
 

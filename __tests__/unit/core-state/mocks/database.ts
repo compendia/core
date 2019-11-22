@@ -4,8 +4,10 @@ export const database = {
     walletManager: {
         findByPublicKey: pubKey => "username",
     },
+    transactionsBusinessRepository: {
+        findById: id => undefined,
+    },
 
-    commitQueuedQueries: () => undefined,
     buildWallets: () => undefined,
     saveWallets: () => undefined,
     getLastBlock: () => undefined,
@@ -15,8 +17,8 @@ export const database = {
     applyRound: () => undefined,
     getActiveDelegates: () => [],
     restoreCurrentRound: () => undefined,
-    enqueueDeleteBlock: () => undefined,
     getBlocks: () => [],
+    getBlocksForDownload: () => [],
     getBlock: () => undefined,
     revertBlock: () => undefined,
     applyBlock: () => undefined,
