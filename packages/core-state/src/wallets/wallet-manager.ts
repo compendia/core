@@ -247,13 +247,7 @@ export class WalletManager implements State.IWalletManager {
                 const lockedBalance = voter.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
                 delegate.setAttribute(
                     "delegate.voteBalance",
-                    voteBalance
-                        .plus(
-                            voter.balance
-                                .plus(lockedBalance)
-                                .times(Managers.configManager.getMilestone().balanceWeight),
-                        )
-                        .plus(voter.getAttribute("stakeWeight", 0)),
+                    voteBalance.plus(voter.balance.plus(lockedBalance)).plus(voter.getAttribute("stakeWeight", 0)),
                 );
             }
         }
@@ -293,9 +287,7 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (applied && delegate.hasVoted()) {
-                const increase: Utils.BigNumber = block.data.reward
-                    .plus(block.data.totalFee)
-                    .times(Managers.configManager.getMilestone().balanceWeight);
+                const increase: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
                 const votedDelegate: State.IWallet = this.findByPublicKey(delegate.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = votedDelegate.getAttribute("delegate.voteBalance");
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.plus(increase));
@@ -337,9 +329,7 @@ export class WalletManager implements State.IWalletManager {
             // by reward + totalFee. In which case the vote balance of the
             // delegate's delegate has to be updated.
             if (reverted && delegate.hasVoted()) {
-                const decrease: Utils.BigNumber = block.data.reward
-                    .plus(block.data.totalFee)
-                    .times(Managers.configManager.getMilestone().balanceWeight);
+                const decrease: Utils.BigNumber = block.data.reward.plus(block.data.totalFee);
                 const votedDelegate: State.IWallet = this.findByPublicKey(delegate.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = votedDelegate.getAttribute("delegate.voteBalance");
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.minus(decrease));
@@ -487,9 +477,37 @@ export class WalletManager implements State.IWalletManager {
         lockTransaction: Interfaces.ITransactionData,
         revert: boolean = false,
     ): void {
-        const senderStakeWeight = sender.getAttribute("stakeWeight", 0);
+        const senderStakeWeight = sender.getAttribute("stakeWeight", Utils.BigNumber.ZERO);
+        const milestone = Managers.configManager.getMilestone();
 
-        if (
+        // If stake transaction group
+        if (transaction.typeGroup === 100 && sender.hasVoted()) {
+            // Check if transaction is of type stakeCreate
+            const delegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
+            let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+            if (transaction.type === 1) {
+                const s = transaction.asset.stakeCreate;
+                const multiplier: number = milestone.stakeLevels[s.duration];
+                const sWeight: Utils.BigNumber = s.amount.times(multiplier).dividedBy(10);
+                const balanceWithFeeFixed = s.amount.plus(transaction.fee);
+
+                voteBalance = revert
+                    ? voteBalance.minus(sWeight).plus(balanceWithFeeFixed)
+                    : voteBalance.minus(balanceWithFeeFixed).plus(sWeight);
+            } else if (transaction.type === 2) {
+                const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.txId];
+                voteBalance = revert
+                    ? voteBalance
+                          .plus(s.weight)
+                          .plus(transaction.fee)
+                          .minus(s.amount)
+                    : voteBalance
+                          .minus(s.weight)
+                          .minus(transaction.fee)
+                          .plus(s.amount);
+            }
+            delegate.setAttribute("delegate.voteBalance", voteBalance);
+        } else if (
             transaction.type === Enums.TransactionType.Vote &&
             transaction.typeGroup === Enums.TransactionTypeGroup.Core
         ) {
@@ -499,28 +517,12 @@ export class WalletManager implements State.IWalletManager {
 
             if (vote.startsWith("+")) {
                 voteBalance = revert
-                    ? voteBalance
-                          .minus(
-                              sender.balance
-                                  .minus(transaction.fee)
-                                  .times(Managers.configManager.getMilestone().balanceWeight),
-                          )
-                          .minus()
-                    : voteBalance
-                          .plus(sender.balance.times(Managers.configManager.getMilestone().balanceWeight))
-                          .plus(senderStakeWeight);
+                    ? voteBalance.minus(sender.balance.minus(transaction.fee)).minus(senderStakeWeight)
+                    : voteBalance.plus(sender.balance).plus(senderStakeWeight);
             } else {
                 voteBalance = revert
-                    ? voteBalance
-                          .plus(sender.balance.times(Managers.configManager.getMilestone().balanceWeight))
-                          .plus(senderStakeWeight)
-                    : voteBalance
-                          .minus(
-                              sender.balance.plus(
-                                  transaction.fee.times(Managers.configManager.getMilestone().balanceWeight),
-                              ),
-                          )
-                          .minus(senderStakeWeight);
+                    ? voteBalance.plus(sender.balance).plus(senderStakeWeight)
+                    : voteBalance.minus(sender.balance.plus(transaction.fee)).minus(senderStakeWeight);
             }
 
             delegate.setAttribute("delegate.voteBalance", voteBalance);
@@ -536,9 +538,7 @@ export class WalletManager implements State.IWalletManager {
                               Utils.BigNumber.ZERO,
                           )
                         : transaction.amount;
-                const total: Utils.BigNumber = amount
-                    .plus(transaction.fee)
-                    .times(Managers.configManager.getMilestone().balanceWeight);
+                const total: Utils.BigNumber = amount.plus(transaction.fee);
 
                 const voteBalance: Utils.BigNumber = delegate.getAttribute(
                     "delegate.voteBalance",
@@ -551,21 +551,15 @@ export class WalletManager implements State.IWalletManager {
                     transaction.typeGroup === Enums.TransactionTypeGroup.Core
                 ) {
                     // HTLC Lock keeps the locked amount as the sender's delegate vote balance
-                    newVoteBalance = revert
-                        ? voteBalance.plus(transaction.fee.times(Managers.configManager.getMilestone().balanceWeight))
-                        : voteBalance.minus(transaction.fee.times(Managers.configManager.getMilestone().balanceWeight));
+                    newVoteBalance = revert ? voteBalance.plus(transaction.fee) : voteBalance.minus(transaction.fee);
                 } else if (
                     transaction.type === Enums.TransactionType.HtlcClaim &&
                     transaction.typeGroup === Enums.TransactionTypeGroup.Core
                 ) {
                     // HTLC Claim transfers the locked amount to the lock recipient's (= claim sender) delegate vote balance
                     newVoteBalance = revert
-                        ? voteBalance
-                              .plus(transaction.fee.times(Managers.configManager.getMilestone().balanceWeight))
-                              .minus(lockTransaction.amount.times(Managers.configManager.getMilestone().balanceWeight))
-                        : voteBalance
-                              .minus(transaction.fee.times(Managers.configManager.getMilestone().balanceWeight))
-                              .plus(lockTransaction.amount.times(Managers.configManager.getMilestone().balanceWeight));
+                        ? voteBalance.plus(transaction.fee).minus(lockTransaction.amount)
+                        : voteBalance.minus(transaction.fee).plus(lockTransaction.amount);
                 } else {
                     // General case : sender delegate vote balance reduced by amount + fees (or increased if revert)
                     newVoteBalance = revert ? voteBalance.plus(total) : voteBalance.minus(total);
@@ -587,12 +581,8 @@ export class WalletManager implements State.IWalletManager {
                 lockWalletDelegate.setAttribute(
                     "delegate.voteBalance",
                     revert
-                        ? lockWalletDelegateVoteBalance.plus(
-                              lockTransaction.amount.times(Managers.configManager.getMilestone().balanceWeight),
-                          )
-                        : lockWalletDelegateVoteBalance.minus(
-                              lockTransaction.amount.times(Managers.configManager.getMilestone().balanceWeight),
-                          ),
+                        ? lockWalletDelegateVoteBalance.plus(lockTransaction.amount)
+                        : lockWalletDelegateVoteBalance.minus(lockTransaction.amount),
                 );
             }
 
@@ -612,9 +602,7 @@ export class WalletManager implements State.IWalletManager {
                         );
                         delegate.setAttribute(
                             "delegate.voteBalance",
-                            revert
-                                ? voteBalance.minus(amount.times(Managers.configManager.getMilestone().balanceWeight))
-                                : voteBalance.plus(amount.times(Managers.configManager.getMilestone().balanceWeight)),
+                            revert ? voteBalance.minus(amount) : voteBalance.plus(amount),
                         );
                     }
                 }
@@ -635,13 +623,7 @@ export class WalletManager implements State.IWalletManager {
 
                 delegate.setAttribute(
                     "delegate.voteBalance",
-                    revert
-                        ? voteBalance.minus(
-                              transaction.amount.times(Managers.configManager.getMilestone().balanceWeight),
-                          )
-                        : voteBalance.plus(
-                              transaction.amount.times(Managers.configManager.getMilestone().balanceWeight),
-                          ),
+                    revert ? voteBalance.minus(transaction.amount) : voteBalance.plus(transaction.amount),
                 );
             }
         }
