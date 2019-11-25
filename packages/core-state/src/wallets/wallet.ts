@@ -235,6 +235,8 @@ export class Wallet implements State.IWallet {
     }
 
     private assertKnownAttribute(key: string): void {
-        assert(Handlers.Registry.isKnownWalletAttribute(key), `Tried to access unknown attribute: ${key}`);
+        if (key !== "stakeWeight") {
+            assert(Handlers.Registry.isKnownWalletAttribute(key), `Tried to access unknown attribute: ${key}`);
+        }
     }
 }
