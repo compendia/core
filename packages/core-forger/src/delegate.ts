@@ -1,6 +1,7 @@
-import { Blocks, Crypto, Identities, Interfaces, Types, Utils } from "@arkecosystem/crypto";
 import forge from "node-forge";
 import wif from "wif";
+
+import { Blocks, Crypto, Identities, Interfaces, Types, Utils } from "@arkecosystem/crypto";
 
 export class Delegate {
     public static encryptPassphrase(passphrase: string, network: Types.NetworkType, password: string): string {
@@ -90,6 +91,11 @@ export class Delegate {
                 this.decryptKeysWithOtp();
             }
 
+            const feeObj = Utils.FeeHelper.getFeeObject(
+                transactionData.fee,
+                Utils.BigNumber.make(options.reward).plus(options.topReward),
+            );
+
             const block: Interfaces.IBlock = Blocks.BlockFactory.make(
                 {
                     version: 0,
@@ -99,9 +105,11 @@ export class Delegate {
                     previousBlockHex: options.previousBlock.idHex,
                     height: options.previousBlock.height + 1,
                     numberOfTransactions: transactions.length,
-                    totalAmount: transactionData.amount,
-                    totalFee: transactionData.fee,
+                    totalAmount: feeObj.toRemove,
+                    totalFee: feeObj.toReward,
+                    removedFee: feeObj.toRemove,
                     reward: options.reward,
+                    topReward: options.topReward,
                     payloadLength: 32 * transactions.length,
                     payloadHash: Crypto.HashAlgorithms.sha256(payloadBuffers).toString("hex"),
                     transactions,

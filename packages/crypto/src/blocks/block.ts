@@ -2,7 +2,7 @@ import { Hash, HashAlgorithms, Slots } from "../crypto";
 import { BlockSchemaError } from "../errors";
 import { IBlock, IBlockData, IBlockJson, IBlockVerification, ITransaction, ITransactionData } from "../interfaces";
 import { configManager } from "../managers/config";
-import { BigNumber, isException } from "../utils";
+import { BigNumber, FeeHelper, isException } from "../utils";
 import { validator } from "../validation";
 import { Deserializer } from "./deserializer";
 import { Serializer } from "./serializer";
@@ -144,8 +144,10 @@ export class Block implements IBlock {
     public toJson(): IBlockJson {
         const data: IBlockJson = JSON.parse(JSON.stringify(this.data));
         data.reward = this.data.reward.toString();
+        data.topReward = this.data.topReward.toFixed();
         data.totalAmount = this.data.totalAmount.toString();
         data.totalFee = this.data.totalFee.toString();
+        data.removedFee = this.data.removedFee.toString();
         data.transactions = this.transactions.map(transaction => transaction.toJson());
 
         return data;
@@ -170,6 +172,12 @@ export class Block implements IBlock {
 
             if (!(block.reward as BigNumber).isEqualTo(constants.reward)) {
                 result.errors.push(["Invalid block reward:", block.reward, "expected:", constants.reward].join(" "));
+            }
+
+            if (!(block.topReward as BigNumber).isEqualTo(constants.topReward)) {
+                result.errors.push(
+                    ["Invalid block top reward:", block.topReward, "expected:", constants.topReward].join(" "),
+                );
             }
 
             const valid = this.verifySignature();
@@ -217,6 +225,7 @@ export class Block implements IBlock {
 
             let totalAmount: BigNumber = BigNumber.ZERO;
             let totalFee: BigNumber = BigNumber.ZERO;
+            let removedFee: BigNumber = BigNumber.ZERO;
 
             const payloadBuffers: Buffer[] = [];
             for (const transaction of this.transactions) {
@@ -251,12 +260,23 @@ export class Block implements IBlock {
                 payloadBuffers.push(bytes);
             }
 
+            const feeObj = FeeHelper.getFeeObject(
+                BigNumber.make(totalFee),
+                BigNumber.make(block.reward).plus(block.topReward),
+            );
+            totalFee = feeObj.toReward;
+            removedFee = feeObj.toRemove;
+
             if (!totalAmount.isEqualTo(block.totalAmount)) {
                 result.errors.push("Invalid total amount");
             }
 
             if (!totalFee.isEqualTo(block.totalFee)) {
                 result.errors.push("Invalid total fee");
+            }
+
+            if (!removedFee.isEqualTo(block.removedFee)) {
+                result.errors.push("Invalid removed fee: expected " + removedFee + " got " + block.removedFee);
             }
 
             if (HashAlgorithms.sha256(payloadBuffers).toString("hex") !== block.payloadHash) {

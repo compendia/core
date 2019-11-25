@@ -20,7 +20,9 @@ export const transformDelegate = (delegate: State.IWallet) => {
         },
         forged: {
             fees: attributes.forgedFees.toFixed(),
+            removed: attributes.removedFees.toFixed(),
             rewards: attributes.forgedRewards.toFixed(),
+            topRewards: attributes.forgedTopRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
     };

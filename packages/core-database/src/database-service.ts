@@ -505,6 +505,7 @@ export class DatabaseService implements Database.IDatabaseService {
         const blockStats: {
             numberOfTransactions: number;
             totalFee: Utils.BigNumber;
+            removedFee: Utils.BigNumber;
             totalAmount: Utils.BigNumber;
             count: number;
         } = await this.connection.blocksRepository.statistics();
@@ -512,6 +513,7 @@ export class DatabaseService implements Database.IDatabaseService {
         const transactionStats: {
             count: number;
             totalFee: Utils.BigNumber;
+            removedFee: Utils.BigNumber;
             totalAmount: Utils.BigNumber;
         } = await this.connection.transactionsRepository.statistics();
 

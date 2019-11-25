@@ -1,8 +1,10 @@
 import memoize from "fast-memoize";
+
 import { SATOSHI } from "../constants";
 import { configManager } from "../managers/config";
 import { Base58 } from "./base58";
 import { BigNumber } from "./bignum";
+import { FeeHelper } from "./fee";
 import { isLocalHost, isValidPeer } from "./is-valid-peer";
 
 const getExceptionIds = memoize(_ => {
@@ -74,4 +76,4 @@ export const isSupportedTansactionVersion = (version: number): boolean => {
     return true;
 };
 
-export { Base58, BigNumber, isValidPeer, isLocalHost };
+export { Base58, BigNumber, isValidPeer, isLocalHost, FeeHelper };

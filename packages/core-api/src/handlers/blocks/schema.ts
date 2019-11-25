@@ -163,7 +163,23 @@ export const search: object = {
                 .integer()
                 .min(0),
         }),
+        removedFee: Joi.object().keys({
+            from: Joi.number()
+                .integer()
+                .min(0),
+            to: Joi.number()
+                .integer()
+                .min(0),
+        }),
         reward: Joi.object().keys({
+            from: Joi.number()
+                .integer()
+                .min(0),
+            to: Joi.number()
+                .integer()
+                .min(0),
+        }),
+        topReward: Joi.object().keys({
             from: Joi.number()
                 .integer()
                 .min(0),

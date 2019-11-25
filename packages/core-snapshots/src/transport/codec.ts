@@ -6,7 +6,9 @@ const encodeBlock = block => {
     const blockCamelized = camelizeKeys(block);
     blockCamelized.totalAmount = Utils.BigNumber.make(block.total_amount || block.totalAmount);
     blockCamelized.totalFee = Utils.BigNumber.make(block.total_fee || block.totalFee);
+    blockCamelized.removedFee = Utils.BigNumber.make(block.removed_fee || block.removedFee);
     blockCamelized.reward = Utils.BigNumber.make(block.reward);
+    blockCamelized.topReward = Utils.BigNumber.make(block.top_reward || block.topReward);
 
     return Blocks.Block.serialize(blockCamelized, true);
 };
@@ -18,7 +20,11 @@ const decodeBlock = (buffer: Buffer) => {
     // @ts-ignore - @TODO: remove ts-ignore
     block.totalFee = block.totalFee.toFixed();
     // @ts-ignore - @TODO: remove ts-ignore
+    block.removedFee = block.removedFee.toFixed();
+    // @ts-ignore - @TODO: remove ts-ignore
     block.reward = block.reward.toFixed();
+    // @ts-ignore - @TODO: remove ts-ignore
+    block.topReward = block.topReward.toFixed();
 
     return decamelizeKeys(block);
 };

@@ -74,6 +74,7 @@ export class Wallet implements State.IWallet {
             delegate.producedBlocks++;
             delegate.forgedFees = delegate.forgedFees.plus(block.totalFee);
             delegate.forgedRewards = delegate.forgedRewards.plus(block.reward);
+            delegate.removedFees = delegate.removedFees.plus(block.removedFee);
             delegate.lastBlock = block;
 
             return true;
@@ -93,6 +94,7 @@ export class Wallet implements State.IWallet {
 
             delegate.forgedFees = delegate.forgedFees.minus(block.totalFee);
             delegate.forgedRewards = delegate.forgedRewards.minus(block.reward);
+            delegate.removedFees = delegate.removedFees.minus(block.reward);
             delegate.producedBlocks--;
 
             // TODO: get it back from database?

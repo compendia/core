@@ -47,6 +47,16 @@
     fast.js "^0.1.1"
     hyperid "^2.0.1"
 
+"@arkecosystem/utils@^0.8.3":
+  version "0.8.8"
+  resolved "https://registry.yarnpkg.com/@arkecosystem/utils/-/utils-0.8.8.tgz#1072fc6cde12edb821df4dd37760f4e09b04125b"
+  integrity sha512-RT8lyu3KCM4v/9DAYjazlN6ByXRIiEWPLe4AhGgtWP1VmUwT6czDlNsznH27WOUv1YryEl9kh/upaYejDWH1OQ==
+  dependencies:
+    "@hapi/bourne" "^1.3.2"
+    fast-copy "^2.0.3"
+    fast-deep-equal "^2.0.1"
+    fast-sort "^1.5.6"
+
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.5.5":
   version "7.5.5"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.5.5.tgz#bc0782f6d69f7b7d49531219699b988f669a8f9d"
