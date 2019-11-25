@@ -52,7 +52,8 @@ export class Serializer {
     private static headerSize(block: IBlockData): number {
         const constants = configManager.getMilestone(block.height - 1 || 1);
 
-        return 4 + // version
+        return (
+            4 + // version
             4 + // timestamp
             4 + // height
             (constants.block.idFullSha256 ? 32 : 8) + // previousBlock
@@ -62,7 +63,8 @@ export class Serializer {
             8 + // reward
             4 + // payloadLength
             block.payloadHash.length / 2 +
-            block.generatorPublicKey.length / 2;
+            block.generatorPublicKey.length / 2
+        );
     }
 
     private static serializeHeader(block: IBlockData, buffer: ByteBuffer): void {
