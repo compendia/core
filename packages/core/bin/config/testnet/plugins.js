@@ -7,6 +7,8 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/storage": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -38,7 +40,9 @@ module.exports = {
                 delegateResignation: 100,
                 htlcLock: 100,
                 htlcClaim: 0,
-                htlcRefund: 0
+                htlcRefund: 0,
+                stakeCreate: 0,
+                stakeRedeem: 0
             },
         },
     },

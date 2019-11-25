@@ -8,6 +8,8 @@ module.exports = {
         minimumVersions: [">=2.0.0"],
         minimumNetworkReach: 5,
     },
+    "@nosplatform/storage": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
