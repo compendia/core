@@ -105,7 +105,7 @@ export class Delegate {
                     previousBlockHex: options.previousBlock.idHex,
                     height: options.previousBlock.height + 1,
                     numberOfTransactions: transactions.length,
-                    totalAmount: feeObj.toRemove,
+                    totalAmount: transactionData.amount,
                     totalFee: feeObj.toReward,
                     removedFee: feeObj.toRemove,
                     reward: options.reward,

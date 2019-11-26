@@ -8,10 +8,12 @@ import { transactions } from "../fixtures/transactions";
 
 const jsonBlock = block => {
     block.reward = block.reward.toFixed();
+    block.top_reward = block.top_reward.toFixed();
     // @ts-ignore
     block.total_amount = block.total_amount.toFixed();
     // @ts-ignore
     block.total_fee = block.total_fee.toFixed();
+    block.removed_fee = block.removed_fee.toFixed();
 
     return block;
 };

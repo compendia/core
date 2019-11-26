@@ -2,6 +2,7 @@
     {
         "height": 1,
         "reward": 0,
+        "topReward": 0,
         "activeDelegates": 51,
         "blocktime": 8,
         "block": {

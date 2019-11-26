@@ -23,6 +23,21 @@ let genesisBlock;
 
 const blockchain = new Blockchain({});
 
+//      block processor
+// import { Identities } from "../../../packages/crypto/src";
+// beforeAll(() => {
+//     let blocks = [];
+//     let i = 0;
+//     for(const block of blocks2to100){
+//         if(true){
+//             blocks[i] = Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")).data;
+//             i++;
+//         }
+//     }
+//     console.dir(blocks);
+//     // console.dir(Blocks.BlockFactory.make(GB, Identities.Keys.fromPassphrase("passphrase")).data);
+// });
+
 describe("Blockchain", () => {
     beforeAll(async () => {
         // Create the genesis block after the setup has finished or else it uses a potentially
@@ -243,7 +258,7 @@ describe("Blockchain", () => {
                 .mockReturnValueOnce(1)
                 .mockReturnValueOnce(1);
 
-            await blockchain.handleIncomingBlock(blocks101to155[54]);
+            blockchain.handleIncomingBlock(blocks101to155[54]);
 
             expect(loggerInfo).toHaveBeenCalledWith("Block disregarded because blockchain is not ready");
             blockchain.state.started = true;

@@ -264,6 +264,7 @@ export class Block implements IBlock {
                 BigNumber.make(totalFee),
                 BigNumber.make(block.reward).plus(block.topReward),
             );
+
             totalFee = feeObj.toReward;
             removedFee = feeObj.toRemove;
 
@@ -272,7 +273,7 @@ export class Block implements IBlock {
             }
 
             if (!totalFee.isEqualTo(block.totalFee)) {
-                result.errors.push("Invalid total fee");
+                result.errors.push("Invalid total fee: expected " + totalFee + " got " + block.totalFee);
             }
 
             if (!removedFee.isEqualTo(block.removedFee)) {

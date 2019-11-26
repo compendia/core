@@ -48,6 +48,7 @@ export class BlockFactory {
 
         const serialized: string = Block.serializeWithTransactions(data).toString("hex");
         const block: IBlock = new Block({ ...Deserializer.deserialize(serialized, false, options), id: data.id });
+
         block.serialized = serialized;
 
         return block;
