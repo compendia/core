@@ -12,7 +12,7 @@ const options = {
 export const setUp = async () => {
     await setUpContainer({
         exit: "@arkecosystem/core-p2p",
-        exclude: ["@arkecosystem/core-p2p"],
+        exclude: ["@arkecosystem/core-p2p", "@nosplatform/storage"],
     });
 
     // register p2p plugin
@@ -31,6 +31,7 @@ export const tearDown = async () => {
 export const setUpFull = async () => {
     await setUpContainer({
         exit: "@arkecosystem/core-blockchain",
+        exclude: ["@nosplatform/storage"],
     });
 };
 
