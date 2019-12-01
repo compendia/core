@@ -49,6 +49,7 @@ describe("Htlc claim handler bootstrap", () => {
                 height: 1,
             },
             reward: Utils.BigNumber.ZERO,
+            topReward: Utils.BigNumber.ZERO,
         };
         const sender = wallets[11];
         const recipientId = "APmKYrtyyP34BdqQKyk71NbzQ2VKjG8sB3";
@@ -88,6 +89,7 @@ describe("Htlc claim handler bootstrap", () => {
                 height: 2,
             },
             reward: Utils.BigNumber.ZERO,
+            topReward: Utils.BigNumber.ZERO,
         });
         await database.connection.saveBlock(blockClaim);
 

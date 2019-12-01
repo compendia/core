@@ -99,6 +99,8 @@ describe("PeerCommunicator", () => {
             status.header.totalAmount = status.header.totalAmount.toFixed();
             status.header.totalFee = status.header.totalFee.toFixed();
             status.header.reward = status.header.reward.toFixed();
+            status.header.topReward = status.header.topReward.toFixed();
+            status.header.removedFee = status.header.removedFee.toFixed();
 
             expect(status).toEqual(mockStatus.state);
         });

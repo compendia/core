@@ -10,7 +10,7 @@ import { configManager } from "../../../../packages/crypto/src/managers";
 import { testnet } from "../../../../packages/crypto/src/networks";
 import { FeeHelper } from "../../../../packages/crypto/src/utils";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
-import { dummyBlock, dummyBlock2, dummyBlockSize } from "../fixtures/block";
+import { dummyBlock, dummyBlock2 } from "../fixtures/block";
 
 const { outlookTable } = configManager.getPreset("mainnet").exceptions;
 
@@ -18,10 +18,9 @@ beforeEach(() => configManager.setFromPreset("devnet"));
 
 // import { Identities, Blocks } from "../../../../packages/crypto/src";
 // beforeAll(() => {
-//       console.dir(Blocks.BlockFactory.make(networks.mainnet.genesisBlock, Identities.Keys.fromPassphrase("passphrase")));
-//     //    const s = Block.serialize(networks.mainnet.genesisBlock).toString("hex");
-//     //    console.log(s);
-
+//       console.dir(Blocks.BlockFactory.make(dummyBlock, Identities.Keys.fromPassphrase("passphrase")));
+//        const s = Block.serialize(dummyBlock).toString("hex");
+//        console.log(s);
 // });
 
 describe("Block", () => {
@@ -140,37 +139,21 @@ describe("Block", () => {
             expect(block.verification.verified).toBeFalse();
             expect(block.verification.errors).toContain(`Encountered duplicate transaction: ${transactions[0].id}`);
         });
-
         it("should fail to verify a block with too large payload", () => {
             jest.spyOn(configManager, "getMilestone").mockImplementation(height => ({
                 block: {
                     version: 0,
                     maxTransactions: 200,
-                    maxPayload: dummyBlockSize - 1,
+                    maxPayload: 0,
                 },
                 reward: 200000000,
                 topReward: 0,
                 vendorFieldLength: 64,
             }));
-            let block = BlockFactory.fromData(dummyBlock);
+            const block = BlockFactory.fromData(dummyBlock);
 
             expect(block.verification.verified).toBeFalse();
-            expect(block.verification.errors[0]).toContain("Payload is too large");
-
-            jest.spyOn(configManager, "getMilestone").mockImplementation(height => ({
-                block: {
-                    version: 0,
-                    maxTransactions: 200,
-                    maxPayload: dummyBlockSize,
-                },
-                reward: 200000000,
-                topReward: 0,
-                vendorFieldLength: 64,
-            }));
-            block = BlockFactory.fromData(dummyBlock);
-
-            expect(block.verification.verified).toBeTrue();
-            expect(block.verification.errors).toBeEmpty();
+            expect(block.verification.errors).toContain("Payload is too large: 1307 > 0");
 
             jest.restoreAllMocks();
         });
@@ -392,7 +375,9 @@ describe("Block", () => {
             expect(actual.numberOfTransactions).toBe(dummyBlock2.data.numberOfTransactions);
             expect(actual.totalAmount).toBe(dummyBlock2.data.totalAmount.toFixed());
             expect(actual.totalFee).toBe(dummyBlock2.data.totalFee.toFixed());
+            expect(actual.removedFee).toBe(dummyBlock2.data.removedFee.toFixed());
             expect(actual.reward).toBe(dummyBlock2.data.reward.toFixed());
+            expect(actual.topReward).toBe(dummyBlock2.data.topReward.toFixed());
             expect(actual.payloadLength).toBe(dummyBlock2.data.payloadLength);
             expect(actual.payloadHash).toBe(dummyBlock2.data.payloadHash);
             expect(actual.generatorPublicKey).toBe(dummyBlock2.data.generatorPublicKey);
@@ -411,6 +396,7 @@ describe("Block", () => {
             expect(actual.numberOfTransactions).toBe(dummyBlock2.data.numberOfTransactions);
             expect(actual.totalAmount).toBe(dummyBlock2.data.totalAmount.toFixed());
             expect(actual.totalFee).toBe(dummyBlock2.data.totalFee.toFixed());
+            expect(actual.reward).toBe(dummyBlock2.data.reward.toFixed());
             expect(actual.reward).toBe(dummyBlock2.data.reward.toFixed());
             expect(actual.payloadLength).toBe(dummyBlock2.data.payloadLength);
             expect(actual.payloadHash).toBe(dummyBlock2.data.payloadHash);

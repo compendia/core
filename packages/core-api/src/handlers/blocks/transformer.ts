@@ -46,7 +46,7 @@ export const transformBlock = (model, transform) => {
             reward: model.reward.toFixed(),
             topReward: model.reward.toFixed(),
             collectiveFee: model.totalFee.plus(model.removedFee).toFixed(),
-            rewardedFee: model.totalFee.toFixed(),
+            fee: model.totalFee.toFixed(),
             removedFee: model.removedFee.toFixed(),
             total: model.totalFee
                 .plus(model.reward)

@@ -401,7 +401,6 @@ export class Blockchain implements blockchain.IBlockchain {
         let forkBlock: Interfaces.IBlock;
         for (const block of blocks) {
             lastProcessResult = await this.blockProcessor.process(block);
-
             if (lastProcessResult === BlockProcessorResult.Accepted) {
                 acceptedBlocks.push(block);
             } else {

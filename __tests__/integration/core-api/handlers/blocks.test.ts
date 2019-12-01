@@ -30,6 +30,7 @@ describe("API 2.0 - Blocks", () => {
             expect(response.data.data).toBeArray();
 
             const block = response.data.data[0];
+
             utils.expectBlock(block, {
                 id: genesisBlock.id,
                 transactions: genesisBlock.numberOfTransactions,
@@ -106,10 +107,12 @@ describe("API 2.0 - Blocks", () => {
                 timestamp: 0,
                 height: 1,
                 reward: "0",
+                topReward: "0",
                 previousBlock: "0",
                 numberOfTransactions: 153,
                 totalAmount: "12500000000000000",
                 totalFee: "0",
+                removedFee: "0",
                 payloadLength: 35960,
                 payloadHash: "d9acd04bde4234a81addb8482333b4ac906bed7be5a9970ce8ada428bd083192",
                 generatorPublicKey: "03b47f6b6719c76bad46a302d9cff7be9b1c2b2a20602a0d880f139b5b8901f068",
@@ -251,7 +254,9 @@ describe("API 2.0 - Blocks", () => {
                 id: genesisBlock.id,
                 generatorPublicKey: genesisBlock.generatorPublicKey,
             });
+
             expect(response).toBeSuccessfulResponse();
+
             expect(response.data.data).toBeArray();
 
             expect(response.data.data).toHaveLength(1);

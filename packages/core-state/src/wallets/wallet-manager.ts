@@ -485,7 +485,7 @@ export class WalletManager implements State.IWalletManager {
             // Check if transaction is of type stakeCreate
             const delegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-            if (transaction.type === 1) {
+            if (transaction.type === 0) {
                 const s = transaction.asset.stakeCreate;
                 const multiplier: number = milestone.stakeLevels[s.duration];
                 const sWeight: Utils.BigNumber = s.amount.times(multiplier).dividedBy(10);
@@ -494,7 +494,7 @@ export class WalletManager implements State.IWalletManager {
                 voteBalance = revert
                     ? voteBalance.minus(sWeight).plus(balanceWithFeeFixed)
                     : voteBalance.minus(balanceWithFeeFixed).plus(sWeight);
-            } else if (transaction.type === 2) {
+            } else if (transaction.type === 1) {
                 const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.txId];
                 voteBalance = revert
                     ? voteBalance

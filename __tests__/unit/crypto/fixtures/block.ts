@@ -1,7 +1,6 @@
 import { Utils } from "@arkecosystem/crypto";
 
 export const dummyBlock = {
-    id: "6614731061944056959",
     version: 0,
     height: 1760000,
     timestamp: 62222080,
@@ -17,6 +16,7 @@ export const dummyBlock = {
     generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
     blockSignature:
         "3045022100ac0751e8b2a7ad4f07214d08ebfa9bf7178551ecc9921ac17d6da29ac1936ba70220198007b2ef03877d52784622fdb436a68a8be3b0baac944226f63da50607cef5",
+    id: "6614731061944056959",
     transactions: [
         {
             version: 1,
@@ -133,8 +133,6 @@ export const dummyBlock = {
     ],
 };
 
-export const dummyBlockSize = 1307;
-
 export const dummyBlock2 = {
     data: dummyBlock,
     serialized:
@@ -169,6 +167,7 @@ export const blockWithExceptions = {
     height: 766787,
     reward: "200000000",
     topReward: "0",
+    removedFee: "20000000",
     transactions: [
         {
             version: 1,
@@ -205,7 +204,6 @@ export const blockWithExceptions = {
     numberOfTransactions: 2,
     totalAmount: "250000000",
     totalFee: "0",
-    removedFee: "20000000",
     payloadLength: 64,
     payloadHash: "53033d24a4f133e47fee3871d82bca12bdf8b58ec4ebf43ac2b7849e78278256",
     generatorPublicKey: "02d0244d939fad9004cc104f71b46b428d903e4f2988a65f39fdaa1b7482894c9e",

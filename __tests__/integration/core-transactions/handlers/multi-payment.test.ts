@@ -47,6 +47,7 @@ describe("Multi payment handler bootstrap", () => {
                 height: 1,
             },
             reward: Utils.BigNumber.ZERO,
+            topReward: Utils.BigNumber.ZERO,
         };
         const sender = wallets[11];
         const payments = [
