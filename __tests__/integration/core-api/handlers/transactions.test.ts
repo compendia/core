@@ -15,7 +15,6 @@ let genesisTransaction;
 let genesisTransactions;
 
 let transactionId;
-let blockId;
 let type;
 let wrongType;
 let version;
@@ -39,7 +38,6 @@ beforeAll(async () => {
     genesisTransaction = genesisTransactions[0];
 
     transactionId = genesisTransaction.id;
-    blockId = genesisBlock.id;
     type = genesisTransaction.type;
     wrongType = 3;
     version = 1;
@@ -179,6 +177,10 @@ describe("API 2.0 - Transactions", () => {
                     BridgechainResignation: 4,
                     BridgechainUpdate: 5,
                 },
+                100: {
+                    StakeCreate: 0,
+                    StakeRedeem: 1,
+                },
             });
         });
     });
@@ -199,8 +201,9 @@ describe("API 2.0 - Transactions", () => {
         });
 
         it("should POST a search for transactions with the exact specified blockId", async () => {
+            const txBlockId = "17184958558311101492";
             const response = await utils.request("POST", "transactions/search", {
-                blockId,
+                blockId: txBlockId,
             });
             expect(response).toBeSuccessfulResponse();
             expect(response.data.data).toBeArray();
@@ -208,7 +211,7 @@ describe("API 2.0 - Transactions", () => {
 
             for (const transaction of response.data.data) {
                 utils.expectTransaction(transaction);
-                expect(transaction.blockId).toBe(blockId);
+                expect(transaction.blockId).toBe(txBlockId);
             }
         });
 
@@ -624,6 +627,10 @@ describe("API 2.0 - Transactions", () => {
                     secondSignature: "500000000",
                     transfer: "10000000",
                     vote: "100000000",
+                },
+                "100": {
+                    stakeCreate: "0",
+                    stakeRedeem: "0",
                 },
                 "2": {
                     bridgechainRegistration: "5000000000",

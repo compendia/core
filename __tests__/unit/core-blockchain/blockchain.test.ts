@@ -23,6 +23,33 @@ let genesisBlock;
 
 const blockchain = new Blockchain({});
 
+//      block processor
+// import { Identities } from "../../../packages/crypto/src";
+
+// const fixtureBlock = require("../../../__tests__/integration/core-tester-cli/__fixtures__/block.json");
+
+// beforeAll(() => {
+//     // const blocks = [];
+//     // let i = 0;
+//     // for (const block of blocks101to155) {
+//     //     if (true) {
+//     //         if (i > 0) {
+//     //             block.previousBlock = blocks[i - 1].id;
+//     //             block.previousBlockHex = blocks[i - 1].idHex;
+//     //         }
+//     //         blocks[i] = Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("flash thank strike stove grain remove match reflect excess present beyond matrix")).data;
+//     //         i++;
+//     //     }
+//     // }
+//     // console.dir(blocks);
+//     // const gbData = Blocks.BlockFactory.fromData(GB);
+//     // const gbData = Blocks.BlockFactory.fromJson(fixtureBlock);
+//     // const gblock = Blocks.BlockFactory.make(gbData, Identities.Keys.fromPassphrase("flash thank strike stove grain remove match reflect excess present beyond matrix"));
+//     console.log(gblock);
+//     // console.log(gblock);
+//     // console.log(Blocks.Block.toBytesHex(GB.id));
+// });
+
 describe("Blockchain", () => {
     beforeAll(async () => {
         // Create the genesis block after the setup has finished or else it uses a potentially
@@ -165,13 +192,15 @@ describe("Blockchain", () => {
             const lastBlock = blockchain.getLastBlock();
             lastBlock.data.timestamp = Crypto.Slots.getSlotNumber() * 8000;
 
-            const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
+            // const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
 
             await blockchain.processBlocks([lastBlock], mockCallback);
             await delay(200);
 
+            console.log(lastBlock);
+
             expect(mockCallback.mock.calls.length).toBe(1);
-            expect(broadcastBlock).toHaveBeenCalled();
+            // expect(broadcastBlock).toHaveBeenCalled();
         });
     });
 
@@ -243,7 +272,7 @@ describe("Blockchain", () => {
                 .mockReturnValueOnce(1)
                 .mockReturnValueOnce(1);
 
-            await blockchain.handleIncomingBlock(blocks101to155[54]);
+            blockchain.handleIncomingBlock(blocks101to155[54]);
 
             expect(loggerInfo).toHaveBeenCalledWith("Block disregarded because blockchain is not ready");
             blockchain.state.started = true;

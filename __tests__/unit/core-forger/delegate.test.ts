@@ -151,6 +151,7 @@ describe("Delegate", () => {
                 height: 1,
             },
             reward: Utils.BigNumber.ZERO,
+            topReward: Utils.BigNumber.ZERO,
         };
 
         Managers.configManager.getMilestone().aip11 = true;
@@ -165,7 +166,9 @@ describe("Delegate", () => {
             numberOfTransactions: 1,
             totalAmount: transactions[0].amount,
             totalFee: transactions[0].fee,
+            removedFee: Utils.BigNumber.ZERO,
             reward: optionsDefault.reward,
+            topReward: optionsDefault.topReward,
         };
 
         it("should forge a block", () => {

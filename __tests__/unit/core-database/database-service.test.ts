@@ -246,7 +246,9 @@ describe("Database Service", () => {
             sender.setAttribute("delegate", {
                 voteBalance: Utils.BigNumber.ZERO,
                 forgedFees: Utils.BigNumber.ZERO,
+                removedFees: Utils.BigNumber.ZERO,
                 forgedRewards: Utils.BigNumber.ZERO,
+                forgedTopRewards: Utils.BigNumber.ZERO,
                 producedBlocks: Utils.BigNumber.ZERO,
             });
 
@@ -280,8 +282,10 @@ describe("Database Service", () => {
                         height: initialHeight + i,
                         numberOfTransactions: 1,
                         totalAmount: transfer.data.amount,
-                        totalFee: Utils.BigNumber.make(1),
+                        totalFee: Utils.BigNumber.ZERO,
+                        removedFee: Utils.BigNumber.make(1),
                         reward: Utils.BigNumber.make(2),
+                        topReward: Utils.BigNumber.ZERO,
                         payloadLength: 0,
                         payloadHash: "a".repeat(64),
                         transactions: [transfer.data],

@@ -11,7 +11,7 @@ export const transformDelegate = (delegate: State.IWallet) => {
         publicKey: delegate.publicKey,
         votes: Utils.BigNumber.make(attributes.voteBalance).toFixed(),
         rank: attributes.rank,
-        isResigned: attributes.resigned,
+        isResigned: !!attributes.resigned,
         blocks: {
             produced: attributes.producedBlocks,
         },
@@ -20,7 +20,9 @@ export const transformDelegate = (delegate: State.IWallet) => {
         },
         forged: {
             fees: attributes.forgedFees.toFixed(),
+            removed: attributes.removedFees.toFixed(),
             rewards: attributes.forgedRewards.toFixed(),
+            topRewards: attributes.forgedTopRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
     };

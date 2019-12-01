@@ -745,6 +745,8 @@ describe("Transaction Guard", () => {
                     totalFee = totalFee.plus(transaction.fee);
                 }
 
+                const feeObj = Utils.FeeHelper.getFeeObject(totalFee, Utils.BigNumber.ZERO);
+
                 // makes blockchain accept a new block with the transactions specified
                 const block = {
                     id: "17882607875259085966",
@@ -752,11 +754,13 @@ describe("Transaction Guard", () => {
                     timestamp: 46583330,
                     height: 2,
                     reward: Utils.BigNumber.make(0),
+                    topReward: Utils.BigNumber.make(0),
                     previousBlock: genesisBlock.id,
                     numberOfTransactions: 1,
                     transactions,
                     totalAmount,
-                    totalFee,
+                    totalFee: feeObj.toReward,
+                    removedFee: feeObj.toRemove,
                     payloadLength: 0,
                     payloadHash: genesisBlock.payloadHash,
                     generatorPublicKey: delegates[0].publicKey,

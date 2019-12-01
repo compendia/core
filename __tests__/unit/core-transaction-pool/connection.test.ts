@@ -683,7 +683,6 @@ describe("Connection", () => {
         it("should update wallet when accepting a chained block", async () => {
             const balanceBefore = mockPoolWallet.balance;
             await connection.acceptChainedBlock(mockBlock);
-
             expect(+mockPoolWallet.balance).toBe(+balanceBefore.minus(mockBlock.data.totalAmount));
         });
 

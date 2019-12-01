@@ -129,7 +129,13 @@ export const blocks: object = {
             totalFee: Joi.number()
                 .integer()
                 .min(0),
+            removedFee: Joi.number()
+                .integer()
+                .min(0),
             reward: Joi.number()
+                .integer()
+                .min(0),
+            topReward: Joi.number()
                 .integer()
                 .min(0),
             payloadLength: Joi.number()

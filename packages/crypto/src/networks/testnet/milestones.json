@@ -2,6 +2,7 @@
     {
         "height": 1,
         "reward": 0,
+        "topReward": 0,
         "activeDelegates": 51,
         "blocktime": 8,
         "block": {
@@ -22,9 +23,19 @@
                 "delegateResignation": 2500000000,
                 "htlcLock": 10000000,
                 "htlcClaim": 0,
-                "htlcRefund": 0
+                "htlcRefund": 0,
+                "stakeCreate": 0,
+                "stakeRedeem": 0
             }
         },
+        "balanceWeight": 1,
+        "stakeLevels": {
+            "120": 30,
+            "7889400": 60,
+            "15778800": 85,
+            "31557600": 110
+        },
+        "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "aip11": true

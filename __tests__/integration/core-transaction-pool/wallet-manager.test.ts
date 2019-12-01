@@ -189,6 +189,8 @@ describe("Apply transactions and block rewards to wallets on new block", () => {
             .create()[0];
 
         const totalFee = 0.1 * satoshi;
+        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make(totalFee), Utils.BigNumber.make(reward));
+
         const blockWithReward = {
             id: "17882607875259085966",
             version: 0,
@@ -199,7 +201,9 @@ describe("Apply transactions and block rewards to wallets on new block", () => {
             numberOfTransactions: 1,
             transactions: [transfer],
             totalAmount: transfer.amount,
-            totalFee: Utils.BigNumber.make(totalFee),
+            totalFee: feeObj.toReward,
+            removedFee: feeObj.toRemove,
+            topReward: Utils.BigNumber.ZERO,
             payloadLength: 0,
             payloadHash: genesisBlock.payloadHash,
             generatorPublicKey,
@@ -218,9 +222,11 @@ describe("Apply transactions and block rewards to wallets on new block", () => {
         expect(+poolWallet.balance).toBe(transferAmount);
 
         const transferDelegateWallet = poolWalletManager.findByAddress(transferDelegate.address);
+
         expect(+transferDelegateWallet.balance).toBe(+transferDelegate.balance - transferAmount - totalFee);
 
-        expect(+delegateWallet.balance).toBe(+forgingDelegate.balance + reward + totalFee); // balance increased by reward + fee
+        const toReward = Number(feeObj.toReward);
+        expect(+delegateWallet.balance).toBe(+forgingDelegate.balance + reward + toReward); // balance increased by reward + fee
     });
 });
 

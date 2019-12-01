@@ -24,7 +24,9 @@ const blockHeader = {
     timestamp: 0,
     totalAmount: "0",
     totalFee: "0",
+    removedFee: "0",
     reward: "0",
+    topReward: "0",
     // tslint:disable-next-line: no-null-keyword
     previousBlock: null,
     generatorPublicKey: "03b47f6b6719c76bad46a302d9cff7be9b1c2b2a20602a0d880f139b5b8901f068",
@@ -97,6 +99,8 @@ describe("PeerCommunicator", () => {
             status.header.totalAmount = status.header.totalAmount.toFixed();
             status.header.totalFee = status.header.totalFee.toFixed();
             status.header.reward = status.header.reward.toFixed();
+            status.header.topReward = status.header.topReward.toFixed();
+            status.header.removedFee = status.header.removedFee.toFixed();
 
             expect(status).toEqual(mockStatus.state);
         });

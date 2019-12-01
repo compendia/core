@@ -33,6 +33,7 @@ export const setUpContainer = async (options: any): Promise<Container.IContainer
     options.network = options.network || "testnet";
 
     process.env.CORE_PATH_DATA = options.data || `${process.env.HOME}/.core`;
+
     process.env.CORE_PATH_CONFIG = options.config
         ? options.config
         : path.resolve(__dirname, `../config/${options.network}`);

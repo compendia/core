@@ -7,6 +7,8 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/storage": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -18,6 +20,7 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
+    "@nosplatform/storage": {},
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -37,7 +40,9 @@ module.exports = {
                 delegateResignation: 100,
                 htlcLock: 100,
                 htlcClaim: 0,
-                htlcRefund: 0
+                htlcRefund: 0,
+                stakeCreate: 0,
+                stakeRedeem: 0
             },
         },
     },

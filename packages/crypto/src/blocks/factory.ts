@@ -31,7 +31,9 @@ export class BlockFactory {
         const data: IBlockData = { ...json };
         data.totalAmount = BigNumber.make(data.totalAmount);
         data.totalFee = BigNumber.make(data.totalFee);
+        data.removedFee = BigNumber.make(data.removedFee);
         data.reward = BigNumber.make(data.reward);
+        data.topReward = BigNumber.make(data.topReward);
 
         for (const transaction of data.transactions) {
             transaction.amount = BigNumber.make(transaction.amount);
@@ -46,6 +48,7 @@ export class BlockFactory {
 
         const serialized: string = Block.serializeWithTransactions(data).toString("hex");
         const block: IBlock = new Block({ ...Deserializer.deserialize(serialized, false, options), id: data.id });
+
         block.serialized = serialized;
 
         return block;

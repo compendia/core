@@ -50,9 +50,13 @@ export class PostgresConnection implements Database.IConnection {
 
         try {
             await this.connect();
+            this.logger.debug("exposeRepositories");
             this.exposeRepositories();
+            this.logger.debug("registerQueryExecutor");
             this.registerQueryExecutor();
+            this.logger.debug("runMigrations");
             await this.runMigrations();
+            this.logger.debug("registerModels");
             await this.registerModels();
             this.logger.debug("Connected to database.");
             this.emitter.emit(Database.DatabaseEvents.POST_CONNECT);
@@ -199,14 +203,14 @@ export class PostgresConnection implements Database.IConnection {
         for (const migration of migrations) {
             const { name } = path.parse(migration.file);
 
+            this.logger.debug(`Migrating ${name}`);
+
             if (name === "20180304100000-create-migrations-table") {
                 await this.query.none(migration);
             } else if (name === "20190917000000-add-asset-column-to-transactions-table") {
                 await this.migrateTransactionsTableToAssetColumn(name, migration);
             } else {
                 if (!(await this.migrationsRepository.findByName(name))) {
-                    this.logger.debug(`Migrating ${name}`);
-
                     await this.query.none(migration);
                     await this.migrationsRepository.insert({ name });
                 }

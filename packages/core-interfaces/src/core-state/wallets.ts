@@ -61,7 +61,9 @@ export interface IWalletDelegateAttributes {
     username: string;
     voteBalance: Utils.BigNumber;
     forgedFees: Utils.BigNumber;
+    removedFees: Utils.BigNumber;
     forgedRewards: Utils.BigNumber;
+    forgedTopRewards: Utils.BigNumber;
     producedBlocks: number;
     rank?: number;
     lastBlock?: Interfaces.IBlockData;

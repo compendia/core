@@ -22,7 +22,7 @@ export const setUp = async () => {
         connection: {
             host: "localhost",
             port: 5432,
-            database: "ark_unitnet",
+            database: "nos_unitnet",
             user: "ark",
             password: "password",
         },

@@ -74,6 +74,7 @@ export class Wallet implements State.IWallet {
             delegate.producedBlocks++;
             delegate.forgedFees = delegate.forgedFees.plus(block.totalFee);
             delegate.forgedRewards = delegate.forgedRewards.plus(block.reward);
+            delegate.removedFees = delegate.removedFees.plus(block.removedFee);
             delegate.lastBlock = block;
 
             return true;
@@ -93,6 +94,7 @@ export class Wallet implements State.IWallet {
 
             delegate.forgedFees = delegate.forgedFees.minus(block.totalFee);
             delegate.forgedRewards = delegate.forgedRewards.minus(block.reward);
+            delegate.removedFees = delegate.removedFees.minus(block.removedFee);
             delegate.producedBlocks--;
 
             // TODO: get it back from database?
@@ -235,6 +237,8 @@ export class Wallet implements State.IWallet {
     }
 
     private assertKnownAttribute(key: string): void {
-        assert(Handlers.Registry.isKnownWalletAttribute(key), `Tried to access unknown attribute: ${key}`);
+        if (key !== "stakeWeight") {
+            assert(Handlers.Registry.isKnownWalletAttribute(key), `Tried to access unknown attribute: ${key}`);
+        }
     }
 }

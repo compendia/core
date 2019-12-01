@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces } from "@arkecosystem/core-transactions";
-import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import pluralize from "pluralize";
 import { WalletIndexAlreadyRegisteredError, WalletIndexNotFoundError } from "./errors";
 import { TempWalletManager } from "./temp-wallet-manager";
@@ -245,7 +245,10 @@ export class WalletManager implements State.IWalletManager {
                 const delegate: State.IWallet = this.findByPublicKey(voter.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance");
                 const lockedBalance = voter.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
-                delegate.setAttribute("delegate.voteBalance", voteBalance.plus(voter.balance).plus(lockedBalance));
+                delegate.setAttribute(
+                    "delegate.voteBalance",
+                    voteBalance.plus(voter.balance.plus(lockedBalance)).plus(voter.getAttribute("stakeWeight", 0)),
+                );
             }
         }
     }
@@ -474,7 +477,37 @@ export class WalletManager implements State.IWalletManager {
         lockTransaction: Interfaces.ITransactionData,
         revert: boolean = false,
     ): void {
-        if (
+        const senderStakeWeight = sender.getAttribute("stakeWeight", Utils.BigNumber.ZERO);
+        const milestone = Managers.configManager.getMilestone();
+
+        // If stake transaction group
+        if (transaction.typeGroup === 100 && sender.hasVoted()) {
+            // Check if transaction is of type stakeCreate
+            const delegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
+            let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+            if (transaction.type === 0) {
+                const s = transaction.asset.stakeCreate;
+                const multiplier: number = milestone.stakeLevels[s.duration];
+                const sWeight: Utils.BigNumber = s.amount.times(multiplier).dividedBy(10);
+                const balanceWithFeeFixed = s.amount.plus(transaction.fee);
+
+                voteBalance = revert
+                    ? voteBalance.minus(sWeight).plus(balanceWithFeeFixed)
+                    : voteBalance.minus(balanceWithFeeFixed).plus(sWeight);
+            } else if (transaction.type === 1) {
+                const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.txId];
+                voteBalance = revert
+                    ? voteBalance
+                          .plus(s.weight)
+                          .plus(transaction.fee)
+                          .minus(s.amount)
+                    : voteBalance
+                          .minus(s.weight)
+                          .minus(transaction.fee)
+                          .plus(s.amount);
+            }
+            delegate.setAttribute("delegate.voteBalance", voteBalance);
+        } else if (
             transaction.type === Enums.TransactionType.Vote &&
             transaction.typeGroup === Enums.TransactionTypeGroup.Core
         ) {
@@ -484,12 +517,12 @@ export class WalletManager implements State.IWalletManager {
 
             if (vote.startsWith("+")) {
                 voteBalance = revert
-                    ? voteBalance.minus(sender.balance.minus(transaction.fee))
-                    : voteBalance.plus(sender.balance);
+                    ? voteBalance.minus(sender.balance.minus(transaction.fee)).minus(senderStakeWeight)
+                    : voteBalance.plus(sender.balance).plus(senderStakeWeight);
             } else {
                 voteBalance = revert
-                    ? voteBalance.plus(sender.balance)
-                    : voteBalance.minus(sender.balance.plus(transaction.fee));
+                    ? voteBalance.plus(sender.balance).plus(senderStakeWeight)
+                    : voteBalance.minus(sender.balance.plus(transaction.fee)).minus(senderStakeWeight);
             }
 
             delegate.setAttribute("delegate.voteBalance", voteBalance);

@@ -6,7 +6,12 @@ import { Handlers } from "@arkecosystem/core-transactions";
 import { InsufficientBalanceError } from "@arkecosystem/core-transactions/src/errors";
 import { Blocks, Constants, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { Address } from "@arkecosystem/crypto/src/identities";
+
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
+import {
+    StakeCreateTransactionHandler,
+    StakeRedeemTransactionHandler,
+} from "../../../../plugins/stake-transactions/src/handlers";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { fixtures } from "../../../utils";
 import wallets from "../__fixtures__/wallets.json";
@@ -21,6 +26,11 @@ const walletData1 = wallets[0];
 const walletData2 = wallets[1];
 
 let walletManager: State.IWalletManager;
+
+beforeAll(() => {
+    Handlers.Registry.registerTransactionHandler(StakeCreateTransactionHandler);
+    Handlers.Registry.registerTransactionHandler(StakeRedeemTransactionHandler);
+});
 
 beforeEach(() => {
     walletManager = new WalletManager();
