@@ -33,7 +33,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             "delegate.forgedFees",
             "delegate.forgedRewards",
             "delegate.forgedTotal",
-            "delegate.forgedFees",
             "delegate.removedFees",
             "delegate.forgedTopRewards",
             "delegate.approval",
