@@ -20,11 +20,23 @@ class TopRewards {
             const topDelegateReward = topDelegateRewardVal ? topDelegateRewardVal : Utils.BigNumber.ZERO;
 
             if (topDelegateReward.isGreaterThan(0)) {
-                const roundDelegates = await Round.findOne(roundInfo.round);
-                const delegates = roundDelegates.topDelegates.split(",");
+                let roundDelegates;
+                let delegates;
+                let delegatesList = [];
+                roundDelegates = await Round.findOne(roundInfo.round);
+                // Check if Round exists in db, otherwise get latest active delegates
+                if (roundDelegates) {
+                    delegates = roundDelegates.topDelegates.split(",");
+                    delegatesList = delegates;
+                } else {
+                    delegates = walletManager.loadActiveDelegateList(roundInfo);
+                    for (const delegate of delegates) {
+                        delegatesList.push(delegate.publicKey);
+                    }
+                }
                 const rewardedDelegates = [];
                 for (let i = 0; i < topDelegateCount; i++) {
-                    const delegate = walletManager.findByPublicKey(delegates[i]);
+                    const delegate = walletManager.findByPublicKey(delegatesList[i]);
                     delegate.balance = delegate.balance.plus(topDelegateReward);
                     delegate.setAttribute(
                         "forgedTopRewards",
@@ -73,11 +85,22 @@ class TopRewards {
                 ? balanceWeightMultiplierVal
                 : Utils.BigNumber.ZERO;
             if (topDelegateReward.isGreaterThan(0)) {
-                const roundDelegates = await Round.findOne(roundInfo.round);
-                const delegates = roundDelegates.topDelegates.split(",");
+                let roundDelegates;
+                let delegates;
+                let delegatesList = [];
+                roundDelegates = await Round.findOne(roundInfo.round);
+                if (roundDelegates) {
+                    delegates = roundDelegates.topDelegates.split(",");
+                    delegatesList = delegates;
+                } else {
+                    delegates = walletManager.loadActiveDelegateList(roundInfo);
+                    for (const delegate of delegates) {
+                        delegatesList.push(delegate.publicKey);
+                    }
+                }
                 const rewardedDelegates = [];
                 for (let i = 0; i < topDelegateCount; i++) {
-                    const delegate = walletManager.findByPublicKey(delegates[i]);
+                    const delegate = walletManager.findByPublicKey(delegatesList[i]);
                     delegate.balance = delegate.balance.minus(topDelegateReward);
                     delegate.setAttribute(
                         "forgedTopRewards",
