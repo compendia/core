@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp, roundCalculator } from "@arkecosystem/core-utils";
-import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Utils } from "@arkecosystem/crypto";
 
 export const transformBlock = (model, transform) => {
     if (!transform) {
@@ -16,7 +16,7 @@ export const transformBlock = (model, transform) => {
     const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     const generator: State.IWallet = databaseService.walletManager.findByPublicKey(model.generatorPublicKey);
     const lastBlock: Interfaces.IBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
-    const topDelegateCount = Managers.configManager.getMilestone(lastBlock.data.height).topDelegates;
+    // const topDelegateCount = Managers.configManager.getMilestone(lastBlock.data.height).topDelegates;
 
     model.reward = Utils.BigNumber.make(model.reward);
     model.topReward = Utils.BigNumber.make(model.topReward);
@@ -26,15 +26,18 @@ export const transformBlock = (model, transform) => {
     // Get top rewarded delegates
     // TODO: Dean - Get top delegates from Round db
     const roundInfo = roundCalculator.calculateRound(lastBlock.data.height);
-    const delegates = databaseService.walletManager.loadActiveDelegateList(roundInfo);
-    const topDelegates = [];
-    let i = 0;
 
-    for (const delegate of delegates) {
-        if (i < topDelegateCount) {
+    let tdGlobal = [];
+    if (app.has("top.delegates")) {
+        tdGlobal = app.resolve("top.delegates");
+    }
+
+    const topDelegates = [];
+    if (roundInfo.round in tdGlobal) {
+        const delegates = tdGlobal[roundInfo.round];
+        for (const delegate of delegates) {
             topDelegates.push({ username: delegate.getAttribute("delegate.username"), address: delegate.address });
         }
-        i++;
     }
 
     return {

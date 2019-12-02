@@ -295,7 +295,7 @@ export class WalletManager implements State.IWalletManager {
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.plus(increase));
             }
 
-            TopRewards.applyReward(block.data, this);
+            await TopRewards.applyReward(block.data, this);
         } catch (error) {
             this.logger.error("Failed to apply all transactions in block - reverting previous transactions");
 
@@ -339,7 +339,7 @@ export class WalletManager implements State.IWalletManager {
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.minus(decrease));
             }
 
-            TopRewards.revertReward(block.data, this);
+            await TopRewards.revertReward(block.data, this);
         } catch (error) {
             this.logger.error(error.stack);
 

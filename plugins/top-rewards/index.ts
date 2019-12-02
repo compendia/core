@@ -2,9 +2,11 @@ import { app } from "@arkecosystem/core-container";
 import { EventEmitter, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Round } from "@nosplatform/storage";
+import { asValue } from "awilix";
 
 class TopRewards {
-    public static applyReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
+    public static async applyReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): Promise<void> {
         const roundInfo = roundCalculator.calculateRound(block.height);
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
@@ -18,10 +20,11 @@ class TopRewards {
             const topDelegateReward = topDelegateRewardVal ? topDelegateRewardVal : Utils.BigNumber.ZERO;
 
             if (topDelegateReward.isGreaterThan(0)) {
-                const delegates = walletManager.loadActiveDelegateList(roundInfo);
+                const roundDelegates = await Round.findOne(roundInfo.round);
+                const delegates = roundDelegates.topDelegates.split(",");
                 const rewardedDelegates = [];
                 for (let i = 0; i < topDelegateCount; i++) {
-                    const delegate = walletManager.findByPublicKey(delegates[i].publicKey);
+                    const delegate = walletManager.findByPublicKey(delegates[i]);
                     delegate.balance = delegate.balance.plus(topDelegateReward);
                     delegate.setAttribute(
                         "forgedTopRewards",
@@ -45,11 +48,19 @@ class TopRewards {
                     walletManager.reindex(delegate);
                 }
                 this.emitter.emit("top.delegates.rewarded", rewardedDelegates, topDelegateReward);
+                let tdGlobal = [];
+                if (app.has("top.delegates")) {
+                    tdGlobal = app.resolve("top.delegates");
+                }
+                if (roundInfo.round in tdGlobal) {
+                    tdGlobal[roundInfo.round] = rewardedDelegates;
+                    app.register("top.delegates", asValue(tdGlobal));
+                }
             }
         }
     }
 
-    public static revertReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): void {
+    public static async revertReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): Promise<void> {
         const roundInfo = roundCalculator.calculateRound(block.height);
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
@@ -62,10 +73,11 @@ class TopRewards {
                 ? balanceWeightMultiplierVal
                 : Utils.BigNumber.ZERO;
             if (topDelegateReward.isGreaterThan(0)) {
-                const delegates = walletManager.loadActiveDelegateList(roundInfo);
+                const roundDelegates = await Round.findOne(roundInfo.round);
+                const delegates = roundDelegates.topDelegates.split(",");
                 const rewardedDelegates = [];
                 for (let i = 0; i < topDelegateCount; i++) {
-                    const delegate = walletManager.findByPublicKey(delegates[i].publicKey);
+                    const delegate = walletManager.findByPublicKey(delegates[i]);
                     delegate.balance = delegate.balance.minus(topDelegateReward);
                     delegate.setAttribute(
                         "forgedTopRewards",
@@ -89,6 +101,14 @@ class TopRewards {
                     walletManager.reindex(delegate);
                 }
                 this.emitter.emit("top.delegate.rewards.reverted", rewardedDelegates, topDelegateReward);
+                let tdGlobal = [];
+                if (app.has("top.delegates")) {
+                    tdGlobal = app.resolve("top.delegates");
+                }
+                if (roundInfo.round in tdGlobal) {
+                    delete tdGlobal[roundInfo.round];
+                    app.register("top.delegates", asValue(tdGlobal));
+                }
             }
         }
     }
