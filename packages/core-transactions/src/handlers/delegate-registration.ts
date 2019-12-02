@@ -1,6 +1,7 @@
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Enums, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { TopRewards } from "@nosplatform/top-rewards";
 import {
     NotSupportedForMultiSignatureWalletError,
     WalletIsAlreadyDelegateError,
@@ -60,7 +61,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
                     producedBlocks: 0,
                     rank: undefined,
                 });
-
                 walletManager.reindex(wallet);
             }
         }
@@ -76,7 +76,9 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
 
             delegate.forgedFees = delegate.forgedFees.plus(block.totalFees);
             delegate.forgedRewards = delegate.forgedRewards.plus(block.totalRewards);
+            delegate.removedFees = delegate.removedFees.plus(block.removedFees);
             delegate.producedBlocks += +block.totalProduced;
+            TopRewards.applyReward(block, walletManager);
         }
 
         for (const block of lastForgedBlocks) {

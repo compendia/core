@@ -2,7 +2,9 @@ import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces } from "@arkecosystem/core-transactions";
 import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { TopRewards } from "@nosplatform/top-rewards";
 import pluralize from "pluralize";
+
 import { WalletIndexAlreadyRegisteredError, WalletIndexNotFoundError } from "./errors";
 import { TempWalletManager } from "./temp-wallet-manager";
 import { Wallet } from "./wallet";
@@ -292,6 +294,8 @@ export class WalletManager implements State.IWalletManager {
                 const voteBalance: Utils.BigNumber = votedDelegate.getAttribute("delegate.voteBalance");
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.plus(increase));
             }
+
+            TopRewards.applyReward(block.data, this);
         } catch (error) {
             this.logger.error("Failed to apply all transactions in block - reverting previous transactions");
 
@@ -334,6 +338,8 @@ export class WalletManager implements State.IWalletManager {
                 const voteBalance: Utils.BigNumber = votedDelegate.getAttribute("delegate.voteBalance");
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.minus(decrease));
             }
+
+            TopRewards.revertReward(block.data, this);
         } catch (error) {
             this.logger.error(error.stack);
 
