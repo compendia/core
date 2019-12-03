@@ -2,10 +2,12 @@ import "jest-extended";
 
 import { Container, Database, State } from "@arkecosystem/core-interfaces";
 import { Wallets } from "@arkecosystem/core-state";
-import { Identities, Managers, Utils } from "@arkecosystem/crypto";
-import { Crypto } from "@arkecosystem/crypto";
+import { Crypto, Identities, Managers, Utils } from "@arkecosystem/crypto";
 import delay from "delay";
+import * as fs from "fs";
 import cloneDeep from "lodash.clonedeep";
+import * as path from "path";
+
 import { secrets } from "../../../utils/config/testnet/delegates.json";
 import { setUpContainer } from "../../../utils/helpers/container";
 
@@ -15,12 +17,18 @@ let app: Container.IContainer;
 export const setUp = async (): Promise<void> => {
     try {
         process.env.CORE_RESET_DATABASE = "1";
+        const dbPath = path.resolve(__dirname, `../../storage/databases/testnet.sqlite`);
+        if (fs.existsSync(dbPath)) {
+            fs.unlinkSync(dbPath);
+        }
 
         app = await setUpContainer({
             include: [
                 "@arkecosystem/core-event-emitter",
                 "@arkecosystem/core-logger-pino",
                 "@arkecosystem/core-state",
+                "@nosplatform/storage",
+                "@nosplatform/supply-tracker",
                 "@arkecosystem/core-database-postgres",
                 "@arkecosystem/core-magistrate-transactions",
                 "@arkecosystem/core-transaction-pool",

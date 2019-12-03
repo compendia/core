@@ -60,12 +60,16 @@ class TopRewards {
                     if (app.has("top.delegates")) {
                         tdGlobal = app.resolve("top.delegates");
                     }
-                    if (!(roundInfo.round in tdGlobal)) {
-                        tdGlobal[roundInfo.round] = delegatesList;
+                    if (!(roundInfo.round in tdGlobal) && rewardedDelegates.length > 0) {
+                        tdGlobal[roundInfo.round] = rewardedDelegates;
                         app.register("top.delegates", asValue(tdGlobal));
-                        console.log(app.resolve("top.delegates"));
                     }
-                    this.emitter.emit("top.delegates.rewarded", rewardedDelegates, topDelegateReward);
+
+                    app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
+                        "top.delegates.rewarded",
+                        rewardedDelegates,
+                        topDelegateReward,
+                    );
                 }
             }
         }
@@ -116,7 +120,11 @@ class TopRewards {
                     rewardedDelegates[i] = delegate.publicKey;
                     walletManager.reindex(delegate);
                 }
-                this.emitter.emit("top.delegate.rewards.reverted", rewardedDelegates, topDelegateReward);
+                app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
+                    "top.delegate.rewards.reverted",
+                    rewardedDelegates,
+                    topDelegateReward,
+                );
                 let tdGlobal = [];
                 if (app.has("top.delegates")) {
                     tdGlobal = app.resolve("top.delegates");
@@ -128,10 +136,6 @@ class TopRewards {
             }
         }
     }
-
-    private static readonly emitter: EventEmitter.EventEmitter = app.resolvePlugin<EventEmitter.EventEmitter>(
-        "event-emitter",
-    );
 }
 
 export { TopRewards };

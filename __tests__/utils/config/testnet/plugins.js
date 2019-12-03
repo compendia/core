@@ -21,6 +21,7 @@ module.exports = {
             password: "password",
         },
     },
+    "@nosplatform/supply-tracker": {},
     "@arkecosystem/core-transaction-pool": {
         enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,

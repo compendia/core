@@ -197,7 +197,11 @@ export const plugin: Container.IPluginDescriptor = {
                 }
                 const roundData = roundCalculator.calculateRound(lastBlock.height);
                 const round = await findOrCreate("Round", roundData.round);
-                if (tx.type === Enums.TransactionType.Transfer && tx.blockId !== genesisBlock.id) {
+                if (
+                    tx.typeGroup === Enums.TransactionTypeGroup.Core &&
+                    tx.type === Enums.TransactionType.Transfer &&
+                    tx.blockId !== genesisBlock.id
+                ) {
                     if (senderAddress === genesisBlock.transactions[0].recipientId) {
                         // Add coins to supply when sent from mint address
                         supply.value = Utils.BigNumber.make(supply.value)
@@ -305,7 +309,7 @@ export const plugin: Container.IPluginDescriptor = {
         emitter.on(ApplicationEvents.TransactionReverted, async txObj => {
             const tx: Interfaces.ITransactionData = txObj;
             // On stake revert
-            if (tx.type === 100) {
+            if (tx.typeGroup === 100 && tx.type === 0) {
                 const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
 
                 supply.value = lastSupply.plus(tx.asset.stakeCreate.amount).toString();
