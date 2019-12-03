@@ -1,12 +1,10 @@
+import { Crypto, Identities, Transactions, Utils } from "@arkecosystem/crypto";
+import { flags } from "@oclif/command";
 import { generateMnemonic } from "bip39";
 import ByteBuffer from "bytebuffer";
 import fs from "fs-extra";
 import { resolve } from "path";
 import prompts from "prompts";
-
-import { Crypto, Identities, Transactions, Utils } from "@arkecosystem/crypto";
-import { flags } from "@oclif/command";
-
 import { CommandFlags } from "../../types";
 import { BaseCommand } from "../command";
 
@@ -41,7 +39,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         }),
         maxBlockPayload: flags.integer({
             description: "the maximum payload length by block",
-            default: 2097152,
+            default: 6300000,
         }),
         rewardHeight: flags.integer({
             description: "the height at which the delegate block reward kicks in",
@@ -220,13 +218,14 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             {
                 height: 1,
                 reward: 0,
-                topReward: 0,
                 activeDelegates,
                 blocktime,
                 block: {
                     version: 0,
                     maxTransactions: maxTxPerBlock,
                     maxPayload: maxBlockPayload,
+                    idFullSha256: true,
+                    acceptExpiredTransactionTimestamps: false,
                 },
                 epoch: "2017-03-21T13:00:00.000Z",
                 fees: {
@@ -237,12 +236,26 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
                         vote: 100000000,
                         multiSignature: 500000000,
                         ipfs: 500000000,
-                        multiPayment: 0,
+                        multiPayment: 10000000,
                         delegateResignation: 2500000000,
+                        htlcLock: 10000000,
+                        htlcClaim: 0,
+                        htlcRefund: 0,
+                        stakeCreate: 0,
+                        stakeRedeem: 0,
                     },
                 },
-                vendorFieldLength: 64,
+                balanceWeight: 1,
+                stakeLevels: {
+                    120: 30,
+                    7889400: 60,
+                    15778800: 85,
+                    31557600: 110,
+                },
+                minimumStake: 1000000000000,
+                vendorFieldLength: 255,
                 aip11: true,
+                multiPaymentLimit: 64,
             },
             {
                 height: rewardHeight,
@@ -253,6 +266,8 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
     private generateCryptoGenesisBlock(genesisWallet, delegates, pubKeyHash: number, totalPremine: string) {
         const premineWallet = this.createWallet(pubKeyHash);
+
+        console.log(`Genesis wallet: ${genesisWallet.passphrase}`);
 
         const transactions = [
             ...this.buildDelegateTransactions(delegates),
@@ -309,7 +324,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
 
     private formatGenesisTransaction(transaction, wallet) {
         Object.assign(transaction, {
-            fee: 0,
+            fee: "0",
             timestamp: 0,
         });
         transaction.signature = Transactions.Signer.sign(transaction, wallet.keys);
@@ -332,10 +347,6 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         let totalAmount = Utils.BigNumber.ZERO;
         const allBytes = [];
 
-        const feeObject = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make(totalFee), Utils.BigNumber.ZERO);
-        totalFee = Number(feeObject.toReward);
-        const removedFee = Number(feeObject.toRemove);
-
         for (const transaction of transactions) {
             const bytes = Transactions.Serializer.getBytes(transaction);
             allBytes.push(bytes);
@@ -344,15 +355,19 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             totalAmount = totalAmount.plus(new Utils.BigNumber(transaction.amount));
         }
 
+        const feeObject = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make(totalFee), Utils.BigNumber.ZERO);
+        totalFee = Number(feeObject.toReward.toString());
+        const removedFee = Number(feeObject.toRemove.toString());
+
         const payloadHash = Crypto.HashAlgorithms.sha256(Buffer.concat(allBytes));
 
         const block = {
             version: 0,
             totalAmount: totalAmount.toString(),
-            totalFee,
-            removedFee,
-            reward: 0,
-            topReward: 0,
+            totalFee: totalFee.toString(),
+            removedFee: removedFee.toString(),
+            reward: "0",
+            topReward: "0",
             payloadHash: payloadHash.toString("hex"),
             timestamp,
             numberOfTransactions: transactions.length,
@@ -392,7 +407,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
     }
 
     private getBytes(genesisBlock) {
-        const size = 4 + 4 + 4 + 8 + 4 + 4 + 4 + 8 + 8 + 8 + 8 + 4 + 4 + 32 + 32 + 64;
+        const size = 4 + 4 + 4 + 8 + 4 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + 64;
 
         const byteBuffer = new ByteBuffer(size, true);
         byteBuffer.writeInt(genesisBlock.version);

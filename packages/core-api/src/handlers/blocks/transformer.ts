@@ -25,19 +25,16 @@ export const transformBlock = (model, transform) => {
 
     // Get top rewarded delegates
     // TODO: Dean - Get top delegates from Round db
-    const roundInfo = roundCalculator.calculateRound(lastBlock.data.height);
+    const roundInfo = roundCalculator.calculateRound(model.height);
 
     let tdGlobal = [];
     if (app.has("top.delegates")) {
         tdGlobal = app.resolve("top.delegates");
     }
 
-    const topDelegates = [];
+    let topDelegates = [];
     if (roundInfo.round in tdGlobal) {
-        const delegates = tdGlobal[roundInfo.round];
-        for (const delegate of delegates) {
-            topDelegates.push({ username: delegate.getAttribute("delegate.username"), address: delegate.address });
-        }
+        topDelegates = tdGlobal[roundInfo.round];
     }
 
     return {
@@ -47,7 +44,7 @@ export const transformBlock = (model, transform) => {
         previous: model.previousBlock,
         forged: {
             reward: model.reward.toFixed(),
-            topReward: model.reward.toFixed(),
+            topReward: model.topReward.toFixed(),
             collectiveFee: model.totalFee.plus(model.removedFee).toFixed(),
             fee: model.totalFee.toFixed(),
             removedFee: model.removedFee.toFixed(),

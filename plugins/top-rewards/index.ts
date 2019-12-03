@@ -11,11 +11,7 @@ class TopRewards {
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
 
-        if (topDelegateCount.isGreaterThan(0)) {
-            const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).balanceVoteWeight;
-            const balanceWeightMultiplier = balanceWeightMultiplierVal
-                ? balanceWeightMultiplierVal
-                : Utils.BigNumber.ZERO;
+        if (topDelegateCount > 0) {
             const topDelegateRewardVal = Utils.BigNumber.make(block.topReward).dividedBy(topDelegateCount);
             const topDelegateReward = topDelegateRewardVal ? topDelegateRewardVal : Utils.BigNumber.ZERO;
 
@@ -35,38 +31,41 @@ class TopRewards {
                     }
                 }
                 const rewardedDelegates = [];
-                for (let i = 0; i < topDelegateCount; i++) {
-                    const delegate = walletManager.findByPublicKey(delegatesList[i]);
-                    delegate.balance = delegate.balance.plus(topDelegateReward);
-                    delegate.setAttribute(
-                        "forgedTopRewards",
-                        delegate.getAttribute<Utils.BigNumber>("forgedTopRewards").plus(topDelegateReward),
-                    );
-                    if (delegate.hasVoted()) {
-                        const votedDelegate: State.IWallet = walletManager.findByPublicKey(
-                            delegate.getAttribute("vote"),
+                if (delegatesList.length > 0) {
+                    for (let i = 0; i < topDelegateCount; i++) {
+                        const delegate = walletManager.findByPublicKey(delegatesList[i]);
+                        delegate.balance = delegate.balance.plus(topDelegateReward);
+                        delegate.setAttribute(
+                            "delegate.forgedTopRewards",
+                            delegate.getAttribute<Utils.BigNumber>("delegate.forgedTopRewards").plus(topDelegateReward),
                         );
-                        votedDelegate.setAttribute(
-                            "voteBalance",
-                            Utils.BigNumber.make(
-                                votedDelegate
-                                    .getAttribute<Utils.BigNumber>("voteBalance")
-                                    .plus(topDelegateReward.times(balanceWeightMultiplier).toFixed()),
-                            ),
-                        );
-                        walletManager.reindex(votedDelegate);
+                        if (delegate.hasVoted()) {
+                            const votedDelegate: State.IWallet = walletManager.findByPublicKey(
+                                delegate.getAttribute("vote"),
+                            );
+                            votedDelegate.setAttribute(
+                                "delegate.voteBalance",
+                                Utils.BigNumber.make(
+                                    votedDelegate
+                                        .getAttribute<Utils.BigNumber>("delegate.voteBalance")
+                                        .plus(topDelegateReward),
+                                ),
+                            );
+                            walletManager.reindex(votedDelegate);
+                        }
+                        rewardedDelegates[i] = delegate.publicKey;
+                        walletManager.reindex(delegate);
                     }
-                    rewardedDelegates[i] = delegate.publicKey;
-                    walletManager.reindex(delegate);
-                }
-                this.emitter.emit("top.delegates.rewarded", rewardedDelegates, topDelegateReward);
-                let tdGlobal = [];
-                if (app.has("top.delegates")) {
-                    tdGlobal = app.resolve("top.delegates");
-                }
-                if (roundInfo.round in tdGlobal) {
-                    tdGlobal[roundInfo.round] = rewardedDelegates;
-                    app.register("top.delegates", asValue(tdGlobal));
+                    let tdGlobal = [];
+                    if (app.has("top.delegates")) {
+                        tdGlobal = app.resolve("top.delegates");
+                    }
+                    if (!(roundInfo.round in tdGlobal)) {
+                        tdGlobal[roundInfo.round] = delegatesList;
+                        app.register("top.delegates", asValue(tdGlobal));
+                        console.log(app.resolve("top.delegates"));
+                    }
+                    this.emitter.emit("top.delegates.rewarded", rewardedDelegates, topDelegateReward);
                 }
             }
         }
@@ -77,13 +76,9 @@ class TopRewards {
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
 
-        if (topDelegateCount.isGreaterThan(0)) {
+        if (topDelegateCount > 0) {
             const topDelegateRewardVal = Utils.BigNumber.make(block.topReward).dividedBy(topDelegateCount);
             const topDelegateReward = topDelegateRewardVal ? topDelegateRewardVal : Utils.BigNumber.ZERO;
-            const balanceWeightMultiplierVal = Managers.configManager.getMilestone(block.height).balanceVoteWeight;
-            const balanceWeightMultiplier = balanceWeightMultiplierVal
-                ? balanceWeightMultiplierVal
-                : Utils.BigNumber.ZERO;
             if (topDelegateReward.isGreaterThan(0)) {
                 let roundDelegates;
                 let delegates;
@@ -103,19 +98,17 @@ class TopRewards {
                     const delegate = walletManager.findByPublicKey(delegatesList[i]);
                     delegate.balance = delegate.balance.minus(topDelegateReward);
                     delegate.setAttribute(
-                        "forgedTopRewards",
-                        delegate.getAttribute("forgedTopRewards").minus(topDelegateReward),
+                        "delegate.forgedTopRewards",
+                        delegate.getAttribute("delegate.forgedTopRewards").minus(topDelegateReward),
                     );
                     if (delegate.hasVoted()) {
                         const votedDelegate: State.IWallet = walletManager.findByPublicKey(
                             delegate.getAttribute("vote"),
                         );
                         votedDelegate.setAttribute(
-                            "voteBalance",
+                            "delegate.voteBalance",
                             Utils.BigNumber.make(
-                                votedDelegate
-                                    .getAttribute("voteBalance")
-                                    .minus(topDelegateReward.times(balanceWeightMultiplier).toFixed()),
+                                votedDelegate.getAttribute("delegate.voteBalance").minus(topDelegateReward.toFixed()),
                             ),
                         );
                         walletManager.reindex(votedDelegate);

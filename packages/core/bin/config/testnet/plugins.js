@@ -70,4 +70,5 @@ module.exports = {
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
     "@arkecosystem/core-snapshots": {},
+    "@nosplatform/supply-tracker": {}
 };
