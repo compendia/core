@@ -1,5 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
+import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 
 export const transformWallet = (wallet: State.IWallet) => {
@@ -20,6 +21,23 @@ export const transformWallet = (wallet: State.IWallet) => {
         }
     }
 
+    const unixStakes = {};
+    if (app.has("stake-transactions")) {
+        for (const key of Object.keys(wallet.getAttribute("stakes", {}))) {
+            const stake = wallet.getAttribute("stakes", {})[key];
+            const epochTime = wallet.getAttribute("stakes", {})[key].redeemableTimestamp;
+            unixStakes[key] = {
+                timestamp: formatTimestamp(stake.timestamp).unix,
+                amount: stake.amount,
+                duration: stake.duration,
+                weight: stake.weight,
+                redeemableTimestamp: formatTimestamp(epochTime).unix,
+                redeemed: stake.redeemed,
+                halved: stake.halved,
+            };
+        }
+    }
+
     return {
         address: wallet.address,
         publicKey: wallet.publicKey,
@@ -35,5 +53,6 @@ export const transformWallet = (wallet: State.IWallet) => {
         vote: wallet.getAttribute("vote"),
         multiSignature,
         business,
+        stakes: unixStakes,
     };
 };

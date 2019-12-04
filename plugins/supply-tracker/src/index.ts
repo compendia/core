@@ -279,7 +279,7 @@ export const plugin: Container.IPluginDescriptor = {
                 const sender = walletManager.findByPublicKey(stakeObj.publicKey);
                 const txId = stakeObj.stakeKey;
                 const block: Interfaces.IBlockData = stakeObj.block;
-                const stake: StakeInterfaces.IStakeObject = sender.stake[txId];
+                const stake: StakeInterfaces.IStakeObject = sender.getAttribute("stakes")[txId];
                 const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
 
                 supply.value = lastSupply.plus(stake.amount).toString();

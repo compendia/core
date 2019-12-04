@@ -501,7 +501,7 @@ export class WalletManager implements State.IWalletManager {
                     ? voteBalance.minus(sWeight).plus(balanceWithFeeFixed)
                     : voteBalance.minus(balanceWithFeeFixed).plus(sWeight);
             } else if (transaction.type === 1) {
-                const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.txId];
+                const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
                 voteBalance = revert
                     ? voteBalance
                           .plus(s.weight)

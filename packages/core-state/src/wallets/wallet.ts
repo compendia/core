@@ -237,6 +237,7 @@ export class Wallet implements State.IWallet {
     }
 
     private assertKnownAttribute(key: string): void {
+        // Overwrite assertKnownAttributes to whitelist stakeWeight and stakes
         if (key !== "stakeWeight") {
             assert(Handlers.Registry.isKnownWalletAttribute(key), `Tried to access unknown attribute: ${key}`);
         }
