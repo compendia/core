@@ -53,6 +53,7 @@ export const transformWallet = (wallet: State.IWallet) => {
         vote: wallet.getAttribute("vote"),
         multiSignature,
         business,
+        stakeWeight: wallet.getAttribute("stakeWeight", "0"),
         stakes: unixStakes,
     };
 };
