@@ -6,4 +6,4 @@
 	url = https://github.com/nos/core-plugin-storage
 [submodule "plugins/stake-transactions-crypto"]
 	path = plugins/stake-transactions-crypto
-	url = https://github.com/ArkEcosystem/core-plugin-skeleton.git
+	url = https://github.com/nos/core-plugin-staking-crypto
