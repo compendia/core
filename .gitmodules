@@ -1,0 +1,3 @@
+[submodule "plugins/storage"]
+	path = plugins/storage
+	url = https://github.com/nos/core-plugin-storage
