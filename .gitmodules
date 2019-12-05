@@ -1,9 +1,0 @@
-[submodule "plugins/stake-transactions"]
-	path = plugins/stake-transactions
-	url = https://github.com/nos/core-plugin-staking
-[submodule "plugins/storage"]
-	path = plugins/storage
-	url = https://github.com/nos/core-plugin-storage
-[submodule "plugins/stake-transactions-crypto"]
-	path = plugins/stake-transactions-crypto
-	url = https://github.com/nos/core-plugin-staking-crypto
