@@ -283,6 +283,8 @@ export class WalletManager implements State.IWalletManager {
                 appliedTransactions.push(transaction);
             }
 
+            await TopRewards.applyReward(block.data, this);
+
             const applied: boolean = delegate.applyBlock(block.data);
 
             // If the block has been applied to the delegate, the balance is increased
@@ -294,8 +296,6 @@ export class WalletManager implements State.IWalletManager {
                 const voteBalance: Utils.BigNumber = votedDelegate.getAttribute("delegate.voteBalance");
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.plus(increase));
             }
-
-            await TopRewards.applyReward(block.data, this);
         } catch (error) {
             this.logger.error("Failed to apply all transactions in block - reverting previous transactions");
 
@@ -327,6 +327,8 @@ export class WalletManager implements State.IWalletManager {
                 revertedTransactions.push(transaction);
             }
 
+            await TopRewards.revertReward(block.data, this);
+
             const reverted: boolean = delegate.revertBlock(block.data);
 
             // If the block has been reverted, the balance is decreased
@@ -338,8 +340,6 @@ export class WalletManager implements State.IWalletManager {
                 const voteBalance: Utils.BigNumber = votedDelegate.getAttribute("delegate.voteBalance");
                 votedDelegate.setAttribute("delegate.voteBalance", voteBalance.minus(decrease));
             }
-
-            await TopRewards.revertReward(block.data, this);
         } catch (error) {
             this.logger.error(error.stack);
 

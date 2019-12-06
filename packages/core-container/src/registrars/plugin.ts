@@ -142,7 +142,7 @@ export class PluginRegistrar {
         } catch (error) {
             if (item.plugin.required) {
                 console.log(`Failed to load required plugin '${name}'`);
-                // this.container.forceExit(`Failed to load required plugin '${name}'`, error);
+                this.container.forceExit(`Failed to load required plugin '${name}'`, error);
             } else {
                 this.failedPlugins[name] = error;
             }
