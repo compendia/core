@@ -123,6 +123,7 @@ export class BusinessUpdateTransactionHandler extends MagistrateTransactionHandl
 
         const connection: Database.IConnection = app.resolvePlugin<Database.IDatabaseService>("database").connection;
         let reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
+
         const updateTransactions: Database.IBootstrapTransaction[] = [];
         while (reader.hasNext()) {
             updateTransactions.push(...(await reader.read()));

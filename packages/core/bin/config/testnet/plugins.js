@@ -8,6 +8,7 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@nosplatform/stake-transactions": {},
+    "@nosplatform/core-curation": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -42,7 +43,9 @@ module.exports = {
                 htlcClaim: 0,
                 htlcRefund: 0,
                 stakeCreate: 0,
-                stakeRedeem: 0
+                stakeRedeem: 0,
+                curate: 0,
+                setIpfsNode:0
             },
         },
     },
