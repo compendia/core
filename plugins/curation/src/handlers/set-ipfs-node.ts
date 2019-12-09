@@ -5,7 +5,7 @@ import { DelegateRegistrationTransactionHandler } from "@arkecosystem/core-trans
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as CuratorTransactions } from "@nosplatform/curation-crypto";
 
-import { IpfsHashAlreadyExists, SenderNotDelegate } from "../errors";
+import { SenderNotDelegate } from "../errors";
 
 export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -17,7 +17,7 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public walletAttributes(): ReadonlyArray<string> {
-        return ["curator.node"];
+        return ["curator", "curator.node"];
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -52,10 +52,6 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
 
         if (!wallet.hasAttribute("delegate.username")) {
             throw new SenderNotDelegate();
-        }
-
-        if (walletManager.getIndex("curator.node").has(transaction.data.asset.node)) {
-            throw new IpfsHashAlreadyExists();
         }
 
         return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
