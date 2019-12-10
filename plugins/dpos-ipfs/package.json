@@ -1,7 +1,7 @@
 {
     "private": true,
-    "name": "@nosplatform/curation-crypto",
-    "description": "Provides curator transactions crypto for the nOS blockchain",
+    "name": "@nosplatform/dpos-ipfs",
+    "description": "Provides curator transactions for the nOS blockchain",
     "version": "0.0.1",
     "author": "Dean van Dugteren <dean@nos.io>",
     "license": "MIT",
@@ -28,7 +28,9 @@
     "dependencies": {
         "@arkecosystem/core-interfaces": "^2.6.0-next.6",
         "@arkecosystem/core-transactions": "^2.6.0-next.6",
-        "@arkecosystem/crypto": "^2.6.0-next.6"
+        "@arkecosystem/crypto": "^2.6.0-next.6",
+        "@nosplatform/dpos-ipfs-crypto": "^0.0.1",
+        "ipfs": "^0.40.0"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",

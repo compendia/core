@@ -8,7 +8,9 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@nosplatform/stake-transactions": {},
-    "@nosplatform/core-curation": {},
+    "@nosplatform/dpos-ipfs": {
+        ipfsKeys : ["description", "curation"]
+    },
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -44,8 +46,7 @@ module.exports = {
                 htlcRefund: 0,
                 stakeCreate: 0,
                 stakeRedeem: 0,
-                curate: 0,
-                setIpfsNode:0
+                dposIpfs: 0
             },
         },
     },

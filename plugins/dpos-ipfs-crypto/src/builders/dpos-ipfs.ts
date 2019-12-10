@@ -1,23 +1,23 @@
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 
-import { CurateTransaction } from "../transactions";
+import { DposIpfsTransaction } from "../transactions";
 
-export class CurateBuilder extends Transactions.TransactionBuilder<CurateBuilder> {
+export class DposIpfsBuilder extends Transactions.TransactionBuilder<DposIpfsBuilder> {
     constructor() {
         super();
-
-        this.data.type = CurateTransaction.type;
-        this.data.typeGroup = CurateTransaction.typeGroup;
-        this.data.fee = CurateTransaction.staticFee();
+        this.data.version = 2;
+        this.data.type = DposIpfsTransaction.type;
+        this.data.typeGroup = DposIpfsTransaction.typeGroup;
+        this.data.fee = DposIpfsTransaction.staticFee();
         this.data.amount = Utils.BigNumber.ZERO;
         this.data.asset = {};
     }
 
-    public ipfsAsset(ipfsId: string): CurateBuilder {
+    public ipfsAsset(ipfsKey: string, ipfsHash: string): DposIpfsBuilder {
         this.data.asset = {
-            ipfs: ipfsId,
+            ipfsKey,
+            ipfsHash,
         };
-
         return this;
     }
 
@@ -28,7 +28,7 @@ export class CurateBuilder extends Transactions.TransactionBuilder<CurateBuilder
         return struct;
     }
 
-    protected instance(): CurateBuilder {
+    protected instance(): DposIpfsBuilder {
         return this;
     }
 }

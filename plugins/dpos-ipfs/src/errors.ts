@@ -7,9 +7,9 @@ export class IpfsHashAlreadyExists extends Errors.TransactionError {
     }
 }
 
-export class NodeNotRegistered extends Errors.TransactionError {
+export class IpfsKeyInvalid extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: Delegate must register a node first.`);
+        super(`Failed to apply transaction: Invalid IPFS Key.`);
     }
 }
 

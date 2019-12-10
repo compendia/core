@@ -1,23 +1,27 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
-import { DelegateRegistrationTransactionHandler } from "@arkecosystem/core-transactions/dist/handlers/delegate-registration";
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
-import { Enums, Transactions as CuratorTransactions } from "@nosplatform/curation-crypto";
+import { Enums, Transactions as DposIpfsTransactions } from "@nosplatform/dpos-ipfs-crypto";
 
-import { SenderNotDelegate } from "../errors";
+import { IpfsHashAlreadyExists, IpfsKeyInvalid } from "../errors";
 
-export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
+export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
-        return CuratorTransactions.SetIpfsNodeTransaction;
+        return DposIpfsTransactions.DposIpfsTransaction;
     }
 
     public dependencies(): ReadonlyArray<Handlers.TransactionHandlerConstructor> {
-        return [DelegateRegistrationTransactionHandler];
+        return [];
     }
 
     public walletAttributes(): ReadonlyArray<string> {
-        return ["curator", "curator.node"];
+        const attributes = ["dpos.ipfs"];
+        const keys = Enums.IpfsKeys;
+        for (const key of keys) {
+            attributes.push(`dpos.ipfs.${key}`);
+        }
+        return attributes;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -26,7 +30,9 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
             const transactions = await reader.read();
             for (const transaction of transactions) {
                 const wallet = walletManager.findByPublicKey(transaction.senderPublicKey);
-                wallet.setAttribute("curator.node", transaction.asset.node);
+                const ipfsKey = transaction.asset.ipfsKey;
+                const ipfsHash = transaction.asset.ipfsHash;
+                wallet.setAttribute(`dpos.ipfs.${ipfsKey}`, ipfsHash);
                 walletManager.reindex(wallet);
             }
         }
@@ -50,8 +56,15 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
             return;
         }
 
-        if (!wallet.hasAttribute("delegate.username")) {
-            throw new SenderNotDelegate();
+        const ipfsKey = transaction.data.asset.ipfsKey;
+        const ipfsHash = transaction.data.asset.ipfsHash;
+
+        if (!Enums.IpfsKeys.includes(ipfsKey)) {
+            throw new IpfsKeyInvalid();
+        }
+
+        if (wallet.getAttribute(`dpos.ipfs.${ipfsKey}`, "") === ipfsHash) {
+            throw new IpfsHashAlreadyExists();
         }
 
         return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
@@ -63,25 +76,20 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
         processor: TransactionPool.IProcessor,
     ): Promise<boolean> {
         if (
-            (await pool.senderHasTransactionsOfType(
+            await pool.senderHasTransactionsOfType(
                 data.senderPublicKey,
-                Enums.CuratorTransactionType.Curate,
-                Enums.CuratorTransactionGroup,
-            )) ||
-            (await pool.senderHasTransactionsOfType(
-                data.senderPublicKey,
-                Enums.CuratorTransactionType.SetIpfsNode,
-                Enums.CuratorTransactionGroup,
-            ))
+                Enums.DposIpfsTransactionType.DposIpfs,
+                Enums.DposIpfsTransactionGroup,
+            )
         ) {
-            processor.pushError(data, "ERR_PENDING", `Curator transaction for wallet already in the pool`);
+            processor.pushError(data, "ERR_PENDING", `DPOS IPFS transaction for wallet already in the pool`);
             return false;
         }
         return true;
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("curator.node.updated", transaction.data);
+        emitter.emit("dpos.ipfs.updated", transaction.data);
     }
 
     public async applyToSender(
@@ -91,8 +99,7 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
         await super.applyToSender(transaction, walletManager);
 
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-
-        sender.setAttribute("curator.node", transaction.data.asset.ipfs);
+        sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, transaction.data.asset.ipfsHash);
 
         walletManager.reindex(sender);
     }
@@ -106,17 +113,17 @@ export class SetIpfsNodeTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const reader = await TransactionReader.create(connection, this.getConstructor());
 
-        const curateTransactions: Database.IBootstrapTransaction[] = [];
+        const DposIpfsTransactions: Database.IBootstrapTransaction[] = [];
         while (reader.hasNext()) {
-            curateTransactions.push(...(await reader.read()));
+            DposIpfsTransactions.push(...(await reader.read()));
         }
 
-        if (curateTransactions.length) {
-            const curateTransaction: Database.IBootstrapTransaction = curateTransactions.pop();
-            const previousNode = curateTransaction.asset.node;
-            sender.setAttribute("curator.node", previousNode);
+        if (DposIpfsTransactions.length) {
+            const DposIpfsTransaction: Database.IBootstrapTransaction = DposIpfsTransactions.pop();
+            const previousIpfsHash = DposIpfsTransaction.asset.ipfsHash;
+            sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, previousIpfsHash);
         } else {
-            sender.forgetAttribute("curator.node");
+            sender.forgetAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`);
         }
 
         walletManager.reindex(sender);
