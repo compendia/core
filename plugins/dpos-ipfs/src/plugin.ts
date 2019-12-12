@@ -1,7 +1,9 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
-import { Container, Database, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
+import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
+// import { roundCalculator } from '@arkecosystem/core-utils';
+import { Interfaces } from "@arkecosystem/crypto";
 import IPFS from "ipfs";
 import path from "path";
 
@@ -9,6 +11,7 @@ import { defaults } from "./defaults";
 import { DposIpfsTransactionHandler } from "./handlers";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+const db = app.resolvePlugin<Database.IDatabaseService>("database");
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -17,26 +20,52 @@ export const plugin: Container.IPluginDescriptor = {
     async register(container: Container.IContainer, options) {
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Module IPFS Transaction");
         Handlers.Registry.registerTransactionHandler(DposIpfsTransactionHandler);
-
-        const ipfsHashes = {};
+        const ipfsHashes = [];
         let ipfs;
+        const loadIpfsHashes = async (delegates: State.IWallet[]) => {
+            const newIpfsHashes = [];
+            for (const delegate of delegates) {
+                if (delegate.hasAttribute("dpos.ipfs")) {
+                    const dIpfs = delegate.getAttribute("dpos.ipfs");
+                    const delegateIpfs = Object.values(dIpfs);
+                    // Get all ipfs hashes from all delegates and store it in newIpfsHashes[]
+                    for (const hash of delegateIpfs) {
+                        console.log(hash);
+                        newIpfsHashes.push(hash);
+                    }
+                }
+            }
+
+            // Pin all new hashes that didn't exist previously
+            for (const hash of newIpfsHashes) {
+                if (hash && ipfsHashes.indexOf(hash) < 0) {
+                    await ipfs.pin.add(hash);
+                    ipfsHashes.push(hash);
+                }
+            }
+
+            // Unpin all ipfs hashes that no longer exist in new ipfs hashes
+            for (const hash of ipfsHashes) {
+                if (hash && newIpfsHashes.indexOf(hash) < 0) {
+                    await ipfs.pin.rm(hash);
+                    delete ipfsHashes[ipfsHashes.indexOf(hash)];
+                }
+            }
+        };
+
         // Setup IPFS node ApplicationEvents.ForgerStarted
-        emitter.on(ApplicationEvents.ForgerStarted, async block => {
-            const db = app.resolvePlugin<Database.IDatabaseService>("database");
-            const delegates = await db.getActiveDelegates();
+        emitter.on(ApplicationEvents.ForgerStarted, async forger => {
+            const delegateKeys = forger.activeDelegates;
+            const delegates = [];
+            for (const key of delegateKeys) {
+                delegates.push(db.walletManager.findByPublicKey(key));
+            }
 
             /*
              * IPFS configuration & init
              */
 
             // Set node config
-            for (const delegate of delegates) {
-                if (delegate.hasAttribute("dpos.ipfs")) {
-                    const hash = delegate.getAttribute("dpos.ipfs");
-                    ipfsHashes[delegate.publicKey] = hash;
-                }
-            }
-
             const ipfsPath = path.resolve(__dirname, `../.ipfs`);
 
             // Start IPFS node
@@ -44,30 +73,29 @@ export const plugin: Container.IPluginDescriptor = {
                 repo: ipfsPath,
             });
 
-            // Pin IPFS hashes
-            for (const hash of Object.values(ipfsHashes)) {
-                await ipfs.pin.add(hash);
-            }
+            // Load hashes
+            await loadIpfsHashes(delegates);
         });
 
-        emitter.on("curator.ipfs.updated", async tx => {
-            container.resolvePlugin<Logger.ILogger>("logger").info(`Pinning ${tx.asset.ipfs}`);
-            console.log(ipfsHashes[tx.senderPublicKey]);
-            if (ipfsHashes[tx.senderPublicKey] !== undefined) {
-                const rm = await ipfs.pin.rm(ipfsHashes[tx.senderPublicKey]);
-                container
-                    .resolvePlugin<Logger.ILogger>("logger")
-                    .info(`Removed pin from previous hash: ${tx.asset.ipfs}`);
-                console.log(rm);
+        // emitter.on("dpos.ipfs.updated", async (data) => {
+        //     if(ipfsHashes.indexOf(data.new) > 0){
+
+        //     }
+        //     await ipfs.pin.add(data.new);
+        //     await ipfs.pin.rm(data.old);
+        // })
+
+        emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
+            // const isNewRound = roundCalculator.isNewRound(blockData.height);
+            // if (isNewRound) {
+            const delegates = await db.getActiveDelegates();
+            const delegateWallets = [];
+            for (const delegate of delegates) {
+                const dWallet = db.walletManager.findByPublicKey(delegate.publicKey);
+                delegateWallets.push(dWallet);
             }
-            const pin = await ipfs.pin.add(tx.asset.ipfs);
-            container.resolvePlugin<Logger.ILogger>("logger").info(`Added pin of hash: ${tx.asset.ipfs}`);
-            console.log(pin);
-            container.resolvePlugin<Logger.ILogger>("logger").info(`List of pins:`);
-            console.log(await ipfs.pin.ls());
-            ipfsHashes[tx.senderPublicKey] = tx.asset.ipfs;
-            container.resolvePlugin<Logger.ILogger>("logger").info(`List of stored pins:`);
-            console.log(ipfsHashes);
+            await loadIpfsHashes(delegateWallets);
+            // }
         });
     },
     async deregister(container: Container.IContainer, options) {

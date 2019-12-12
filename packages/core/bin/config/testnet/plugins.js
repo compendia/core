@@ -8,9 +8,6 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@nosplatform/stake-transactions": {},
-    "@nosplatform/dpos-ipfs": {
-        ipfsKeys : ["description", "curation"]
-    },
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -24,6 +21,9 @@ module.exports = {
     },
     "@nosplatform/storage": {},
     "@nosplatform/supply-tracker": {},
+    "@nosplatform/dpos-ipfs": {
+        ipfsKeys : ["description", "curation"]
+    },
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,

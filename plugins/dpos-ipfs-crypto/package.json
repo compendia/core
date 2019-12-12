@@ -1,7 +1,7 @@
 {
     "name": "@nosplatform/dpos-ipfs-crypto",
     "description": "Provides transaction crypto for the dpos-ipfs plug-in",
-    "version": "0.0.1",
+    "version": "0.0.1-alpha.1",
     "author": "Dean van Dugteren <dean@nos.io>",
     "license": "MIT",
     "main": "dist/index.js",

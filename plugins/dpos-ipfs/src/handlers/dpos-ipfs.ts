@@ -1,10 +1,12 @@
 import { app } from "@arkecosystem/core-container";
-import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as DposIpfsTransactions } from "@nosplatform/dpos-ipfs-crypto";
 
 import { IpfsHashAlreadyExists, IpfsKeyInvalid } from "../errors";
+
+// const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
 export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -88,19 +90,19 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
         return true;
     }
 
+    /*
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
         emitter.emit("dpos.ipfs.updated", transaction.data);
     }
+    */
 
     public async applyToSender(
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
     ): Promise<void> {
         await super.applyToSender(transaction, walletManager);
-
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, transaction.data.asset.ipfsHash);
-
         walletManager.reindex(sender);
     }
 
