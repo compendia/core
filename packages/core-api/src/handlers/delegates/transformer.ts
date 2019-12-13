@@ -5,7 +5,7 @@ import { Utils } from "@arkecosystem/crypto";
 export const transformDelegate = (delegate: State.IWallet) => {
     const attributes: State.IWalletDelegateAttributes = delegate.getAttribute("delegate");
 
-    const ipfs = delegate.getAttribute("dpos.ipfs", false);
+    const dposIpfs = delegate.getAttribute("dpos.ipfs", false);
 
     const data = {
         username: attributes.username,
@@ -27,9 +27,7 @@ export const transformDelegate = (delegate: State.IWallet) => {
             topRewards: attributes.forgedTopRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
-        curator: {
-            ipfs,
-        },
+        dposIpfs,
     };
 
     const lastBlock = attributes.lastBlock;

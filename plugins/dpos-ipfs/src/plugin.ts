@@ -2,8 +2,8 @@ import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-// import { roundCalculator } from '@arkecosystem/core-utils';
-import { Interfaces } from "@arkecosystem/crypto";
+import { roundCalculator } from "@arkecosystem/core-utils";
+import { Interfaces, Managers } from "@arkecosystem/crypto";
 import IPFS from "ipfs";
 import path from "path";
 
@@ -30,7 +30,6 @@ export const plugin: Container.IPluginDescriptor = {
                     const delegateIpfs = Object.values(dIpfs);
                     // Get all ipfs hashes from all delegates and store it in newIpfsHashes[]
                     for (const hash of delegateIpfs) {
-                        console.log(hash);
                         newIpfsHashes.push(hash);
                     }
                 }
@@ -39,8 +38,22 @@ export const plugin: Container.IPluginDescriptor = {
             // Pin all new hashes that didn't exist previously
             for (const hash of newIpfsHashes) {
                 if (hash && ipfsHashes.indexOf(hash) < 0) {
-                    await ipfs.pin.add(hash);
-                    ipfsHashes.push(hash);
+                    try {
+                        const files = await ipfs.files.ls(`/ipfs/${hash}`);
+                        const stat = await ipfs.files.stat(`/ipfs/${hash}`);
+                        if (
+                            stat &&
+                            stat.cumulativeSize <= Managers.configManager.getMilestone().ipfs.maxFileSize &&
+                            files &&
+                            files.length === 1
+                        ) {
+                            await ipfs.pin.add(hash);
+                            ipfsHashes.push(hash);
+                            container.resolvePlugin<Logger.ILogger>("logger").info(`DPOS IPFS added ${hash}`);
+                        }
+                    } catch (error) {
+                        container.resolvePlugin<Logger.ILogger>("logger").error(error);
+                    }
                 }
             }
 
@@ -49,6 +62,7 @@ export const plugin: Container.IPluginDescriptor = {
                 if (hash && newIpfsHashes.indexOf(hash) < 0) {
                     await ipfs.pin.rm(hash);
                     delete ipfsHashes[ipfsHashes.indexOf(hash)];
+                    container.resolvePlugin<Logger.ILogger>("logger").info(`DPOS IPFS removed ${hash}`);
                 }
             }
         };
@@ -71,31 +85,29 @@ export const plugin: Container.IPluginDescriptor = {
             // Start IPFS node
             ipfs = await IPFS.create({
                 repo: ipfsPath,
+                config: {
+                    Addresses: {
+                        Swarm: [`/ip4/0.0.0.0/tcp/${options.port}`, `/ip4/127.0.0.1/tcp/${options.wsPort}/ws`],
+                    },
+                },
             });
 
             // Load hashes
             await loadIpfsHashes(delegates);
         });
 
-        // emitter.on("dpos.ipfs.updated", async (data) => {
-        //     if(ipfsHashes.indexOf(data.new) > 0){
-
-        //     }
-        //     await ipfs.pin.add(data.new);
-        //     await ipfs.pin.rm(data.old);
-        // })
-
         emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
-            // const isNewRound = roundCalculator.isNewRound(blockData.height);
-            // if (isNewRound) {
-            const delegates = await db.getActiveDelegates();
-            const delegateWallets = [];
-            for (const delegate of delegates) {
-                const dWallet = db.walletManager.findByPublicKey(delegate.publicKey);
-                delegateWallets.push(dWallet);
+            const isNewRound = roundCalculator.isNewRound(blockData.height);
+            // Only load new hashes if new round, or each block when running testnet.
+            if (ipfs && (isNewRound || Managers.configManager.get("network.name") === "testnet")) {
+                const delegates = await db.getActiveDelegates();
+                const delegateWallets = [];
+                for (const delegate of delegates) {
+                    const dWallet = db.walletManager.findByPublicKey(delegate.publicKey);
+                    delegateWallets.push(dWallet);
+                }
+                await loadIpfsHashes(delegateWallets);
             }
-            await loadIpfsHashes(delegateWallets);
-            // }
         });
     },
     async deregister(container: Container.IContainer, options) {

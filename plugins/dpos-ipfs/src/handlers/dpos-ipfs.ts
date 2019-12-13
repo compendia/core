@@ -4,7 +4,7 @@ import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as DposIpfsTransactions } from "@nosplatform/dpos-ipfs-crypto";
 
-import { IpfsHashAlreadyExists, IpfsKeyInvalid } from "../errors";
+import { IpfsHashAlreadyExists, IpfsKeyInvalid, SenderNotDelegate } from "../errors";
 
 // const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
@@ -56,6 +56,14 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     ): Promise<void> {
         if (Utils.isException(transaction.data)) {
             return;
+        }
+
+        // Error if sender is not active delegate
+        const database: Database.IDatabaseService = app.resolvePlugin("database");
+        const delegates: State.IWallet[] = await database.getActiveDelegates();
+
+        if (!delegates.find(delegate => delegate.publicKey === transaction.data.senderPublicKey)) {
+            throw new SenderNotDelegate();
         }
 
         const ipfsKey = transaction.data.asset.ipfsKey;

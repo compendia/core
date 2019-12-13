@@ -22,7 +22,9 @@ module.exports = {
     "@nosplatform/storage": {},
     "@nosplatform/supply-tracker": {},
     "@nosplatform/dpos-ipfs": {
-        ipfsKeys : ["description", "curation"]
+        ipfsKeys: ["description", "curation"],
+        port: 6003,
+        wsPort: 6004
     },
     "@arkecosystem/core-transaction-pool": {
         enabled: true,

@@ -40,6 +40,12 @@
             "15778800": 85,
             "31557600": 110
         },
+        "ipfs": {
+            "maxFileSize": {
+                "description": 25000,
+                "curation": 500000000
+            }
+        },
         "minimumStake": 1000000000000,
         "vestedWalletPublicKey": "none"
     },
