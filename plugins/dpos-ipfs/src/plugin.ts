@@ -21,16 +21,21 @@ export const plugin: Container.IPluginDescriptor = {
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Module IPFS Transaction");
         Handlers.Registry.registerTransactionHandler(DposIpfsTransactionHandler);
         const ipfsHashes = [];
+        const ipfsIndex = {};
         let ipfs;
         const loadIpfsHashes = async (delegates: State.IWallet[]) => {
             const newIpfsHashes = [];
             for (const delegate of delegates) {
                 if (delegate.hasAttribute("dpos.ipfs")) {
                     const dIpfs = delegate.getAttribute("dpos.ipfs");
-                    const delegateIpfs = Object.values(dIpfs);
+                    const delegateIpfs: string[] = Object.values(dIpfs);
+                    const ipfsKeys = Object.keys(dIpfs);
                     // Get all ipfs hashes from all delegates and store it in newIpfsHashes[]
+                    let i = 0;
                     for (const hash of delegateIpfs) {
                         newIpfsHashes.push(hash);
+                        ipfsIndex[hash] = ipfsKeys[i];
+                        i++;
                     }
                 }
             }
@@ -41,12 +46,9 @@ export const plugin: Container.IPluginDescriptor = {
                     try {
                         const files = await ipfs.files.ls(`/ipfs/${hash}`);
                         const stat = await ipfs.files.stat(`/ipfs/${hash}`);
-                        if (
-                            stat &&
-                            stat.cumulativeSize <= Managers.configManager.getMilestone().ipfs.maxFileSize &&
-                            files &&
-                            files.length === 1
-                        ) {
+                        const ipfsKey = ipfsIndex[hash];
+                        const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[ipfsKey];
+                        if (stat && stat.cumulativeSize <= maxFileSize && files && files.length === 1) {
                             await ipfs.pin.add(hash);
                             ipfsHashes.push(hash);
                             container.resolvePlugin<Logger.ILogger>("logger").info(`DPOS IPFS added ${hash}`);

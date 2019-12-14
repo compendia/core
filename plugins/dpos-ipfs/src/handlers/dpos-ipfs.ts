@@ -1,10 +1,10 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as DposIpfsTransactions } from "@nosplatform/dpos-ipfs-crypto";
 
-import { IpfsHashAlreadyExists, IpfsKeyInvalid, SenderNotDelegate } from "../errors";
+import { IpfsHashAlreadyExists, IpfsKeyInvalid, SenderNotActiveDelegate, SenderNotDelegate } from "../errors";
 
 // const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
@@ -62,8 +62,16 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
         const database: Database.IDatabaseService = app.resolvePlugin("database");
         const delegates: State.IWallet[] = await database.getActiveDelegates();
 
-        if (!delegates.find(delegate => delegate.publicKey === transaction.data.senderPublicKey)) {
+        // If wallet is not a delegate, or is a delegate but not in forging position and fee is too low: throw error.
+        if (!wallet.isDelegate()) {
             throw new SenderNotDelegate();
+        }
+
+        if (
+            !delegates.find(delegate => delegate.publicKey === transaction.data.senderPublicKey) &&
+            transaction.data.fee.isLessThan(Managers.configManager.getMilestone().fees.staticFees.dposIpfs)
+        ) {
+            throw new SenderNotActiveDelegate();
         }
 
         const ipfsKey = transaction.data.asset.ipfsKey;

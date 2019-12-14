@@ -26,7 +26,8 @@
                 "htlcClaim": 0,
                 "htlcRefund": 0,
                 "stakeCreate": 0,
-                "stakeRedeem": 0
+                "stakeRedeem": 0,
+                "dposIpfs": 500000000
             }
         },
         "vendorFieldLength": 64,

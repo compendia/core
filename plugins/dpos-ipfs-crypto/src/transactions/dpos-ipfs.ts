@@ -19,7 +19,7 @@ export class DposIpfsTransaction extends Transactions.Transaction {
                 type: { transactionType: DposIpfsTransactionType.DposIpfs },
                 typeGroup: { const: DposIpfsTransactionGroup },
                 amount: { bignumber: { minimum: 0, maximum: 0 } },
-                fee: { bignumber: { minimum: 0, maximum: 0 } },
+                fee: { bignumber: { minimum: 0 } },
                 asset: {
                     type: "object",
                     required: ["ipfsKey", "ipfsHash"],
