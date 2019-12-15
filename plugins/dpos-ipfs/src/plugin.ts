@@ -21,10 +21,10 @@ export const plugin: Container.IPluginDescriptor = {
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Module IPFS Transaction");
         Handlers.Registry.registerTransactionHandler(DposIpfsTransactionHandler);
         const ipfsHashes = [];
-        const ipfsIndex = {};
         let ipfs;
         const loadIpfsHashes = async (delegates: State.IWallet[]) => {
             const newIpfsHashes = [];
+            const ipfsIndex = {};
             for (const delegate of delegates) {
                 if (delegate.hasAttribute("dpos.ipfs")) {
                     const dIpfs = delegate.getAttribute("dpos.ipfs");
