@@ -21,6 +21,11 @@ module.exports = {
     },
     "@nosplatform/storage": {},
     "@nosplatform/supply-tracker": {},
+    "@nosplatform/dpos-ipfs": {
+        ipfsKeys: ["description", "curation"],
+        port: 6003,
+        wsPort: 6004
+    },
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -42,7 +47,8 @@ module.exports = {
                 htlcClaim: 0,
                 htlcRefund: 0,
                 stakeCreate: 0,
-                stakeRedeem: 0
+                stakeRedeem: 0,
+                dposIpfs: 0
             },
         },
     },

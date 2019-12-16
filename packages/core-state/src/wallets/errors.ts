@@ -26,6 +26,7 @@ export class WalletIndexAlreadyRegisteredError extends WalletsError {
 
 export class WalletIndexNotFoundError extends WalletsError {
     constructor(what: string) {
+        console.trace(what);
         super(`The wallet index does not exist: ${what}`);
     }
 }

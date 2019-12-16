@@ -26,7 +26,8 @@
                 "htlcClaim": 0,
                 "htlcRefund": 0,
                 "stakeCreate": 0,
-                "stakeRedeem": 0
+                "stakeRedeem": 0,
+                "dposIpfs": 500000000
             }
         },
         "vendorFieldLength": 64,
@@ -39,6 +40,12 @@
             "7889400": 60,
             "15778800": 85,
             "31557600": 110
+        },
+        "ipfs": {
+            "maxFileSize": {
+                "description": 25000,
+                "curation": 500000000
+            }
         },
         "minimumStake": 1000000000000,
         "vestedWalletPublicKey": "none"

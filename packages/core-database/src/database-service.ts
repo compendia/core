@@ -116,7 +116,7 @@ export class DatabaseService implements Database.IDatabaseService {
                     await this.setForgingDelegatesOfRound(roundInfo, delegates);
                     await this.saveRound(delegates);
 
-                    this.blocksInCurrentRound.length = 0;
+                    this.blocksInCurrentRound = [];
 
                     this.emitter.emit(ApplicationEvents.RoundApplied);
                 } catch (error) {
@@ -155,7 +155,8 @@ export class DatabaseService implements Database.IDatabaseService {
         if (!roundInfo) {
             const database: Database.IDatabaseService = app.resolvePlugin("database");
             const lastBlock = await database.getLastBlock();
-            roundInfo = roundCalculator.calculateRound(lastBlock.data.height);
+            const lastHeight = lastBlock.data ? lastBlock.data.height : 1;
+            roundInfo = roundCalculator.calculateRound(lastHeight);
         }
 
         const { round } = roundInfo;
