@@ -5,7 +5,10 @@ import { Utils } from "@arkecosystem/crypto";
 export const transformDelegate = (delegate: State.IWallet) => {
     const attributes: State.IWalletDelegateAttributes = delegate.getAttribute("delegate");
 
-    const dposIpfs = delegate.getAttribute("dpos.ipfs", false);
+    let ipfs = {};
+    if (delegate.hasAttribute("delegate.ipfs")) {
+        ipfs = delegate.getAttribute("delegate.ipfs", false);
+    }
 
     const data = {
         username: attributes.username,
@@ -27,7 +30,7 @@ export const transformDelegate = (delegate: State.IWallet) => {
             topRewards: attributes.forgedTopRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
-        dposIpfs,
+        ipfs,
     };
 
     const lastBlock = attributes.lastBlock;

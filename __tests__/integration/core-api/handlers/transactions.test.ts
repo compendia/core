@@ -181,6 +181,9 @@ describe("API 2.0 - Transactions", () => {
                     StakeCreate: 0,
                     StakeRedeem: 1,
                 },
+                101: {
+                    DposIpfs: 0,
+                },
             });
         });
     });
@@ -631,6 +634,9 @@ describe("API 2.0 - Transactions", () => {
                 "100": {
                     stakeCreate: "0",
                     stakeRedeem: "0",
+                },
+                "101": {
+                    dposIpfs: "500000000",
                 },
                 "2": {
                     bridgechainRegistration: "5000000000",
