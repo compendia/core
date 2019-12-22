@@ -20,6 +20,10 @@ describe("transformPlugins", () => {
                 enabled: false,
                 port: 4004,
             },
+            "@nosplatform/dpos-ipfs": {
+                enabled: false,
+                port: 6003,
+            },
         });
     });
 });

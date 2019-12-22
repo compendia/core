@@ -1,14 +1,13 @@
 import Joi from "@hapi/joi";
-import { orderBy, pagination } from "../shared/schemas";
+import { bridgechainIteratees, businessIteratees } from "../shared/iteratees";
+import { address, genericName, orderBy, pagination, publicKey, walletId } from "../shared/schemas";
 
 export const index: object = {
     query: {
         ...pagination,
         ...{
-            orderBy,
-            publicKey: Joi.string()
-                .hex()
-                .length(66),
+            orderBy: orderBy(businessIteratees),
+            publicKey,
             isResigned: Joi.bool(),
         },
     },
@@ -16,22 +15,18 @@ export const index: object = {
 
 export const show: object = {
     params: {
-        id: Joi.string()
-            .hex()
-            .length(66),
+        id: walletId,
     },
 };
 
 export const bridgechains: object = {
     params: {
-        id: Joi.string()
-            .hex()
-            .length(66),
+        id: walletId,
     },
     query: {
         ...pagination,
         ...{
-            orderBy,
+            orderBy: orderBy(bridgechainIteratees),
             isResigned: Joi.bool(),
         },
     },
@@ -41,16 +36,13 @@ export const search: object = {
     query: {
         ...pagination,
         ...{
-            orderBy,
+            orderBy: orderBy(businessIteratees),
         },
     },
     payload: {
-        publicKey: Joi.string()
-            .hex()
-            .length(66),
-        name: Joi.string()
-            .regex(/^[a-zA-Z0-9_-]+$/)
-            .max(40),
+        address,
+        publicKey,
+        name: genericName,
         website: Joi.string().max(80),
         vat: Joi.string()
             .alphanum()

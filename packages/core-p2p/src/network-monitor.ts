@@ -186,7 +186,7 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
         }
     }
 
-    public async discoverPeers(initialRun?: boolean): Promise<boolean> {
+    public async discoverPeers(pingAll?: boolean): Promise<boolean> {
         const maxPeersPerPeer: number = 50;
         const ownPeers: P2P.IPeer[] = this.storage.getPeers();
         const theirPeers: P2P.IPeer[] = Object.values(
@@ -211,9 +211,9 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
                 .reduce((acc, curr) => ({ ...acc, ...curr }), {}),
         );
 
-        if (initialRun || !this.hasMinimumPeers() || ownPeers.length < theirPeers.length * 0.5) {
+        if (pingAll || !this.hasMinimumPeers() || ownPeers.length < theirPeers.length * 0.75) {
             await Promise.all(theirPeers.map(p => this.processor.validateAndAcceptPeer(p, { lessVerbose: true })));
-            this.pingPeerPorts(initialRun);
+            this.pingPeerPorts(pingAll);
 
             return true;
         }
@@ -264,6 +264,7 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
     }
 
     public async checkNetworkHealth(): Promise<P2P.INetworkStatus> {
+        await this.discoverPeers(true);
         await this.cleansePeers({ forcePing: true });
 
         const lastBlock = app
@@ -493,7 +494,7 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
             `Broadcasting block ${block.data.height.toLocaleString()} to ${pluralize("peer", peers.length, true)}`,
         );
 
-        await Promise.all(peers.map(peer => this.communicator.postBlock(peer, block.toJson())));
+        await Promise.all(peers.map(peer => this.communicator.postBlock(peer, block)));
     }
 
     public async broadcastTransactions(transactions: Interfaces.ITransaction[]): Promise<any> {
@@ -516,9 +517,9 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
         );
     }
 
-    private async pingPeerPorts(initialRun?: boolean): Promise<void> {
+    private async pingPeerPorts(pingAll?: boolean): Promise<void> {
         let peers = this.storage.getPeers();
-        if (!initialRun) {
+        if (!pingAll) {
             peers = shuffle(peers).slice(0, Math.floor(peers.length / 2));
         }
 

@@ -194,9 +194,14 @@ export class Block implements IBlock {
                 result.errors.push("Invalid block timestamp");
             }
 
-            const size: number = Serializer.size(this);
-            if (size > constants.block.maxPayload) {
-                result.errors.push(`Payload is too large: ${size} > ${constants.block.maxPayload}`);
+            const serializedBuffer = Block.serializeWithTransactions({
+                ...block,
+                transactions: this.transactions.map(tx => tx.data),
+            });
+            if (serializedBuffer.byteLength > constants.block.maxPayload) {
+                result.errors.push(
+                    `Payload is too large: ${serializedBuffer.byteLength} > ${constants.block.maxPayload}`,
+                );
             }
 
             const invalidTransactions: ITransaction[] = this.transactions.filter(tx => !tx.verified);

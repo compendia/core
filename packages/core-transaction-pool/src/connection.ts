@@ -11,6 +11,7 @@ import { ITransactionsProcessed } from "./interfaces";
 import { Memory } from "./memory";
 import { Processor } from "./processor";
 import { Storage } from "./storage";
+import { getMaxTransactionBytes } from "./utils";
 import { WalletManager } from "./wallet-manager";
 
 export class Connection implements TransactionPool.IConnection {
@@ -148,13 +149,13 @@ export class Connection implements TransactionPool.IConnection {
     }
 
     public async getTransactionsForForging(blockSize: number): Promise<string[]> {
-        return (await this.getValidatedTransactions(0, blockSize, this.options.maxTransactionBytes)).map(transaction =>
+        return (await this.getValidatedTransactions(0, blockSize, getMaxTransactionBytes())).map(transaction =>
             transaction.serialized.toString("hex"),
         );
     }
 
     public async getTransactionIdsForForging(start: number, size: number): Promise<string[]> {
-        return (await this.getValidatedTransactions(start, size, this.options.maxTransactionBytes)).map(
+        return (await this.getValidatedTransactions(start, size, getMaxTransactionBytes())).map(
             (transaction: Interfaces.ITransaction) => transaction.id,
         );
     }
@@ -401,7 +402,7 @@ export class Connection implements TransactionPool.IConnection {
             }
 
             if (maxBytes > 0) {
-                const transactionSize: number = JSON.stringify(transaction.data).length;
+                const transactionSize: number = transaction.serialized.byteLength;
 
                 if (transactionBytes + transactionSize > maxBytes) {
                     return data;

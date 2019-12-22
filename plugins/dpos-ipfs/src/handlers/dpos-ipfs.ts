@@ -92,7 +92,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
+    ): Promise<{ type: string; message: string } | null> {
         if (
             await pool.senderHasTransactionsOfType(
                 data.senderPublicKey,
@@ -100,10 +100,12 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
                 Enums.DposIpfsTransactionGroup,
             )
         ) {
-            processor.pushError(data, "ERR_PENDING", `DPOS IPFS transaction for wallet already in the pool`);
-            return false;
+            return {
+                type: "ERR_PENDING",
+                message: `DPOS IPFS transaction for wallet already in the pool`,
+            };
         }
-        return true;
+        return null;
     }
 
     /*

@@ -3,7 +3,8 @@ import "jest-extended";
 import "../mocks/core-container";
 import { defaults } from "../mocks/p2p-options";
 
-import { Managers } from "@arkecosystem/crypto/src";
+import { Blocks, Managers } from "@arkecosystem/crypto/src";
+import unitnetMilestones from "@arkecosystem/crypto/src/networks/unitnet/milestones.json";
 import delay from "delay";
 import SocketCluster from "socketcluster";
 import socketCluster from "socketcluster-client";
@@ -71,6 +72,12 @@ afterAll(() => {
     jest.setTimeout(5000);
 });
 
+describe("Server initialization", () => {
+    it("should init the server with correct maxPayload value", async () => {
+        expect(server.options.maxPayload).toBe(unitnetMilestones[0].block.maxPayload + 10 * 1024); // unitnet milestones maxPayload + 1024 margin
+    });
+});
+
 describe("Peer socket endpoint", () => {
     describe("socket endpoints", () => {
         it("should getPeers", async () => {
@@ -94,8 +101,14 @@ describe("Peer socket endpoint", () => {
         describe("postBlock", () => {
             it("should postBlock successfully", async () => {
                 await delay(1000);
+                const dummyBlock = BlockFactory.createDummy();
                 const { data } = await emit("p2p.peer.postBlock", {
-                    data: { block: BlockFactory.createDummy().toJson() },
+                    data: {
+                        block: Blocks.Serializer.serializeWithTransactions({
+                            ...dummyBlock.data,
+                            transactions: dummyBlock.transactions.map(tx => tx.data),
+                        }),
+                    },
                     headers,
                 });
 
@@ -107,6 +120,18 @@ describe("Peer socket endpoint", () => {
                 await expect(
                     emit("p2p.peer.postBlock", {
                         data: {},
+                        headers,
+                    }),
+                ).rejects.toHaveProperty("name", "Error");
+            });
+
+            it("should throw error when sending wrong buffer", async () => {
+                await delay(1000);
+                await expect(
+                    emit("p2p.peer.postBlock", {
+                        data: {
+                            block: Buffer.from("oopsThisIsNotABlockBuffer"),
+                        },
                         headers,
                     }),
                 ).rejects.toHaveProperty("name", "BadConnectionError");
@@ -157,6 +182,10 @@ describe("Peer socket endpoint", () => {
                 await delay(1000);
 
                 expect(socket.state).toBe("closed");
+
+                // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
+                server.killWorkers({ immediate: true });
+                await delay(2000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends too many pongs too quickly", async () => {
@@ -178,6 +207,10 @@ describe("Peer socket endpoint", () => {
                 await delay(1000);
 
                 expect(socket.state).toBe("closed");
+
+                // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
+                server.killWorkers({ immediate: true });
+                await delay(2000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends a ping frame", async () => {
@@ -189,6 +222,10 @@ describe("Peer socket endpoint", () => {
                 ping();
                 await delay(500);
                 expect(socket.state).toBe("closed");
+
+                // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
+                server.killWorkers({ immediate: true });
+                await delay(2000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends a pong frame", async () => {
@@ -200,6 +237,10 @@ describe("Peer socket endpoint", () => {
                 pong();
                 await delay(500);
                 expect(socket.state).toBe("closed");
+
+                // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
+                server.killWorkers({ immediate: true });
+                await delay(2000); // give time to workers to respawn
             });
         });
     });
@@ -245,19 +286,22 @@ describe("Peer socket endpoint", () => {
         it("should cancel the request when exceeding rate limit on a certain endpoint", async () => {
             await delay(1000);
 
-            const block = BlockFactory.createDummy().toJson();
+            const block = BlockFactory.createDummy();
 
-            await emit("p2p.peer.postBlock", {
-                headers,
-                data: { block },
-            });
-
-            await expect(
+            const postBlock = () =>
                 emit("p2p.peer.postBlock", {
                     headers,
-                    data: { block },
-                }),
-            ).rejects.toHaveProperty("name", "BadConnectionError");
+                    data: {
+                        block: Blocks.Serializer.serializeWithTransactions({
+                            ...block.data,
+                            transactions: block.transactions.map(tx => tx.data),
+                        }),
+                    },
+                });
+
+            await expect(postBlock()).toResolve();
+            await expect(postBlock()).toResolve();
+            await expect(postBlock()).rejects.toHaveProperty("name", "BadConnectionError");
 
             await expect(
                 emit("p2p.peer.getStatus", {
@@ -268,12 +312,7 @@ describe("Peer socket endpoint", () => {
 
             await delay(4000);
 
-            await expect(
-                emit("p2p.peer.postBlock", {
-                    headers,
-                    data: { block },
-                }),
-            ).toResolve();
+            await expect(postBlock()).toResolve();
         });
 
         it("should close the connection when the event length is > 128", async () => {
@@ -337,6 +376,24 @@ describe("Peer socket endpoint", () => {
             await delay(1000);
 
             expect(socket.state).not.toBe("open");
+        });
+
+        it("should close the connection if it sends data after a disconnect packet", async () => {
+            connect();
+            await delay(1000);
+
+            expect(socket.state).toBe("open");
+
+            send('{"event":"#disconnect","data":{"code":4000}}');
+            await expect(
+                emit("p2p.peer.getStatus", {
+                    headers,
+                }),
+            ).rejects.toHaveProperty("name", "BadConnectionError");
+
+            // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
+            server.killWorkers({ immediate: true });
+            await delay(2000); // give time to workers to respawn
         });
     });
 });

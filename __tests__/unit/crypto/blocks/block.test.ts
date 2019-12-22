@@ -140,6 +140,8 @@ describe("Block", () => {
             expect(block.verification.errors).toContain(`Encountered duplicate transaction: ${transactions[0].id}`);
         });
         it("should fail to verify a block with too large payload", () => {
+            let block = BlockFactory.fromData(dummyBlock);
+
             jest.spyOn(configManager, "getMilestone").mockImplementation(height => ({
                 block: {
                     version: 0,
@@ -150,7 +152,7 @@ describe("Block", () => {
                 topReward: 0,
                 vendorFieldLength: 64,
             }));
-            const block = BlockFactory.fromData(dummyBlock);
+            block = BlockFactory.fromData(dummyBlock);
 
             expect(block.verification.verified).toBeFalse();
             expect(block.verification.errors).toContain("Payload is too large: 1307 > 0");

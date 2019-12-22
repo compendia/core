@@ -42,6 +42,7 @@ export class DatabaseService implements Database.IDatabaseService {
     public async init(): Promise<void> {
         if (process.env.CORE_ENV === "test") {
             Managers.configManager.getMilestone().aip11 = false;
+            Managers.configManager.getMilestone().htlcEnabled = false;
         }
 
         this.emitter.emit(ApplicationEvents.StateStarting, this);
@@ -385,6 +386,7 @@ export class DatabaseService implements Database.IDatabaseService {
 
         if (block.height === 1 && process.env.CORE_ENV === "test") {
             Managers.configManager.getMilestone().aip11 = true;
+            Managers.configManager.getMilestone().htlcEnabled = true;
         }
 
         return lastBlock;
@@ -645,6 +647,7 @@ export class DatabaseService implements Database.IDatabaseService {
 
         if (process.env.CORE_ENV === "test") {
             Managers.configManager.getMilestone().aip11 = true;
+            Managers.configManager.getMilestone().htlcEnabled = true;
         }
 
         this.configureState(lastBlock);
