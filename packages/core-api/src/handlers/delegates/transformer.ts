@@ -6,8 +6,8 @@ export const transformDelegate = (delegate: State.IWallet) => {
     const attributes: State.IWalletDelegateAttributes = delegate.getAttribute("delegate");
 
     let ipfs = {};
-    if (delegate.hasAttribute("delegate.ipfs")) {
-        ipfs = delegate.getAttribute("delegate.ipfs", false);
+    if (delegate.hasAttribute("dpos.ipfs")) {
+        ipfs = delegate.getAttribute("dpos.ipfs", false);
     }
 
     const data = {

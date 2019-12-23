@@ -26,8 +26,8 @@ export const plugin: Container.IPluginDescriptor = {
             const newIpfsHashes = [];
             const ipfsIndex = {};
             for (const delegate of delegates) {
-                if (delegate.hasAttribute("delegate.ipfs")) {
-                    const dIpfs = delegate.getAttribute("delegate.ipfs");
+                if (delegate.hasAttribute("dpos.ipfs")) {
+                    const dIpfs = delegate.getAttribute("dpos.ipfs");
                     const delegateIpfs: string[] = Object.values(dIpfs);
                     const ipfsKeys = Object.keys(dIpfs);
                     // Get all ipfs hashes from all delegates and store it in newIpfsHashes[]

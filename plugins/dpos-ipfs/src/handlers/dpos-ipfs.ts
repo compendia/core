@@ -18,10 +18,10 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public walletAttributes(): ReadonlyArray<string> {
-        const attributes = ["delegate.ipfs"];
+        const attributes = ["dpos.ipfs"];
         const keys = Enums.IpfsKeys;
         for (const key of keys) {
-            attributes.push(`delegate.ipfs.${key}`);
+            attributes.push(`dpos.ipfs.${key}`);
         }
         return attributes;
     }
@@ -34,7 +34,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
                 const wallet = walletManager.findByPublicKey(transaction.senderPublicKey);
                 const ipfsKey = transaction.asset.ipfsKey;
                 const ipfsHash = transaction.asset.ipfsHash;
-                wallet.setAttribute(`delegate.ipfs.${ipfsKey}`, ipfsHash);
+                wallet.setAttribute(`dpos.ipfs.${ipfsKey}`, ipfsHash);
                 walletManager.reindex(wallet);
             }
         }
@@ -81,7 +81,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
             throw new IpfsKeyInvalid();
         }
 
-        if (wallet.getAttribute(`delegate.ipfs.${ipfsKey}`, "") === ipfsHash) {
+        if (wallet.getAttribute(`dpos.ipfs.${ipfsKey}`, "") === ipfsHash) {
             throw new IpfsHashAlreadyExists();
         }
 
@@ -110,7 +110,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
 
     /*
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("delegate.ipfs.updated", transaction.data);
+        emitter.emit("dpos.ipfs.updated", transaction.data);
     }
     */
 
@@ -120,7 +120,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     ): Promise<void> {
         await super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        sender.setAttribute(`delegate.ipfs.${transaction.data.asset.ipfsKey}`, transaction.data.asset.ipfsHash);
+        sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, transaction.data.asset.ipfsHash);
         walletManager.reindex(sender);
     }
 
@@ -141,9 +141,9 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
         if (DposIpfsTransactions.length) {
             const DposIpfsTransaction: Database.IBootstrapTransaction = DposIpfsTransactions.pop();
             const previousIpfsHash = DposIpfsTransaction.asset.ipfsHash;
-            sender.setAttribute(`delegate.ipfs.${transaction.data.asset.ipfsKey}`, previousIpfsHash);
+            sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, previousIpfsHash);
         } else {
-            sender.forgetAttribute(`delegate.ipfs.${transaction.data.asset.ipfsKey}`);
+            sender.forgetAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`);
         }
 
         walletManager.reindex(sender);
