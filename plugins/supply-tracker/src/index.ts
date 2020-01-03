@@ -54,6 +54,14 @@ export const plugin: Container.IPluginDescriptor = {
             await staked.save();
         }
 
+        let totalStakeWeight = await Statistic.findOne({ name: `stakeWeight` });
+        if (!totalStakeWeight) {
+            totalStakeWeight = new Statistic();
+            totalStakeWeight.name = `stakeWeight`;
+            totalStakeWeight.value = "0";
+            await totalStakeWeight.save();
+        }
+
         const findOrCreate = async (model, id) => {
             let res;
             if (model === "Round") {
@@ -255,7 +263,13 @@ export const plugin: Container.IPluginDescriptor = {
                 await supply.save();
                 await staked.save();
                 // Save round data
-                const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+                let lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+                if (!lastBlock) {
+                    lastBlock = app
+                        .resolvePlugin<State.IStateService>("state")
+                        .getStore()
+                        .getLastBlock().data;
+                }
                 const roundData = roundCalculator.calculateRound(lastBlock.height);
 
                 const round = await findOrCreate("Round", roundData.round);
@@ -263,6 +277,23 @@ export const plugin: Container.IPluginDescriptor = {
                     .plus(o.amount)
                     .toString();
                 await round.save();
+
+                // Save duration-specific stake stat
+                let stat = await Statistic.findOne({ name: `stakes.${o.duration}` });
+                if (!stat) {
+                    stat = new Statistic();
+                    stat.name = `stakes.${o.duration}`;
+                    stat.value = "0";
+                }
+                stat.value = Utils.BigNumber.make(stat.value)
+                    .plus(o.amount)
+                    .toFixed();
+                await stat.save();
+
+                totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
+                    .plus(o.weight)
+                    .toString();
+                await totalStakeWeight.save();
 
                 logger.info(
                     `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
@@ -272,7 +303,7 @@ export const plugin: Container.IPluginDescriptor = {
             });
         });
 
-        // On stake create
+        // On stake release
         emitter.on("stake.released", async stakeObj => {
             q(async () => {
                 const walletManager = app.resolvePlugin("database").walletManager;
@@ -298,6 +329,24 @@ export const plugin: Container.IPluginDescriptor = {
                     .toString();
                 await round.save();
 
+                // Save duration-specific stake stat
+                let stat = await Statistic.findOne({ name: `stakes.${stake.duration}` });
+                if (!stat) {
+                    stat = new Statistic();
+                    stat.name = `stakes.${stake.duration}`;
+                    stat.value = stake.amount.toString();
+                }
+                stat.value = Utils.BigNumber.make(stat.value)
+                    .minus(stake.amount)
+                    .toFixed();
+                await stat.save();
+
+                totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
+                    .minus(stakeObj.prevStakeWeight)
+                    .plus(stake.weight)
+                    .toString();
+                await totalStakeWeight.save();
+
                 logger.info(
                     `Supply updated. Previous: ${lastSupply.dividedBy(
                         Constants.ARKTOSHI,
@@ -311,14 +360,23 @@ export const plugin: Container.IPluginDescriptor = {
             // On stake revert
             if (tx.typeGroup === 100 && tx.type === 0) {
                 const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
+                const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(
+                    tx.asset.stakeCreate,
+                    tx.id,
+                );
 
                 supply.value = lastSupply.plus(tx.asset.stakeCreate.amount).toString();
                 staked.value = Utils.BigNumber.make(staked.value)
                     .minus(tx.asset.stakeCreate.amount)
                     .toString();
 
+                totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
+                    .minus(o.weight)
+                    .toString();
+
                 await supply.save();
                 await staked.save();
+                await totalStakeWeight.save();
 
                 // Save round data
                 const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
@@ -338,6 +396,31 @@ export const plugin: Container.IPluginDescriptor = {
                         Constants.ARKTOSHI,
                     )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                 );
+            } else if (tx.typeGroup === 100 && tx.type === 1) {
+                // If stake redeem is reverted, update global stats
+                const walletManager = app.resolvePlugin("database").walletManager;
+                const sender = walletManager.findByPublicKey(tx.senderPublicKey);
+                const txId = tx.asset.stakeRedeem.id;
+                const stakes = sender.getAttribute("stakes", {});
+                const stake = stakes[txId];
+                if (Object.keys(stake).length) {
+                    const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
+                    supply.value = lastSupply.minus(tx.asset.stakeCreate.amount).toString();
+                    staked.value = Utils.BigNumber.make(staked.value)
+                        .plus(tx.asset.stakeCreate.amount)
+                        .toString();
+                    totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
+                        .plus(stake.weight)
+                        .toString();
+                    await supply.save();
+                    await staked.save();
+                    await totalStakeWeight.save();
+                    logger.info(
+                        `Supply updated. Previous: ${lastSupply.dividedBy(
+                            Constants.ARKTOSHI,
+                        )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                    );
+                }
             }
         });
     },

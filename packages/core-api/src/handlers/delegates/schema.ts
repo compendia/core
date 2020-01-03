@@ -144,6 +144,9 @@ export const voters: object = {
             balance: Joi.number()
                 .integer()
                 .min(0),
+            stakeWeight: Joi.number()
+                .integer()
+                .min(0),
             voteBalance: Joi.number()
                 .integer()
                 .min(0),

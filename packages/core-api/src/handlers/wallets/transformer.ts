@@ -54,6 +54,9 @@ export const transformWallet = (wallet: State.IWallet) => {
         multiSignature,
         business,
         stakeWeight: wallet.getAttribute("stakeWeight", "0"),
+        totalWeight: Utils.BigNumber.make(wallet.getAttribute("stakeWeight", "0"))
+            .plus(Utils.BigNumber.make(wallet.balance))
+            .toFixed(),
         stakes: unixStakes,
     };
 };

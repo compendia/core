@@ -13,6 +13,8 @@ export const index: object = {
             vote: publicKey,
             username,
             balance: Joi.number().integer(),
+            stakeWeight: Joi.number().integer(),
+            totalWeight: Joi.number().integer(),
             voteBalance: Joi.number()
                 .integer()
                 .min(0),

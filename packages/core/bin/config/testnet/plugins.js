@@ -19,7 +19,11 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
-    "@nosplatform/storage": {},
+    "@nosplatform/storage": {
+        port: 6002,
+        host: "0.0.0.0",
+        cors: true
+    },
     "@nosplatform/supply-tracker": {},
     "@nosplatform/dpos-ipfs": {
         ipfsKeys: ["description", "curation"],
