@@ -1,7 +1,7 @@
 import "../../../utils";
 
 import { app } from "@arkecosystem/core-container";
-import { Database } from "@arkecosystem/core-interfaces";
+import { Database, State } from "@arkecosystem/core-interfaces";
 import { Crypto, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
 import { TransactionFactory } from "../../../helpers";
 import { genesisBlock } from "../../../utils/fixtures/testnet/block-model";
@@ -12,7 +12,7 @@ beforeAll(async () => await setUp());
 afterAll(async () => await tearDown());
 
 describe("API 2.0 - Locks", () => {
-    let wallets;
+    let wallets: State.IWallet[];
     let lockIds;
     let walletManager;
 
@@ -46,7 +46,7 @@ describe("API 2.0 - Locks", () => {
                     secretHash: transaction.id,
                     expiration: {
                         type: j % 2 === 0 ? 1 : 2,
-                        value: 100 * (j + 1),
+                        value: !j ? 0 : 100 * (j + 1),
                     },
                     timestamp: (i + 1) * 100000,
                 };
@@ -67,11 +67,32 @@ describe("API 2.0 - Locks", () => {
             utils.expectLock(response.data.data[0]);
         });
 
+        it("should give correct meta data", async () => {
+            const response = await utils.request("GET", "locks");
+            expect(response).toBeSuccessfulResponse();
+
+            const numberOfLocks = wallets.reduce(
+                (acc, curr) => acc + Object.keys(curr.getAttribute("htlc.locks")).length,
+                0,
+            );
+            const expectedMeta = {
+                count: numberOfLocks,
+                first: "/locks?page=1&limit=100",
+                last: "/locks?page=1&limit=100",
+                next: null,
+                pageCount: 1,
+                previous: null,
+                self: "/locks?page=1&limit=100",
+                totalCount: numberOfLocks,
+            };
+            expect(response.data.meta).toEqual(expectedMeta);
+        });
+
         it("should GET all the locks sorted by expirationValue,asc", async () => {
             const response = await utils.request("GET", "locks", { orderBy: "expirationValue:asc" });
             expect(response).toBeSuccessfulResponse();
             expect(response.data.data).toBeArray();
-            expect(response.data.data[0].expirationValue).toBe(100);
+            expect(response.data.data[0].expirationValue).toBe(0);
         });
 
         it("should GET all the locks by epoch expiration", async () => {
@@ -90,6 +111,22 @@ describe("API 2.0 - Locks", () => {
             expect(response.data.data.every(lock => lock.expirationType === 2)).toBeTrue();
         });
 
+        it("should GET all the locks that are expired", async () => {
+            const response = await utils.request("GET", "locks", { isExpired: true });
+            expect(response).toBeSuccessfulResponse();
+            expect(response.data.data).toBeArray();
+            expect(response.data.data).not.toBeEmpty();
+            expect(response.data.data.every(lock => lock.isExpired)).toBeTrue();
+        });
+
+        it("should GET all the locks that are not expired", async () => {
+            const response = await utils.request("GET", "locks", { isExpired: false });
+            expect(response).toBeSuccessfulResponse();
+            expect(response.data.data).toBeArray();
+            expect(response.data.data).not.toBeEmpty();
+            expect(response.data.data.every(lock => !lock.isExpired)).toBeTrue();
+        });
+
         describe("orderBy", () => {
             it("should be ordered by amount:desc", async () => {
                 const response = await utils.request("GET", "locks", { orderBy: "amount:desc", expirationType: 2 });
@@ -104,7 +141,7 @@ describe("API 2.0 - Locks", () => {
                 }
             });
 
-            it("should be ordered by amount:ascs", async () => {
+            it("should be ordered by amount:asc", async () => {
                 const response = await utils.request("GET", "locks", { orderBy: "amount:asc", expirationType: 2 });
                 expect(response).toBeSuccessfulResponse();
                 expect(response.data.data).toBeArray();
@@ -217,7 +254,9 @@ describe("API 2.0 - Locks", () => {
 
             const lock = response.data.data[0];
             utils.expectLock(lock);
-            expect(lock.timestamp).toBe(5000);
+            expect(lock.timestamp.unix).toBe(1490106200);
+            expect(lock.timestamp.epoch).toBe(5000);
+            expect(lock.timestamp.human).toBe("2017-03-21T14:23:20.000Z");
         });
     });
 

@@ -6,9 +6,9 @@ import {
     Transactions as MagistrateTransactions,
 } from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Transactions } from "@arkecosystem/crypto";
 import {
-    BridgechainIsNotRegisteredError,
+    BridgechainIsNotRegisteredByWalletError,
     BridgechainIsResignedError,
     BusinessIsNotRegisteredError,
     BusinessIsResignedError,
@@ -16,8 +16,9 @@ import {
 import { MagistrateApplicationEvents } from "../events";
 import { IBridgechainWalletAttributes, IBusinessWalletAttributes } from "../interfaces";
 import { BridgechainRegistrationTransactionHandler } from "./bridgechain-registration";
+import { MagistrateTransactionHandler } from "./magistrate-handler";
 
-export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHandler {
+export class BridgechainUpdateTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return MagistrateTransactions.BridgechainUpdateTransaction;
     }
@@ -28,10 +29,6 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
 
     public walletAttributes(): ReadonlyArray<string> {
         return [];
-    }
-
-    public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -46,8 +43,13 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
                     "business",
                 );
 
-                const { bridgechainId, seedNodes } = transaction.asset.bridgechainUpdate;
-                businessAttributes.bridgechains[bridgechainId].bridgechainAsset.seedNodes = seedNodes;
+                const bridgechainUpdate = transaction.asset.bridgechainUpdate;
+                const bridgechainAsset =
+                    businessAttributes.bridgechains[bridgechainUpdate.bridgechainId].bridgechainAsset;
+
+                const shallowCloneBridgechainUpdate = { ...bridgechainUpdate };
+                delete shallowCloneBridgechainUpdate.bridgechainId; // we don't want id in wallet bridgechain asset
+                Object.assign(bridgechainAsset, shallowCloneBridgechainUpdate);
 
                 walletManager.reindex(wallet);
             }
@@ -57,7 +59,7 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         if (!wallet.hasAttribute("business")) {
             throw new BusinessIsNotRegisteredError();
@@ -70,20 +72,24 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
         const businessAttributes: IBusinessWalletAttributes = wallet.getAttribute<IBusinessWalletAttributes>(
             "business",
         );
+        if (!businessAttributes.bridgechains) {
+            throw new BridgechainIsNotRegisteredByWalletError();
+        }
+
         const bridgechainUpdate: MagistrateInterfaces.IBridgechainUpdateAsset =
             transaction.data.asset.bridgechainUpdate;
         const bridgechainAttributes: IBridgechainWalletAttributes =
-            businessAttributes.bridgechains[bridgechainUpdate.bridgechainId.toFixed()];
+            businessAttributes.bridgechains[bridgechainUpdate.bridgechainId];
 
         if (!bridgechainAttributes) {
-            throw new BridgechainIsNotRegisteredError();
+            throw new BridgechainIsNotRegisteredByWalletError();
         }
 
         if (bridgechainAttributes.resigned) {
             throw new BridgechainIsResignedError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -94,8 +100,30 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        return true;
+    ): Promise<{ type: string; message: string } | null> {
+        const { bridgechainId }: { bridgechainId: string } = data.asset.bridgechainUpdate;
+
+        const bridgechainUpdatesInPool: Interfaces.ITransactionData[] = Array.from(
+            await pool.getTransactionsByType(
+                Enums.MagistrateTransactionType.BridgechainUpdate,
+                Enums.MagistrateTransactionGroup,
+            ),
+        ).map((memTx: Interfaces.ITransaction) => memTx.data);
+
+        if (
+            bridgechainUpdatesInPool.some(
+                update =>
+                    update.senderPublicKey === data.senderPublicKey &&
+                    update.asset.bridgechainUpdate.bridgechainId === bridgechainId,
+            )
+        ) {
+            return {
+                type: "ERR_PENDING",
+                message: `Bridgechain update for bridgechainId "${bridgechainId}" already in the pool`,
+            };
+        }
+
+        return null;
     }
 
     public async applyToSender(
@@ -112,8 +140,11 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
             transaction.data.asset.bridgechainUpdate;
 
         const bridgechainAttributes: IBridgechainWalletAttributes =
-            businessAttributes.bridgechains[bridgechainUpdate.bridgechainId.toFixed()];
-        bridgechainAttributes.bridgechainAsset.seedNodes = bridgechainUpdate.seedNodes;
+            businessAttributes.bridgechains[bridgechainUpdate.bridgechainId];
+
+        const shallowCloneBridgechainUpdate = { ...bridgechainUpdate };
+        delete shallowCloneBridgechainUpdate.bridgechainId; // we don't want id in wallet bridgechain asset
+        Object.assign(bridgechainAttributes.bridgechainAsset, shallowCloneBridgechainUpdate);
 
         walletManager.reindex(wallet);
     }
@@ -124,60 +155,81 @@ export class BridgechainUpdateTransactionHandler extends Handlers.TransactionHan
     ): Promise<void> {
         await super.revertForSender(transaction, walletManager);
 
+        // Here we have to "replay" all bridgechain registration and update transactions for this bridgechain id
+        // (except the current one being reverted) to rebuild previous wallet state.
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const businessAttributes: IBusinessWalletAttributes = sender.getAttribute<IBusinessWalletAttributes>(
             "business",
         );
+        const bridgechainId: string = transaction.data.asset.bridgechainUpdate.bridgechainId;
 
-        const connection: Database.IConnection = app.resolvePlugin<Database.IConnection>("database");
-        const reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
-        const updateTransactions: Database.IBootstrapTransaction[] = [];
-        while (reader.hasNext()) {
-            updateTransactions.push(...(await reader.read()));
+        const connection: Database.IConnection = app.resolvePlugin<Database.IDatabaseService>("database").connection;
+
+        const dbRegistrationTransactions = await connection.transactionsRepository.search({
+            parameters: [
+                {
+                    field: "senderPublicKey",
+                    value: transaction.data.senderPublicKey,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "type",
+                    value: Enums.MagistrateTransactionType.BridgechainRegistration,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "typeGroup",
+                    value: transaction.data.typeGroup,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+            ],
+        });
+        const dbUpdateTransactions = await connection.transactionsRepository.search({
+            parameters: [
+                {
+                    field: "senderPublicKey",
+                    value: transaction.data.senderPublicKey,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "type",
+                    value: Enums.MagistrateTransactionType.BridgechainUpdate,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "typeGroup",
+                    value: transaction.data.typeGroup,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+            ],
+            orderBy: [
+                {
+                    direction: "asc",
+                    field: "nonce",
+                },
+            ],
+        });
+
+        let bridgechainAsset: MagistrateInterfaces.IBridgechainRegistrationAsset;
+        for (const dbRegistrationTx of dbRegistrationTransactions.rows) {
+            if (dbRegistrationTx.asset.bridgechainRegistration.genesisHash === bridgechainId) {
+                bridgechainAsset = dbRegistrationTx.asset
+                    .bridgechainRegistration as MagistrateInterfaces.IBridgechainRegistrationAsset;
+                break;
+            }
         }
 
-        if (updateTransactions.length > 1) {
-            const updateTransaction: Database.IBootstrapTransaction = updateTransactions.pop();
-            const { bridgechainId, seedNodes } = updateTransaction.asset.bridgechainUpdate;
-            const bridgechainAttributes: IBridgechainWalletAttributes = businessAttributes.bridgechains[bridgechainId];
-            bridgechainAttributes.bridgechainAsset.seedNodes = seedNodes;
-        } else {
-            // There are equally many bridgechain registrations as bridgechains a wallet posseses in the database.
-            // By getting the index of the bridgechainId we can use it as an offset to get
-            // the actual registration transaction.
-            const bridgechainId: string = transaction.data.asset.bridgechainUpdate.bridgechainId.toFixed();
-            const registrationIndex: number = Object.keys(businessAttributes.bridgechains).indexOf(bridgechainId);
-
-            const bridgechainRegistration: MagistrateInterfaces.IBridgechainRegistrationAsset = (await app
-                .resolvePlugin<Database.IConnection>("database")
-                .transactionsRepository.search({
-                    parameters: [
-                        {
-                            field: "senderPublicKey",
-                            value: sender.publicKey,
-                            operator: Database.SearchOperator.OP_EQ,
-                        },
-                        {
-                            field: "type",
-                            value: Enums.MagistrateTransactionType.BridgechainRegistration,
-                            operator: Database.SearchOperator.OP_EQ,
-                        },
-                    ],
-                    orderBy: [
-                        {
-                            direction: "asc",
-                            field: "nonce",
-                        },
-                    ],
-                    paginate: {
-                        limit: 1,
-                        offset: registrationIndex,
-                    },
-                })).rows[0].asset.bridgechainRegistration;
-
-            const bridgechainAttributes: IBridgechainWalletAttributes = businessAttributes.bridgechains[bridgechainId];
-            bridgechainAttributes.bridgechainAsset.seedNodes = bridgechainRegistration.seedNodes;
+        for (const dbUpdateTx of dbUpdateTransactions.rows) {
+            const bridgechainUpdateAsset = dbUpdateTx.asset
+                .bridgechainUpdate as MagistrateInterfaces.IBridgechainUpdateAsset;
+            if (dbUpdateTx.id === transaction.id || bridgechainUpdateAsset.bridgechainId !== bridgechainId) {
+                continue;
+            }
+            delete dbUpdateTx.asset.bridgechainUpdate.bridgechainId; // no need for bridgechainId for bridgechain asset
+            Object.assign(bridgechainAsset, bridgechainUpdateAsset);
         }
+
+        businessAttributes.bridgechains[bridgechainId] = { bridgechainAsset };
 
         walletManager.reindex(sender);
     }

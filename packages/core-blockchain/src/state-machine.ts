@@ -198,7 +198,7 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             stateStorage.lastDownloadedBlock || stateStorage.getLastBlock().data;
         const blocks: Interfaces.IBlockData[] = await blockchain.p2p
             .getMonitor()
-            .syncWithNetwork(lastDownloadedBlock.height);
+            .downloadBlocksFromHeight(lastDownloadedBlock.height);
 
         if (blockchain.isStopped) {
             return;
@@ -237,7 +237,9 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
             }
         } else {
             if (empty) {
-                logger.info("No new block found on this peer");
+                logger.info(
+                    `Could not download any blocks from any peer from height ${lastDownloadedBlock.height + 1}`,
+                );
             } else {
                 logger.warn(`Downloaded block not accepted: ${JSON.stringify(blocks[0])}`);
                 logger.warn(`Last downloaded block: ${JSON.stringify(lastDownloadedBlock)}`);
@@ -256,7 +258,6 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
 
     async startForkRecovery() {
         logger.info("Starting fork recovery");
-
         blockchain.clearAndStopQueue();
 
         const random: number = 4 + Math.floor(Math.random() * 99); // random int inside [4, 102] range
@@ -268,10 +269,10 @@ blockchainMachine.actionMap = (blockchain: Blockchain) => ({
 
         logger.info(`Removed ${pluralize("block", blocksToRemove, true)}`);
 
-        await blockchain.transactionPool.buildWallets();
         await blockchain.p2p.getMonitor().refreshPeersAfterFork();
 
         blockchain.dispatch("SUCCESS");
+        blockchain.queue.resume();
     },
 
     async rollbackDatabase() {

@@ -1,23 +1,23 @@
 import Joi from "@hapi/joi";
-import { pagination } from "../shared/schemas/pagination";
+import { bridgechainIteratees } from "../shared/iteratees";
+import { address, genericName, orderBy, pagination, publicKey } from "../shared/schemas";
 
 export const index: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
-            bridgechainId: Joi.number()
-                .integer()
-                .min(1),
+            orderBy: orderBy(bridgechainIteratees),
+            publicKey,
+            isResigned: Joi.bool(),
         },
     },
 };
 
 export const show: object = {
     params: {
-        id: Joi.number()
-            .integer()
-            .min(1),
+        id: Joi.string()
+            .hex()
+            .length(64), // id is genesisHash
     },
 };
 
@@ -25,12 +25,22 @@ export const search: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
+            orderBy: orderBy(bridgechainIteratees),
         },
     },
     payload: {
-        bridgechainId: Joi.number()
-            .integer()
-            .min(1),
+        address,
+        publicKey,
+        bridgechainRepository: Joi.string().max(80),
+        genesisHash: Joi.string()
+            .hex()
+            .length(64),
+        name: genericName,
+        seedNodes: Joi.array()
+            .unique()
+            .min(1)
+            .max(10)
+            .items(Joi.string().ip()),
+        isResigned: Joi.bool(),
     },
 };

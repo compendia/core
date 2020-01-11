@@ -11,6 +11,7 @@ import { ITransactionsProcessed } from "./interfaces";
 import { Memory } from "./memory";
 import { Processor } from "./processor";
 import { Storage } from "./storage";
+import { getMaxTransactionBytes } from "./utils";
 import { WalletManager } from "./wallet-manager";
 
 export class Connection implements TransactionPool.IConnection {
@@ -53,7 +54,7 @@ export class Connection implements TransactionPool.IConnection {
             this.memory.remember(transaction, true);
         }
 
-        this.emitter.once("internal.stateBuilder.finished", async () => {
+        this.emitter.once(ApplicationEvents.StateBuilderFinished, async () => {
             // Remove from the pool invalid entries found in `transactionsFromDisk`.
             await this.validateTransactions(transactionsFromDisk);
             await this.purgeExpired();
@@ -148,13 +149,13 @@ export class Connection implements TransactionPool.IConnection {
     }
 
     public async getTransactionsForForging(blockSize: number): Promise<string[]> {
-        return (await this.getValidatedTransactions(0, blockSize, this.options.maxTransactionBytes)).map(transaction =>
+        return (await this.getValidatedTransactions(0, blockSize, getMaxTransactionBytes())).map(transaction =>
             transaction.serialized.toString("hex"),
         );
     }
 
     public async getTransactionIdsForForging(start: number, size: number): Promise<string[]> {
-        return (await this.getValidatedTransactions(start, size, this.options.maxTransactionBytes)).map(
+        return (await this.getValidatedTransactions(start, size, getMaxTransactionBytes())).map(
             (transaction: Interfaces.ITransaction) => transaction.id,
         );
     }
@@ -243,7 +244,7 @@ export class Connection implements TransactionPool.IConnection {
                     }
 
                     this.logger.error(
-                        `Cannot apply transaction ${transaction.id} when trying to accept ` +
+                        `[Pool] Cannot apply transaction ${transaction.id} when trying to accept ` +
                             `block ${block.data.id}: ${error.message}`,
                     );
 
@@ -347,6 +348,26 @@ export class Connection implements TransactionPool.IConnection {
         return false;
     }
 
+    public async replay(transactions: Interfaces.ITransaction[]): Promise<void> {
+        this.flush();
+        this.walletManager.reset();
+
+        for (const transaction of transactions) {
+            try {
+                const handler: Handlers.TransactionHandler = await Handlers.Registry.get(
+                    transaction.type,
+                    transaction.typeGroup,
+                );
+                await handler.applyToSender(transaction, this.walletManager);
+                await handler.applyToRecipient(transaction, this.walletManager);
+
+                this.memory.remember(transaction);
+            } catch (error) {
+                this.logger.error(`[Pool] Transaction (${transaction.id}): ${error.message}`);
+            }
+        }
+    }
+
     private async getValidatedTransactions(
         start: number,
         size: number,
@@ -381,7 +402,7 @@ export class Connection implements TransactionPool.IConnection {
             }
 
             if (maxBytes > 0) {
-                const transactionSize: number = JSON.stringify(transaction.data).length;
+                const transactionSize: number = transaction.serialized.byteLength;
 
                 if (transactionBytes + transactionSize > maxBytes) {
                     return data;
@@ -445,7 +466,7 @@ export class Connection implements TransactionPool.IConnection {
             );
             await handler.applyToSender(transaction, this.walletManager);
         } catch (error) {
-            this.logger.error(error.message);
+            this.logger.error(`[Pool] ${error.message}`);
 
             this.memory.forget(transaction.id);
 
@@ -515,7 +536,7 @@ export class Connection implements TransactionPool.IConnection {
             } catch (error) {
                 this.removeTransactionById(transaction.id);
                 this.logger.error(
-                    `Removed ${transaction.id} before forging because it is no longer valid: ${error.message}`,
+                    `[Pool] Removed ${transaction.id} before forging because it is no longer valid: ${error.message}`,
                 );
             }
         }

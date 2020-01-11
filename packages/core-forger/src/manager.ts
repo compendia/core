@@ -111,7 +111,7 @@ export class ForgerManager {
             return this.checkLater(Crypto.Slots.getTimeInMsUntilNextSlot());
         } catch (error) {
             if (error instanceof HostNoResponseError || error instanceof RelayCommunicationError) {
-                if (error.message.includes("blockchain isn't ready")) {
+                if (error.message.includes("blockchain isn't ready") || error.message.includes("App is not ready.")) {
                     this.logger.info("Waiting for relay to become ready.");
                 } else {
                     this.logger.warn(error.message);
@@ -163,7 +163,7 @@ export class ForgerManager {
         if (timeLeftInMs >= minimumMs && currentSlot === roundSlot) {
             this.logger.info(`Forged new block ${block.data.id} by delegate ${prettyName}`);
 
-            await this.client.broadcastBlock(block.toJson());
+            await this.client.broadcastBlock(block);
 
             this.client.emitEvent(ApplicationEvents.BlockForged, block.data);
 

@@ -14,12 +14,31 @@ import { BusinessRegistrationTransactionHandler } from "../../../../packages/cor
 import { IBusinessWalletAttributes } from "../../../../packages/core-magistrate-transactions/src/interfaces";
 import { businessRegistrationAsset1 } from "../helper";
 
+jest.mock("@arkecosystem/core-container", () => {
+    return {
+        app: {
+            resolvePlugin: name => {
+                switch (name) {
+                    case "database":
+                        return {
+                            walletManager,
+                        };
+                    default:
+                        return {};
+                }
+            },
+        },
+    };
+});
+
 let businessRegistrationHandler: Handlers.TransactionHandler;
 
 let businessRegistrationBuilder: MagistrateBuilders.BusinessRegistrationBuilder;
 
 let senderWallet: Wallets.Wallet;
 let walletManager: State.IWalletManager;
+
+Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
 
 describe("Business registration handler", () => {
     Managers.configManager.setFromPreset("testnet");
@@ -35,7 +54,7 @@ describe("Business registration handler", () => {
         walletManager.registerIndex(MagistrateIndex.Businesses, businessIndexer);
 
         senderWallet = new Wallets.Wallet("ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
-        senderWallet.balance = Utils.BigNumber.make(4527654311);
+        senderWallet.balance = Utils.BigNumber.make("5000000000");
         senderWallet.publicKey = "03287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37";
         walletManager.reindex(senderWallet);
     });
@@ -44,7 +63,6 @@ describe("Business registration handler", () => {
         it("should not throw", async () => {
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("500000000")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
             await expect(
@@ -60,7 +78,6 @@ describe("Business registration handler", () => {
 
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("100")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
             await expect(
@@ -72,7 +89,6 @@ describe("Business registration handler", () => {
             senderWallet.setAttribute("business.resigned", true);
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("100")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
             await expect(
@@ -85,7 +101,6 @@ describe("Business registration handler", () => {
         it("should not fail", async () => {
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("1200")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
             await expect(businessRegistrationHandler.applyToSender(actual.build(), walletManager)).toResolve();
@@ -94,16 +109,12 @@ describe("Business registration handler", () => {
         it("should get correct wallet", async () => {
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("1200")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
 
             await businessRegistrationHandler.applyToSender(actual.build(), walletManager);
 
-            const wallet = walletManager.findByIndex(
-                MagistrateIndex.Businesses,
-                senderWallet.getAttribute<IBusinessWalletAttributes>("business").businessId.toFixed(),
-            );
+            const wallet = walletManager.findByIndex(MagistrateIndex.Businesses, senderWallet.publicKey);
 
             expect(wallet).toStrictEqual(senderWallet);
         });
@@ -112,14 +123,12 @@ describe("Business registration handler", () => {
     describe("revertForSender", () => {
         it("should not fail", async () => {
             senderWallet.setAttribute<IBusinessWalletAttributes>("business", {
-                businessId: Utils.BigNumber.ONE,
                 businessAsset: businessRegistrationAsset1,
             });
             senderWallet.nonce = Utils.BigNumber.make(1);
             walletManager.reindex(senderWallet);
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("1200")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
             await expect(businessRegistrationHandler.revertForSender(actual.build(), walletManager)).toResolve();
@@ -127,25 +136,27 @@ describe("Business registration handler", () => {
 
         it("should be undefined", async () => {
             senderWallet.setAttribute<IBusinessWalletAttributes>("business", {
-                businessId: Utils.BigNumber.ONE,
                 businessAsset: businessRegistrationAsset1,
             });
             senderWallet.nonce = Utils.BigNumber.make(1);
             walletManager.reindex(senderWallet);
 
-            let wallet = walletManager.findByIndex(MagistrateIndex.Businesses, "1");
-            expect(wallet).toBe(senderWallet);
+            const initialWallet = walletManager.findByIndex(MagistrateIndex.Businesses, senderWallet.publicKey);
+            expect(initialWallet).toBe(senderWallet);
 
             const actual = businessRegistrationBuilder
                 .businessRegistrationAsset(businessRegistrationAsset1)
-                .fee("1200")
                 .nonce("1")
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
 
             await businessRegistrationHandler.revertForSender(actual.build(), walletManager);
 
-            wallet = walletManager.findByIndex(MagistrateIndex.Businesses, "1");
-            expect(wallet.getAttribute("business")).toBeUndefined();
+            const walletByIndexAfterRevert = walletManager.findByIndex(
+                MagistrateIndex.Businesses,
+                senderWallet.publicKey,
+            );
+            expect(walletByIndexAfterRevert).toBeUndefined();
+            expect(initialWallet.getAttribute("business")).toBeUndefined();
         });
     });
 });

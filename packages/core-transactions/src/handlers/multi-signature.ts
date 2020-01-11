@@ -60,7 +60,7 @@ export class MultiSignatureTransactionHandler extends TransactionHandler {
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         const { data }: Interfaces.ITransaction = transaction;
 
@@ -78,7 +78,7 @@ export class MultiSignatureTransactionHandler extends TransactionHandler {
         }
 
         const multiSigAddress: string = Identities.Address.fromMultiSignatureAsset(data.asset.multiSignature);
-        const recipientWallet: State.IWallet = databaseWalletManager.findByAddress(multiSigAddress);
+        const recipientWallet: State.IWallet = walletManager.findByAddress(multiSigAddress);
 
         if (recipientWallet.hasMultiSignature()) {
             throw new MultiSignatureAlreadyRegisteredError();
@@ -88,19 +88,15 @@ export class MultiSignatureTransactionHandler extends TransactionHandler {
             throw new InvalidMultiSignatureError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public async canEnterTransactionPool(
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        if (await this.typeFromSenderAlreadyInPool(data, pool, processor)) {
-            return false;
-        }
-
-        return true;
+    ): Promise<{ type: string, message: string } | null> {
+        return this.typeFromSenderAlreadyInPool(data, pool);
     }
 
     public async applyToSender(

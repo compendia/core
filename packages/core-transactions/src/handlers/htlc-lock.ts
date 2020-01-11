@@ -24,35 +24,42 @@ export class HtlcLockTransactionHandler extends TransactionHandler {
         for (const transaction of transactions) {
             const wallet: State.IWallet = walletManager.findByPublicKey(transaction.senderPublicKey);
             const locks: Interfaces.IHtlcLocks = wallet.getAttribute("htlc.locks", {});
-            locks[transaction.id] = {
-                amount: Utils.BigNumber.make(transaction.amount),
-                recipientId: transaction.recipientId,
-                timestamp: transaction.timestamp,
-                vendorField: transaction.vendorField ? transaction.vendorField : undefined,
-                ...transaction.asset.lock,
-            };
+            let lockedBalance: Utils.BigNumber = wallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
+
+            if (transaction.open) {
+                locks[transaction.id] = {
+                    amount: Utils.BigNumber.make(transaction.amount),
+                    recipientId: transaction.recipientId,
+                    timestamp: transaction.timestamp,
+                    vendorField: transaction.vendorField
+                        ? Buffer.from(transaction.vendorField, "hex").toString("utf8")
+                        : undefined,
+                    ...transaction.asset.lock,
+                };
+
+                lockedBalance = lockedBalance.plus(transaction.amount);
+
+                const recipientWallet: State.IWallet = walletManager.findByAddress(transaction.recipientId);
+                walletsToIndex[wallet.address] = wallet;
+                walletsToIndex[recipientWallet.address] = recipientWallet;
+            }
+
             wallet.setAttribute("htlc.locks", locks);
-
-            const lockedBalance: Utils.BigNumber = wallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
-            wallet.setAttribute("htlc.lockedBalance", lockedBalance.plus(transaction.amount));
-
-            const recipientWallet: State.IWallet = walletManager.findByAddress(transaction.recipientId);
-
-            walletsToIndex[wallet.address] = wallet;
-            walletsToIndex[recipientWallet.address] = recipientWallet;
+            wallet.setAttribute("htlc.lockedBalance", lockedBalance);
         }
 
         walletManager.index(Object.values(walletsToIndex));
     }
 
     public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
+        const milestone = Managers.configManager.getMilestone();
+        return milestone.aip11 === true && milestone.htlcEnabled === true;
     }
 
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         const lock: Interfaces.IHtlcLockAsset = transaction.data.asset.lock;
         const lastBlock: Interfaces.IBlock = app
@@ -78,15 +85,15 @@ export class HtlcLockTransactionHandler extends TransactionHandler {
             throw new HtlcLockExpiredError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public async canEnterTransactionPool(
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        return true;
+    ): Promise<{ type: string, message: string } | null> {
+        return null;
     }
 
     public async applyToSender(
@@ -132,11 +139,11 @@ export class HtlcLockTransactionHandler extends TransactionHandler {
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
-    ): Promise<void> {}
+    ): Promise<void> { }
 
     public async revertForRecipient(
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
-    ): Promise<void> {}
+    ): Promise<void> { }
 }

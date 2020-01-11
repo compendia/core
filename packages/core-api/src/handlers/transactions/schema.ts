@@ -1,17 +1,13 @@
 import { app } from "@arkecosystem/core-container";
 import Joi from "@hapi/joi";
-import { blockId } from "../shared/schemas/block-id";
-import { pagination } from "../shared/schemas/pagination";
-
-const address: object = Joi.string()
-    .alphanum()
-    .length(34);
+import { transactionIteratees } from "../shared/iteratees";
+import { address, blockId, orderBy, pagination, publicKey } from "../shared/schemas";
 
 export const index: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
+            orderBy: orderBy(transactionIteratees),
             id: Joi.string()
                 .hex()
                 .length(64),
@@ -25,15 +21,9 @@ export const index: object = {
             version: Joi.number()
                 .integer()
                 .positive(),
-            senderPublicKey: Joi.string()
-                .hex()
-                .length(66),
-            senderId: Joi.string()
-                .alphanum()
-                .length(34),
-            recipientId: Joi.string()
-                .alphanum()
-                .length(34),
+            senderPublicKey: publicKey,
+            senderId: address,
+            recipientId: address,
             timestamp: Joi.number()
                 .integer()
                 .min(0),
@@ -101,7 +91,7 @@ export const search: object = {
         },
     },
     payload: {
-        orderBy: Joi.string(),
+        orderBy: orderBy(transactionIteratees),
         id: Joi.string()
             .hex()
             .length(64),
@@ -115,9 +105,7 @@ export const search: object = {
         version: Joi.number()
             .integer()
             .positive(),
-        senderPublicKey: Joi.string()
-            .hex()
-            .length(66),
+        senderPublicKey: publicKey,
         senderId: address,
         recipientId: address,
         addresses: Joi.array()

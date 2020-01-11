@@ -16,8 +16,21 @@ const index = async request => {
 };
 
 const show = async request => {
+    let publicKey: string;
+
+    if (request.params.id.length === 66) {
+        publicKey = request.params.id;
+    } else {
+        try {
+            publicKey = databaseService.wallets.findById(Database.SearchScope.Wallets, request.params.id).publicKey;
+        } catch (error) {
+            return Boom.notFound("Business not found");
+        }
+    }
+
     const business = databaseService.wallets.search(Database.SearchScope.Businesses, {
-        businessId: request.params.id,
+        publicKey,
+        ...request.query,
     }).rows[0];
 
     if (!business) {
@@ -25,6 +38,22 @@ const show = async request => {
     }
 
     return respondWithResource(business, "business");
+};
+
+const bridgechains = async request => {
+    const wallet = databaseService.wallets.findById(Database.SearchScope.Wallets, request.params.id);
+
+    if (!wallet || !wallet.hasAttribute("business")) {
+        return Boom.notFound("Business not found");
+    }
+
+    const bridgechains = databaseService.wallets.search(Database.SearchScope.Bridgechains, {
+        publicKey: wallet.publicKey,
+        ...request.query,
+        ...paginate(request),
+    });
+
+    return toPagination(bridgechains, "bridgechain");
 };
 
 const search = async request => {
@@ -44,6 +73,11 @@ export const registerMethods = server => {
             ...paginate(request),
         }))
         .method("v2.businesses.show", show, 8, request => ({ id: request.params.id }))
+        .method("v2.businesses.bridgechains", bridgechains, 8, request => ({
+            id: request.params.id,
+            ...request.query,
+            ...paginate(request),
+        }))
         .method("v2.businesses.search", search, 30, request => ({
             ...request.payload,
             ...request.query,

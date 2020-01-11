@@ -4,6 +4,7 @@ import { Utils } from "@arkecosystem/crypto";
 import delay from "delay";
 import { defaults } from "../../../../packages/core-api/src/defaults";
 import { plugin } from "../../../../packages/core-api/src/plugin";
+import { defaults as defaultsPeer } from "../../../../packages/core-p2p/src/defaults";
 import { registerWithContainer, setUpContainer } from "../../../utils/helpers/container";
 
 import { delegates } from "../../../utils/fixtures";
@@ -36,6 +37,8 @@ const setUp = async () => {
         ],
     });
 
+    app.register("pkg.p2p.opts", asValue(defaultsPeer));
+
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     await databaseService.buildWallets();
     await databaseService.saveRound(round);
@@ -62,13 +65,12 @@ const calculateRanks = async () => {
                 .comparedTo(a.getAttribute<Utils.BigNumber>("delegate.voteBalance")),
     );
 
-    // tslint:disable-next-line: ban
-    sortBy(delegateWallets, "publicKey").forEach((delegate, i) => {
+    for (const delegate of sortBy(delegateWallets, "publicKey")) {
         const wallet = databaseService.walletManager.findByPublicKey(delegate.publicKey);
-        wallet.setAttribute("delegate.rank", i + 1);
+        wallet.setAttribute("delegate.rank", delegateWallets.indexOf(delegate) + 1);
 
         databaseService.walletManager.reindex(wallet);
-    });
+    }
 };
 
 export { calculateRanks, setUp, tearDown };

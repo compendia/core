@@ -59,15 +59,23 @@ export class VoteTransactionHandler extends TransactionHandler {
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         const { data }: Interfaces.ITransaction = transaction;
+
         const vote: string = data.asset.votes[0];
         const walletVote: string = wallet.getAttribute("vote");
+
+        const delegatePublicKey: string = vote.slice(1);
+        const delegateWallet: State.IWallet = walletManager.findByPublicKey(delegatePublicKey);
 
         if (vote.startsWith("+")) {
             if (walletVote) {
                 throw new AlreadyVotedError();
+            }
+
+            if (delegateWallet.hasAttribute("delegate.resigned")) {
+                throw new VotedForResignedDelegateError(vote);
             }
         } else {
             if (!walletVote) {
@@ -77,18 +85,11 @@ export class VoteTransactionHandler extends TransactionHandler {
             }
         }
 
-        const delegatePublicKey: string = vote.slice(1);
-        const delegateWallet: State.IWallet = databaseWalletManager.findByPublicKey(delegatePublicKey);
-
         if (!delegateWallet.isDelegate()) {
             throw new VotedForNonDelegateError(vote);
         }
 
-        if (delegateWallet.hasAttribute("delegate.resigned")) {
-            throw new VotedForResignedDelegateError(vote);
-        }
-
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -104,12 +105,8 @@ export class VoteTransactionHandler extends TransactionHandler {
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        if (await this.typeFromSenderAlreadyInPool(data, pool, processor)) {
-            return false;
-        }
-
-        return true;
+    ): Promise<{ type: string, message: string } | null> {
+        return this.typeFromSenderAlreadyInPool(data, pool);
     }
 
     public async applyToSender(

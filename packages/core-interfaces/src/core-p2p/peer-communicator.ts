@@ -4,8 +4,7 @@ import { IPeer } from "./peer";
 export interface IPeerCommunicator {
     ping(peer: IPeer, timeoutMsec: number, force?: boolean): Promise<any>;
     pingPorts(peer: IPeer): Promise<void>;
-    downloadBlocks(peer: IPeer, fromBlockHeight): Promise<any>;
-    postBlock(peer: IPeer, block: Interfaces.IBlockJson);
+    postBlock(peer: IPeer, block: Interfaces.IBlock);
     postTransactions(peer: IPeer, transactions: Interfaces.ITransactionJson[]): Promise<any>;
     getPeers(peer: IPeer): Promise<any>;
     getPeerBlocks(

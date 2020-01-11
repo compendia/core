@@ -1,15 +1,19 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
-import { Interfaces as MagistrateInterfaces } from "@arkecosystem/core-magistrate-crypto";
+import {
+    Enums,
+    Interfaces as MagistrateInterfaces,
+    Transactions as MagistrateTransactions,
+} from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Transactions } from "@arkecosystem/crypto";
 import { BusinessIsNotRegisteredError, BusinessIsResignedError } from "../errors";
 import { MagistrateApplicationEvents } from "../events";
 import { IBusinessWalletAttributes } from "../interfaces";
 import { BusinessRegistrationTransactionHandler } from "./business-registration";
+import { MagistrateTransactionHandler } from "./magistrate-handler";
 
-export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandler {
+export class BusinessUpdateTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return MagistrateTransactions.BusinessUpdateTransaction;
     }
@@ -20,10 +24,6 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
 
     public walletAttributes(): ReadonlyArray<string> {
         return [];
-    }
-
-    public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -52,7 +52,7 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
         if (!wallet.hasAttribute("business")) {
             throw new BusinessIsNotRegisteredError();
@@ -62,7 +62,7 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
             throw new BusinessIsResignedError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -73,8 +73,22 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        return true;
+    ): Promise<{ type: string, message: string } | null> {
+        if (
+            await pool.senderHasTransactionsOfType(
+                data.senderPublicKey,
+                Enums.MagistrateTransactionType.BusinessUpdate,
+                Enums.MagistrateTransactionGroup,
+            )
+        ) {
+            const wallet: State.IWallet = pool.walletManager.findByPublicKey(data.senderPublicKey);
+            return {
+                type: "ERR_PENDING",
+                message: `Business update for "${wallet.getAttribute("business")}" already in the pool`,
+            }
+        }
+
+        return null;
     }
 
     public async applyToSender(
@@ -100,40 +114,67 @@ export class BusinessUpdateTransactionHandler extends Handlers.TransactionHandle
         walletManager: State.IWalletManager,
     ): Promise<void> {
         await super.revertForSender(transaction, walletManager);
+
+        // Here we have to "replay" all business registration and update transactions
+        // (except the current one being reverted) to rebuild previous wallet state.
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        let businessWalletAsset: MagistrateInterfaces.IBusinessRegistrationAsset = sender.getAttribute<
-            IBusinessWalletAttributes
-        >("business").businessAsset;
 
-        const connection: Database.IConnection = app.resolvePlugin<Database.IConnection>("database");
-        let reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
-        const updateTransactions: Database.IBootstrapTransaction[] = [];
-        while (reader.hasNext()) {
-            updateTransactions.push(...(await reader.read()));
-        }
+        const connection: Database.IConnection = app.resolvePlugin<Database.IDatabaseService>("database").connection;
 
-        if (updateTransactions.length > 0) {
-            const updateTransaction: Database.IBootstrapTransaction = updateTransactions.pop();
-            const previousUpdate: MagistrateInterfaces.IBusinessUpdateAsset = updateTransaction.asset.businessUpdate;
+        const dbRegistrationTransactions = await connection.transactionsRepository.search({
+            parameters: [
+                {
+                    field: "senderPublicKey",
+                    value: transaction.data.senderPublicKey,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "type",
+                    value: Enums.MagistrateTransactionType.BusinessRegistration,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "typeGroup",
+                    value: transaction.data.typeGroup,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+            ],
+        });
+        const dbUpdateTransactions = await connection.transactionsRepository.search({
+            parameters: [
+                {
+                    field: "senderPublicKey",
+                    value: transaction.data.senderPublicKey,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "type",
+                    value: Enums.MagistrateTransactionType.BusinessUpdate,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+                {
+                    field: "typeGroup",
+                    value: transaction.data.typeGroup,
+                    operator: Database.SearchOperator.OP_EQ,
+                },
+            ],
+            orderBy: [
+                {
+                    direction: "asc",
+                    field: "nonce",
+                },
+            ],
+        });
 
-            businessWalletAsset = {
-                ...businessWalletAsset,
-                ...previousUpdate,
-            };
-        } else {
-            reader = await TransactionReader.create(connection, MagistrateTransactions.BusinessRegistrationTransaction);
-            const registerTransactions: Database.IBootstrapTransaction[] = [];
-            while (reader.hasNext()) {
-                registerTransactions.push(...(await reader.read()));
+        const businessWalletAsset = dbRegistrationTransactions.rows[0].asset
+            .businessRegistration as MagistrateInterfaces.IBusinessRegistrationAsset;
+
+        for (const dbUpdateTx of dbUpdateTransactions.rows) {
+            if (dbUpdateTx.id === transaction.id) {
+                continue;
             }
-
-            const registerTransaction: Database.IBootstrapTransaction = registerTransactions.pop();
-            const previousRegistration: MagistrateInterfaces.IBusinessRegistrationAsset =
-                registerTransaction.asset.businessRegistration;
-            businessWalletAsset = {
-                ...businessWalletAsset,
-                ...previousRegistration,
-            };
+            Object.assign(businessWalletAsset, dbUpdateTx.asset
+                .businessUpdate as MagistrateInterfaces.IBusinessUpdateAsset);
         }
 
         sender.setAttribute("business.businessAsset", businessWalletAsset);

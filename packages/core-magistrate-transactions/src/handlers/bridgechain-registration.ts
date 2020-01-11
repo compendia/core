@@ -1,14 +1,19 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
-import { BusinessIsResignedError, WalletIsNotBusinessError } from "../errors";
+import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import {
+    BridgechainAlreadyRegisteredError,
+    BusinessIsResignedError,
+    GenesisHashAlreadyRegisteredError,
+    WalletIsNotBusinessError,
+} from "../errors";
 import { MagistrateApplicationEvents } from "../events";
-import { IBusinessWalletAttributes } from "../interfaces";
-import { MagistrateIndex } from "../wallet-manager";
+import { IBridgechainWalletAttributes, IBusinessWalletAttributes } from "../interfaces";
 import { BusinessRegistrationTransactionHandler } from "./business-registration";
+import { MagistrateTransactionHandler } from "./magistrate-handler";
 
-export class BridgechainRegistrationTransactionHandler extends Handlers.TransactionHandler {
+export class BridgechainRegistrationTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
         return MagistrateTransactions.BridgechainRegistrationTransaction;
     }
@@ -19,10 +24,6 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
 
     public walletAttributes(): ReadonlyArray<string> {
         return ["business.bridgechains.bridgechain"];
-    }
-
-    public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
@@ -40,9 +41,8 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
                     businessAttributes.bridgechains = {};
                 }
 
-                const bridgechainId: Utils.BigNumber = this.getBridgechainId(walletManager);
-                businessAttributes.bridgechains[bridgechainId.toFixed()] = {
-                    bridgechainId,
+                const bridgechainId: string = transaction.asset.bridgechainRegistration.genesisHash;
+                businessAttributes.bridgechains[bridgechainId] = {
                     bridgechainAsset: transaction.asset.bridgechainRegistration,
                 };
 
@@ -55,8 +55,12 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
+        if (Utils.isException(transaction.data)) {
+            return;
+        }
+
         if (!wallet.hasAttribute("business")) {
             throw new WalletIsNotBusinessError();
         }
@@ -65,7 +69,38 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
             throw new BusinessIsResignedError();
         }
 
-        return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
+        const { data }: Interfaces.ITransaction = transaction;
+        const bridgechains: Record<string, IBridgechainWalletAttributes> = wallet.getAttribute("business.bridgechains");
+
+        if (
+            bridgechains &&
+            Object.values(bridgechains).some(bridgechain => {
+                return (
+                    bridgechain.bridgechainAsset.name.toLowerCase() ===
+                    data.asset.bridgechainRegistration.name.toLowerCase()
+                );
+            })
+        ) {
+            throw new BridgechainAlreadyRegisteredError();
+        }
+
+        for (const wallet of walletManager.getIndex("businesses").values()) {
+            const bridgechains: Record<string, IBridgechainWalletAttributes> = wallet.getAttribute(
+                "business.bridgechains",
+            );
+
+            if (bridgechains) {
+                const bridgechainValues: IBridgechainWalletAttributes[] = Object.values(bridgechains);
+
+                for (const bridgechain of bridgechainValues) {
+                    if (bridgechain.bridgechainAsset.genesisHash === data.asset.bridgechainRegistration.genesisHash) {
+                        throw new GenesisHashAlreadyRegisteredError();
+                    }
+                }
+            }
+        }
+
+        return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
@@ -76,8 +111,8 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        return true;
+    ): Promise<{ type: string, message: string } | null> {
+        return null;
     }
 
     public async applyToSender(
@@ -94,9 +129,8 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
             businessAttributes.bridgechains = {};
         }
 
-        const bridgechainId: Utils.BigNumber = this.getBridgechainId(walletManager);
-        businessAttributes.bridgechains[bridgechainId.toFixed()] = {
-            bridgechainId,
+        const bridgechainId: string = transaction.data.asset.bridgechainRegistration.genesisHash;
+        businessAttributes.bridgechains[bridgechainId] = {
             bridgechainAsset: transaction.data.asset.bridgechainRegistration,
         };
 
@@ -132,8 +166,4 @@ export class BridgechainRegistrationTransactionHandler extends Handlers.Transact
         walletManager: State.IWalletManager,
         // tslint:disable-next-line:no-empty
     ): Promise<void> {}
-
-    private getBridgechainId(walletManager: State.IWalletManager): Utils.BigNumber {
-        return Utils.BigNumber.make(walletManager.getIndex(MagistrateIndex.Bridgechains).values().length).plus(1);
-    }
 }

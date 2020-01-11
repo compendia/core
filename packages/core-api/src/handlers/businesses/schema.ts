@@ -1,23 +1,38 @@
 import Joi from "@hapi/joi";
-import { pagination } from "../shared/schemas/pagination";
+import { bridgechainIteratees, businessIteratees } from "../shared/iteratees";
+import { address, genericName, orderBy, pagination, publicKey, walletId } from "../shared/schemas";
 
 export const index: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
-            businessId: Joi.number()
-                .integer()
-                .min(1),
+            orderBy: orderBy(businessIteratees),
+            publicKey,
+            isResigned: Joi.bool(),
+            transform: Joi.bool().default(true),
         },
     },
 };
 
 export const show: object = {
     params: {
-        id: Joi.number()
-            .integer()
-            .min(1),
+        id: walletId,
+    },
+    query: {
+        transform: Joi.bool().default(true),
+    }
+};
+
+export const bridgechains: object = {
+    params: {
+        id: walletId,
+    },
+    query: {
+        ...pagination,
+        ...{
+            orderBy: orderBy(bridgechainIteratees),
+            isResigned: Joi.bool(),
+        },
     },
 };
 
@@ -25,12 +40,19 @@ export const search: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
+            orderBy: orderBy(businessIteratees),
         },
     },
     payload: {
-        businessId: Joi.number()
-            .integer()
-            .min(1),
+        address,
+        publicKey,
+        name: genericName,
+        website: Joi.string().max(80),
+        vat: Joi.string()
+            .alphanum()
+            .max(15),
+        repository: Joi.string().max(80),
+        isResigned: Joi.bool(),
+        transform: Joi.bool().default(true),
     },
 };

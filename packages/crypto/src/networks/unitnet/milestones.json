@@ -26,8 +26,9 @@
             }
         },
         "vendorFieldLength": 64,
-        "multiPaymentLimit": 500,
-        "aip11": true
+        "multiPaymentLimit": 256,
+        "aip11": true,
+        "htlcEnabled": true
     },
     {
         "height": 75600,

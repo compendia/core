@@ -1,6 +1,6 @@
 {
     "name": "@arkecosystem/core-container",
-    "version": "2.6.0-next.1",
+    "version": "2.6.0-next.7",
     "description": "Container for ARK Core",
     "license": "MIT",
     "contributors": [
@@ -19,21 +19,22 @@
         "prepublishOnly": "yarn build"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.6.0-next.1",
-        "@arkecosystem/crypto": "^2.6.0-next.1",
+        "@arkecosystem/core-interfaces": "^2.6.0-next.7",
+        "@arkecosystem/crypto": "^2.6.0-next.7",
         "@hapi/hoek": "^8.0.2",
         "@hapi/joi": "^15.1.0",
         "awilix": "^4.2.2",
         "delay": "^4.3.0",
         "env-paths": "^2.2.0",
-        "envfile": "^3.0.0",
+        "envfile": "^4.0.0",
         "expand-home-dir": "^0.0.3",
         "fs-extra": "^8.1.0",
         "got": "^9.6.0",
         "lodash.get": "^4.4.2",
         "lodash.isstring": "^4.0.1",
         "lodash.set": "^4.3.2",
-        "semver": "^6.2.0"
+        "log-process-errors": "^5.0.2",
+        "semver": "^7.0.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^8.0.0",

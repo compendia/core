@@ -1,7 +1,7 @@
 import "jest-extended";
 
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Crypto, Enums, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Crypto, Enums, Errors, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 import { Registry, TransactionHandler } from "../../../packages/core-transactions/src/handlers";
 import { TransactionHandlerConstructor } from "../../../packages/core-transactions/src/handlers/transaction";
@@ -18,8 +18,9 @@ const { Slots } = Crypto;
 const TEST_TRANSACTION_TYPE = 100;
 
 class TestTransaction extends Transactions.Transaction {
-    public static type = TEST_TRANSACTION_TYPE;
-    public static typeGroup = Enums.TransactionTypeGroup.Test;
+    public static type: number = TEST_TRANSACTION_TYPE;
+    public static typeGroup: number = Enums.TransactionTypeGroup.Test;
+    public static key: string = "test";
 
     public static getSchema(): Transactions.schemas.TransactionSchema {
         return extend(transactionBaseSchema, {
@@ -96,8 +97,8 @@ class TestTransactionHandler extends TransactionHandler {
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
-        return true;
+    ): Promise<{ type: string, message: string } | null> {
+        return null;
     }
 
     public async applyToRecipient(
@@ -118,6 +119,7 @@ beforeAll(() => {
     testnet.milestones[0].fees.staticFees.test = 1234;
 
     Managers.configManager.setConfig(testnet);
+    Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
 });
 
 describe("Registry", () => {
@@ -187,6 +189,14 @@ describe("Registry", () => {
 
     it("should throw when trying to deregister a Core transaction type", () => {
         expect(() => Registry.deregisterTransactionHandler(TransferTransactionHandler)).toThrowError();
+    });
+
+    it("should throw when registering the same key twice", async () => {
+        TestTransaction.key = "transfer";
+        expect(() => Registry.registerTransactionHandler(TestTransactionHandler)).toThrowError(
+            Errors.TransactionKeyAlreadyRegisteredError,
+        );
+        TestTransaction.key = "test";
     });
 
     it("should return all bootstrapped transaction handlers", () => {

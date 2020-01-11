@@ -7,6 +7,8 @@ import { businessUpdateAsset1, businessUpdateAsset2, businessUpdateAsset3, check
 
 let builder: MagistrateBuilders.BusinessUpdateBuilder;
 
+Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
+
 describe("Business update transaction", () => {
     Managers.configManager.setFromPreset("testnet");
     Transactions.TransactionRegistry.registerTransactionType(MagistrateTransactions.BusinessUpdateTransaction);
@@ -24,7 +26,7 @@ describe("Business update transaction", () => {
                 .getStruct();
 
             const serialized = Transactions.TransactionFactory.fromData(businessResignation).serialized.toString("hex");
-            const deserialized = Transactions.deserializer.deserialize(serialized);
+            const deserialized = Transactions.Deserializer.deserialize(serialized);
 
             checkCommonFields(deserialized, businessResignation);
         });
@@ -36,7 +38,7 @@ describe("Business update transaction", () => {
                 .getStruct();
 
             const serialized = Transactions.TransactionFactory.fromData(businessResignation).serialized.toString("hex");
-            const deserialized = Transactions.deserializer.deserialize(serialized);
+            const deserialized = Transactions.Deserializer.deserialize(serialized);
 
             checkCommonFields(deserialized, businessResignation);
         });
@@ -48,7 +50,7 @@ describe("Business update transaction", () => {
                 .getStruct();
 
             const serialized = Transactions.TransactionFactory.fromData(businessResignation).serialized.toString("hex");
-            const deserialized = Transactions.deserializer.deserialize(serialized);
+            const deserialized = Transactions.Deserializer.deserialize(serialized);
 
             checkCommonFields(deserialized, businessResignation);
         });

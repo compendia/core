@@ -32,9 +32,9 @@ export class TransferTransactionHandler extends TransactionHandler {
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         sender: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
-        return super.throwIfCannotBeApplied(transaction, sender, databaseWalletManager);
+        return super.throwIfCannotBeApplied(transaction, sender, walletManager);
     }
 
     public hasVendorField(): boolean {
@@ -45,19 +45,17 @@ export class TransferTransactionHandler extends TransactionHandler {
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
+    ): Promise<{ type: string, message: string } | null> {
         if (!isRecipientOnActiveNetwork(data)) {
-            processor.pushError(
-                data,
-                "ERR_INVALID_RECIPIENT",
-                `Recipient ${data.recipientId} is not on the same network: ${Managers.configManager.get(
+            return {
+                type: "ERR_INVALID_RECIPIENT",
+                message: `Recipient ${data.recipientId} is not on the same network: ${Managers.configManager.get(
                     "network.pubKeyHash",
                 )}`,
-            );
-            return false;
+            };
         }
 
-        return true;
+        return null;
     }
 
     public async applyToRecipient(

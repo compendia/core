@@ -3,13 +3,12 @@ import "jest-extended";
 import { eventEmitter } from "./mocks/core-container";
 
 import { P2P } from "@arkecosystem/core-interfaces";
-import { Transactions } from "@arkecosystem/crypto";
+import { Blocks, Transactions } from "@arkecosystem/crypto";
 import { getPeerConfig } from "../../../packages/core-p2p/src/socket-server/utils/get-peer-config";
-import { BlockFactory } from "../../helpers";
 import { createPeerService, createStubPeer } from "../../helpers/peers";
 import { TransactionFactory } from "../../helpers/transaction-factory";
 import { genesisBlock } from "../../utils/config/unitnet/genesisBlock";
-import genesisBlockJSON from "../../utils/config/unitnet/genesisBlock.json";
+import { blocks2to100 } from "../../utils/fixtures/testnet/blocks2to100";
 import { delegates } from "../../utils/fixtures/unitnet";
 import { MockSocketManager } from "./__support__/mock-socket-server/manager";
 
@@ -55,7 +54,13 @@ describe("PeerCommunicator", () => {
     describe("postBlock", () => {
         it("should get back success when posting genesis block", async () => {
             await socketManager.addMock("postBlock", {});
-            const response = await communicator.postBlock(stubPeer, genesisBlockJSON);
+            const response = await communicator.postBlock(
+                stubPeer,
+                new Blocks.Block({
+                    data: blocks2to100[0],
+                    transactions: [],
+                }),
+            );
 
             expect(response).toBeObject();
         });
@@ -75,38 +80,6 @@ describe("PeerCommunicator", () => {
             );
 
             expect(response).toBeArray();
-        });
-    });
-
-    describe("downloadBlocks", () => {
-        it("should be ok", async () => {
-            await socketManager.addMock("getBlocks", [
-                BlockFactory.createDummy().toJson(),
-                BlockFactory.createDummy().toJson(),
-            ]);
-
-            const blocks = await communicator.downloadBlocks(stubPeer, 1);
-
-            expect(blocks).toBeArray();
-            expect(blocks.length).toBe(2);
-        });
-
-        it("should return the blocks with status 200", async () => {
-            const block = BlockFactory.createDummy();
-            await socketManager.addMock("getBlocks", [block.toJson()]);
-            const response = await communicator.downloadBlocks(stubPeer, 1);
-
-            expect(response).toBeArrayOfSize(1);
-            expect(response[0].id).toBe(block.data.id);
-        });
-
-        it("should update the height after download", async () => {
-            await socketManager.addMock("getBlocks", [genesisBlock]);
-
-            stubPeer.state.height = undefined;
-            await communicator.downloadBlocks(stubPeer, 1);
-
-            expect(stubPeer.state.height).toBe(1);
         });
     });
 
@@ -189,13 +162,18 @@ describe("PeerCommunicator", () => {
 
         it("should return true when peer has common block", async () => {
             await socketManager.resetAllMocks();
-            await socketManager.addMock("getCommonBlocks", { common: genesisBlock });
 
-            const commonBlocks = await communicator.hasCommonBlocks(stubPeer, [genesisBlock.id]);
+            const common = {
+                id: genesisBlock.id,
+                height: genesisBlock.height,
+                previousBlock: genesisBlock.previousBlock,
+                timestamp: genesisBlock.timestamp,
+            };
+            await socketManager.addMock("getCommonBlocks", { common });
 
-            expect(commonBlocks.id).toBe(genesisBlock.id);
-            expect(commonBlocks.height).toBe(genesisBlock.height);
-            expect(commonBlocks.transactions).toHaveLength(255);
+            const commonBlock = await communicator.hasCommonBlocks(stubPeer, [genesisBlock.id]);
+
+            expect(commonBlock).toEqual(common);
         });
     });
 

@@ -15,21 +15,33 @@ export interface ITransactionHandler {
 
     verify(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): Promise<boolean>;
 
-    dynamicFee(transaction: Interfaces.ITransaction, addonBytes: number, satoshiPerByte: number): Utils.BigNumber;
+    dynamicFee(context: IDynamicFeeContext): Utils.BigNumber;
 
     throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         wallet: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void>;
     apply(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): Promise<void>;
     revert(transaction: Interfaces.ITransaction, walletManager: State.IWalletManager): Promise<void>;
 
+    /**
+     * Check if a transaction of this type can enter the pool.
+     * An error object is returned to designate that the transaction cannot enter
+     * the pool, or null if it can enter.
+     */
     canEnterTransactionPool(
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean>;
+    ): Promise<{ type: string, message: string } | null>;
 
     emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void;
+}
+
+export interface IDynamicFeeContext {
+    transaction: Interfaces.ITransaction;
+    addonBytes: number;
+    satoshiPerByte: number;
+    height: number;
 }

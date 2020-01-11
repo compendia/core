@@ -1,17 +1,15 @@
+import { Enums } from "@arkecosystem/crypto";
 import Joi from "@hapi/joi";
-import { pagination } from "../shared/schemas/pagination";
+import { lockIteratees, transactionIteratees } from "../shared/iteratees";
+import { address, orderBy, pagination, publicKey } from "../shared/schemas";
 
 export const index: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
-            recipientId: Joi.string()
-                .alphanum()
-                .length(34),
-            senderPublicKey: Joi.string()
-                .hex()
-                .length(66),
+            orderBy: orderBy(lockIteratees),
+            recipientId: address,
+            senderPublicKey: publicKey,
             lockId: Joi.string()
                 .hex()
                 .length(64),
@@ -24,7 +22,8 @@ export const index: object = {
             expirationValue: Joi.number()
                 .integer()
                 .min(0),
-            expirationType: Joi.number().only(1, 2),
+            expirationType: Joi.number().only(...Object.values(Enums.HtlcLockExpirationType)),
+            isExpired: Joi.bool(),
         },
     },
 };
@@ -41,16 +40,12 @@ export const search: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
+            orderBy: orderBy(lockIteratees),
         },
     },
     payload: {
-        recipientId: Joi.string()
-            .alphanum()
-            .length(34),
-        senderPublicKey: Joi.string()
-            .hex()
-            .length(66),
+        recipientId: address,
+        senderPublicKey: publicKey,
         lockId: Joi.string()
             .hex()
             .length(64),
@@ -76,7 +71,7 @@ export const search: object = {
         vendorField: Joi.string()
             .min(1)
             .max(255),
-        expirationType: Joi.number().only(1, 2),
+        expirationType: Joi.number().only(...Object.values(Enums.HtlcLockExpirationType)),
         expirationValue: Joi.object().keys({
             from: Joi.number()
                 .integer()
@@ -85,6 +80,7 @@ export const search: object = {
                 .integer()
                 .min(0),
         }),
+        isExpired: Joi.bool(),
     },
 };
 
@@ -92,7 +88,7 @@ export const unlocked: object = {
     query: {
         ...pagination,
         ...{
-            orderBy: Joi.string(),
+            orderBy: orderBy(transactionIteratees),
         },
     },
     payload: {

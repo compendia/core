@@ -1,8 +1,10 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { expirationCalculator } from "@arkecosystem/core-utils";
 import { Enums, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import assert = require("assert");
 import { HtlcLockNotExpiredError, HtlcLockTransactionNotFoundError } from "../errors";
+import { IDynamicFeeContext } from "../interfaces";
 import { HtlcLockTransactionHandler } from "./htlc-lock";
 import { TransactionHandler, TransactionHandlerConstructor } from "./transaction";
 
@@ -29,14 +31,11 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
     }
 
     public async isActivated(): Promise<boolean> {
-        return !!Managers.configManager.getMilestone().aip11;
+        const milestone = Managers.configManager.getMilestone();
+        return milestone.aip11 === true && milestone.htlcEnabled === true;
     }
 
-    public dynamicFee(
-        transaction: Interfaces.ITransaction,
-        addonBytes: number,
-        satoshiPerByte: number,
-    ): Utils.BigNumber {
+    public dynamicFee(context: IDynamicFeeContext): Utils.BigNumber {
         // override dynamicFee calculation as this is a zero-fee transaction
         return Utils.BigNumber.ZERO;
     }
@@ -44,30 +43,24 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
     public async throwIfCannotBeApplied(
         transaction: Interfaces.ITransaction,
         sender: State.IWallet,
-        databaseWalletManager: State.IWalletManager,
+        walletManager: State.IWalletManager,
     ): Promise<void> {
-        await this.performGenericWalletChecks(transaction, sender, databaseWalletManager);
+        await this.performGenericWalletChecks(transaction, sender, walletManager);
 
         // Specific HTLC refund checks
         const refundAsset: Interfaces.IHtlcRefundAsset = transaction.data.asset.refund;
         const lockId: string = refundAsset.lockTransactionId;
-        const lockWallet: State.IWallet = databaseWalletManager.findByIndex(State.WalletIndexes.Locks, lockId);
+
+        const dbWalletManager: State.IWalletManager = app.resolvePlugin<Database.IDatabaseService>("database")
+            .walletManager;
+
+        const lockWallet: State.IWallet = dbWalletManager.findByIndex(State.WalletIndexes.Locks, lockId);
         if (!lockWallet || !lockWallet.getAttribute("htlc.locks", {})[lockId]) {
             throw new HtlcLockTransactionNotFoundError();
         }
 
         const lock: Interfaces.IHtlcLock = lockWallet.getAttribute("htlc.locks")[lockId];
-        const lastBlock: Interfaces.IBlock = app
-            .resolvePlugin<State.IStateService>("state")
-            .getStore()
-            .getLastBlock();
-        const lastBlockEpochTimestamp: number = lastBlock.data.timestamp;
-        const expiration: Interfaces.IHtlcExpiration = lock.expiration;
-        if (
-            (expiration.type === Enums.HtlcLockExpirationType.EpochTimestamp &&
-                expiration.value > lastBlockEpochTimestamp) ||
-            (expiration.type === Enums.HtlcLockExpirationType.BlockHeight && expiration.value > lastBlock.data.height)
-        ) {
+        if (!expirationCalculator.calculateLockExpirationStatus(lock.expiration)) {
             throw new HtlcLockNotExpiredError();
         }
     }
@@ -76,18 +69,16 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
         data: Interfaces.ITransactionData,
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
-    ): Promise<boolean> {
+    ): Promise<{ type: string, message: string } | null> {
         const lockId: string = data.asset.refund.lockTransactionId;
 
         const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
         const lockWallet: State.IWallet = databaseService.walletManager.findByIndex(State.WalletIndexes.Locks, lockId);
         if (!lockWallet || !lockWallet.getAttribute("htlc.locks", {})[lockId]) {
-            processor.pushError(
-                data,
-                "ERR_HTLCLOCKNOTFOUND",
-                `The associated lock transaction id "${lockId}" was not found.`,
-            );
-            return false;
+            return {
+                type: "ERR_HTLCLOCKNOTFOUND",
+                message: `The associated lock transaction id "${lockId}" was not found.`,
+            };
         }
 
         const htlcRefundsInpool: Interfaces.ITransactionData[] = Array.from(
@@ -99,11 +90,13 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
         );
 
         if (alreadyHasPendingRefund) {
-            processor.pushError(data, "ERR_PENDING", `HtlcRefund for "${lockId}" already in the pool`);
-            return false;
+            return {
+                type: "ERR_PENDING",
+                message: `HtlcRefund for "${lockId}" already in the pool`,
+            }
         }
 
-        return true;
+        return null;
     }
 
     public async applyToSender(
@@ -137,11 +130,7 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
         const newLockedBalance: Utils.BigNumber = lockedBalance.minus(locks[lockId].amount);
         assert(!newLockedBalance.isNegative());
 
-        if (newLockedBalance.isZero()) {
-            lockWallet.forgetAttribute("htlc.lockedBalance");
-        } else {
-            lockWallet.setAttribute("htlc.lockedBalance", newLockedBalance);
-        }
+        lockWallet.setAttribute("htlc.lockedBalance", newLockedBalance);
 
         delete locks[lockId];
 
@@ -168,14 +157,16 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
         const lockWallet: State.IWallet = walletManager.findByPublicKey(lockTransaction.senderPublicKey);
 
         lockWallet.balance = lockWallet.balance.minus(lockTransaction.amount).plus(transaction.data.fee);
-        const lockedBalance: Utils.BigNumber = lockWallet.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
+        const lockedBalance: Utils.BigNumber = lockWallet.getAttribute("htlc.lockedBalance");
         lockWallet.setAttribute("htlc.lockedBalance", lockedBalance.plus(lockTransaction.amount));
         const locks: Interfaces.IHtlcLocks = lockWallet.getAttribute("htlc.locks");
         locks[lockTransaction.id] = {
             amount: lockTransaction.amount,
             recipientId: lockTransaction.recipientId,
             timestamp: lockTransaction.timestamp,
-            vendorField: lockTransaction.vendorField ? lockTransaction.vendorField : undefined,
+            vendorField: lockTransaction.vendorField
+                ? Buffer.from(lockTransaction.vendorField, "hex").toString("utf8")
+                : undefined,
             ...lockTransaction.asset.lock,
         };
 
@@ -186,11 +177,11 @@ export class HtlcRefundTransactionHandler extends TransactionHandler {
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
-    ): Promise<void> {}
+    ): Promise<void> { }
 
     public async revertForRecipient(
         transaction: Interfaces.ITransaction,
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
-    ): Promise<void> {}
+    ): Promise<void> { }
 }

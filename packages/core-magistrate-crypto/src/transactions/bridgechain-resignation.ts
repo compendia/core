@@ -1,8 +1,6 @@
 import { Transactions, Utils } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
-import Long from "long";
 import { MagistrateTransactionGroup, MagistrateTransactionStaticFees, MagistrateTransactionType } from "../enums";
-import { IBridgechainResignationAsset } from "../interfaces";
 
 const { schemas } = Transactions;
 
@@ -29,7 +27,9 @@ export class BridgechainResignationTransaction extends Transactions.Transaction 
                             type: "object",
                             required: ["bridgechainId"],
                             properties: {
-                                bridgechainId: { bignumber: { minimum: 1 } },
+                                bridgechainId: {
+                                    $ref: "transactionId",
+                                },
                             },
                         },
                     },
@@ -42,9 +42,8 @@ export class BridgechainResignationTransaction extends Transactions.Transaction 
     public serialize(): ByteBuffer {
         const { data } = this;
 
-        const bridgechainResignationAsset = data.asset.bridgechainResignation as IBridgechainResignationAsset;
-        const buffer: ByteBuffer = new ByteBuffer(8, true);
-        buffer.writeUint64(Long.fromString(bridgechainResignationAsset.bridgechainId.toString()));
+        const buffer: ByteBuffer = new ByteBuffer(32, true);
+        buffer.append(data.asset.bridgechainResignation.bridgechainId, "hex");
 
         return buffer;
     }
@@ -52,7 +51,7 @@ export class BridgechainResignationTransaction extends Transactions.Transaction 
     public deserialize(buf: ByteBuffer): void {
         const { data } = this;
 
-        const bridgechainId: Utils.BigNumber = Utils.BigNumber.make(buf.readUint64().toString());
+        const bridgechainId: string = buf.readBytes(32).toString("hex");
         data.asset = {
             bridgechainResignation: {
                 bridgechainId,

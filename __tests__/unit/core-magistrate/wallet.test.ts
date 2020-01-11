@@ -1,23 +1,21 @@
 import { BusinessRegistrationTransactionHandler } from "@arkecosystem/core-magistrate-transactions/src/handlers";
 import { Wallets } from "@arkecosystem/core-state";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Utils } from "@arkecosystem/crypto";
 import { IBusinessWalletAttributes } from "../../../packages/core-magistrate-transactions/src/interfaces";
 
+const genesisHash = "8527a891e224136950ff32ca212b45bc93f69fbb801c3b1ebedac52775f99e61";
 describe("should test wallet", () => {
     it("should return the same data as added", () => {
         Handlers.Registry.registerTransactionHandler(BusinessRegistrationTransactionHandler);
         const senderWallet: Wallets.Wallet = new Wallets.Wallet("ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
         const businessAttributes: IBusinessWalletAttributes = {
-            businessId: Utils.BigNumber.make(1),
             businessAsset: {
                 name: "google",
-                website: "www.google.com",
+                website: "https://www.google.com",
             },
             resigned: false,
             bridgechains: {
-                "1001": {
-                    bridgechainId: Utils.BigNumber.make(1001),
+                [genesisHash]: {
                     bridgechainAsset: {
                         name: "googleCrypto",
                         seedNodes: [
@@ -27,7 +25,9 @@ describe("should test wallet", () => {
                             "2001:0db8:85a3:0000:0000:8a2e:0370:7332",
                         ],
                         genesisHash: "127e6fbfe24a750e72930c220a8e138275656b8e5d8f48a98c3c92df2caba935",
-                        bridgechainRepository: "github",
+                        bridgechainRepository: "http://github.com",
+                        bridgechainAssetRepository: "http://github.com/asset",
+                        ports: { "@arkecosystem/core-api": 12345 },
                     },
                 },
             },

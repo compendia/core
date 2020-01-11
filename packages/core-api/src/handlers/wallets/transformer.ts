@@ -8,10 +8,11 @@ export const transformWallet = (wallet: State.IWallet) => {
     return {
         address: wallet.address,
         publicKey: wallet.publicKey,
-        username,
         nonce: wallet.nonce.toFixed(),
-        secondPublicKey: wallet.getAttribute("secondPublicKey"),
         balance: Utils.BigNumber.make(wallet.balance).toFixed(),
+        attributes: wallet.getAttributes(),
+
+        // TODO: remove with v3
         lockedBalance: wallet.hasAttribute("htlc.lockedBalance")
             ? wallet.getAttribute("htlc.lockedBalance").toFixed()
             : undefined,

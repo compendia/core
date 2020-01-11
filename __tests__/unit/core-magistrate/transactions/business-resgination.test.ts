@@ -7,6 +7,8 @@ import { checkCommonFields } from "../helper";
 
 let builder: MagistrateBuilders.BusinessResignationBuilder;
 
+Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
+
 describe("Business resignation ser/deser", () => {
     Managers.configManager.setFromPreset("testnet");
     Transactions.TransactionRegistry.registerTransactionType(MagistrateTransactions.BusinessResignationTransaction);
@@ -22,7 +24,7 @@ describe("Business resignation ser/deser", () => {
             .getStruct();
 
         const serialized = Transactions.TransactionFactory.fromData(businessResignation).serialized.toString("hex");
-        const deserialized = Transactions.deserializer.deserialize(serialized);
+        const deserialized = Transactions.Deserializer.deserialize(serialized);
 
         checkCommonFields(deserialized, businessResignation);
     });

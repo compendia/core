@@ -9,6 +9,8 @@ import { Managers, Transactions, Utils } from "@arkecosystem/crypto";
 
 let builder: MagistrateBuilders.BusinessRegistrationBuilder;
 
+Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
+
 describe("Business registration builder", () => {
     Managers.configManager.setFromPreset("testnet");
     Transactions.TransactionRegistry.registerTransactionType(MagistrateTransactions.BusinessRegistrationTransaction);
@@ -22,7 +24,7 @@ describe("Business registration builder", () => {
             const actual = builder
                 .businessRegistrationAsset({
                     name: "businessName",
-                    website: "www.website.com",
+                    website: "http://www.website.com",
                 })
                 .sign("passphrase");
 
@@ -34,7 +36,7 @@ describe("Business registration builder", () => {
             const actual = builder
                 .businessRegistrationAsset({
                     name: "businessName",
-                    website: "www.website.com",
+                    website: "http://www.website.com",
                 })
                 .sign("passphrase")
                 .secondSign("second passphrase");
@@ -48,9 +50,9 @@ describe("Business registration builder", () => {
                 .nonce("3")
                 .businessRegistrationAsset({
                     name: "businessName",
-                    website: "www.website.com",
+                    website: "http://www.website.com",
                     vat: "1234567890",
-                    repository: "www.repository.com/google",
+                    repository: "http://www.repository.com/myorg/myrepo",
                 })
                 .sign("clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire");
             expect(actual.build().verified).toBeTrue();

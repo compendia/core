@@ -4,12 +4,14 @@ import "../../core-database/mocks/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { InsufficientBalanceError } from "@arkecosystem/core-transactions/src/errors";
-import { Blocks, Constants, Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Blocks, Constants, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { Address } from "@arkecosystem/crypto/src/identities";
 import { Wallet, WalletManager } from "../../../../packages/core-state/src/wallets";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { fixtures } from "../../../utils";
 import wallets from "../__fixtures__/wallets.json";
+
+Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
 
 const { BlockFactory } = Blocks;
 const { SATOSHI } = Constants;
@@ -117,17 +119,17 @@ describe("Wallet Manager", () => {
 
                     try {
                         await walletManager.applyBlock(block2);
-
                         expect(undefined).toBe("this should fail if no error is thrown");
                     } catch (error) {
                         expect(walletManager.revertTransaction).toHaveBeenCalledTimes(2);
-                        // tslint:disable-next-line: ban
-                        block2.transactions.slice(0, 1).forEach((transaction, i, total) => {
+                        for (const transaction of block2.transactions.slice(0, 1)) {
+                            const i = block2.transactions.slice(0, 1).indexOf(transaction);
+                            const total = block2.transactions.slice(0, 1).length;
                             expect(walletManager.revertTransaction).toHaveBeenNthCalledWith(
-                                total.length + 1 - i,
+                                total + 1 - i,
                                 block2.transactions[i],
                             );
-                        });
+                        }
                     }
                 });
 

@@ -17,14 +17,14 @@ module.exports = async options => {
     const transactions = [];
     const noncesByAddress = {};
 
-    Object.keys(utils.wallets).forEach(txType => {
+    for(const txType of Object.keys(utils.wallets)) {
         // ignore 2nd sign registration tx type as we already have a 2nd signature
         if (txType !== "secondSignRegistration") {
             const wallets = utils.wallets[txType];
 
             transactions.push(_genTransaction(txType, wallets));
         }
-    });
+    }
 
     await testUtils.POST("transactions", { transactions });
 
@@ -42,11 +42,12 @@ module.exports = async options => {
                 transaction = TransactionFactory.vote(delegates[2].publicKey);
                 break;
             case "delegateRegistration":
-                transaction = TransactionFactory.delegateRegistration(wallets[2].address.slice(0, 10).toLowerCase(),
+                transaction = TransactionFactory.delegateRegistration(
+                    wallets[2].address.slice(0, 10).toLowerCase(),
                 );
                 break;
             case "ipfs":
-                transaction = TransactionFactory.ipfs("QmR45FmbVVrixReBwJkhEKde2qwHYaQzGxu4ZoDeswuF9w");
+                transaction = TransactionFactory.ipfs("QmYSK2JyM3RyDyB52caZCTKFR3HKniEcMnNJYdk8DQ6KKB");
                 break;
         }
 

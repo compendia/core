@@ -12,6 +12,8 @@ import {
     BusinessUpdateTransactionHandler,
 } from "../../../../packages/core-magistrate-transactions/src/handlers";
 
+Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from height 2 on testnet
+
 describe("Registry test", () => {
     Managers.configManager.setFromPreset("testnet");
 
@@ -43,5 +45,13 @@ describe("Registry test", () => {
             Handlers.Registry.get(Enums.MagistrateTransactionType.BusinessUpdate, Enums.MagistrateTransactionGroup);
             Handlers.Registry.get(Enums.MagistrateTransactionType.BridgechainUpdate, Enums.MagistrateTransactionGroup);
         }).not.toThrowError();
+    });
+
+    it("should return static fee for dynamic fee", () => {
+        for (const handler of Handlers.Registry.getAll().filter(
+            handler => handler.getConstructor().typeGroup === Enums.MagistrateTransactionGroup,
+        )) {
+            expect(handler.dynamicFee({} as any)).toEqual(handler.getConstructor().staticFee({} as any));
+        }
     });
 });

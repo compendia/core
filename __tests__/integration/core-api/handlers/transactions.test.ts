@@ -68,6 +68,24 @@ describe("API 2.0 - Transactions", () => {
 
             utils.expectTransaction(response.data.data[0]);
         });
+
+        it("should give correct meta data", async () => {
+            const response = await utils.request("GET", "transactions");
+            expect(response).toBeSuccessfulResponse();
+
+            const expectedMeta = {
+                count: 100,
+                first: "/transactions?transform=true&page=1&limit=100",
+                last: "/transactions?transform=true&page=2&limit=100",
+                next: "/transactions?transform=true&page=2&limit=100",
+                pageCount: 2,
+                previous: null,
+                self: "/transactions?transform=true&page=1&limit=100",
+                totalCount: 110,
+                totalCountIsEstimate: true,
+            };
+            expect(response.data.meta).toEqual(expectedMeta);
+        });
     });
 
     describe("GET /transactions/:id", () => {
@@ -157,7 +175,7 @@ describe("API 2.0 - Transactions", () => {
             expect(response).toBeSuccessfulResponse();
             expect(response.data.data).toBeObject();
             expect(response.data.data).toEqual({
-                Core: {
+                1: {
                     Transfer: 0,
                     SecondSignature: 1,
                     DelegateRegistration: 2,
@@ -170,7 +188,8 @@ describe("API 2.0 - Transactions", () => {
                     HtlcClaim: 9,
                     HtlcRefund: 10,
                 },
-                2: { // Marketplace stuff
+                2: {
+                    // Marketplace stuff
                     BusinessRegistration: 0,
                     BusinessResignation: 1,
                     BusinessUpdate: 2,
@@ -611,17 +630,27 @@ describe("API 2.0 - Transactions", () => {
 
             expect(response).toBeSuccessfulResponse();
             expect(response.data.data).toEqual({
-                delegateRegistration: 2500000000,
-                delegateResignation: 2500000000,
-                ipfs: 500000000,
-                multiPayment: 10000000,
-                multiSignature: 500000000,
-                secondSignature: 500000000,
-                transfer: 10000000,
-                vote: 100000000,
-                htlcClaim: 0,
-                htlcLock: 10000000,
-                htlcRefund: 0,
+                "1": {
+                    delegateRegistration: "2500000000",
+                    delegateResignation: "2500000000",
+                    htlcClaim: "0",
+                    htlcLock: "10000000",
+                    htlcRefund: "0",
+                    ipfs: "500000000",
+                    multiPayment: "10000000",
+                    multiSignature: "500000000",
+                    secondSignature: "500000000",
+                    transfer: "10000000",
+                    vote: "100000000",
+                },
+                "2": {
+                    bridgechainRegistration: "5000000000",
+                    bridgechainResignation: "5000000000",
+                    bridgechainUpdate: "5000000000",
+                    businessRegistration: "5000000000",
+                    businessResignation: "5000000000",
+                    businessUpdate: "5000000000",
+                },
             });
         });
     });
