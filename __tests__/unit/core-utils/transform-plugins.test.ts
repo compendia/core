@@ -20,7 +20,7 @@ describe("transformPlugins", () => {
                 enabled: false,
                 port: 4004,
             },
-            "@nosplatform/dpos-ipfs": {
+            "@nosplatform/file-transactions": {
                 enabled: false,
                 port: 6003,
             },

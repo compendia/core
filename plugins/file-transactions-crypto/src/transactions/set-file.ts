@@ -1,31 +1,31 @@
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 
-import { DposIpfsTransactionGroup, DposIpfsTransactionType, IpfsKeys } from "../enums";
-import { IDposIpfsAsset } from "../interfaces";
+import { FileKeys, FileTransactionGroup, FileTransactionType } from "../enums";
+import { IIpfsAsset } from "../interfaces";
 
 const { schemas } = Transactions;
 
-export class DposIpfsTransaction extends Transactions.Transaction {
-    public static typeGroup: number = DposIpfsTransactionGroup;
-    public static type: number = DposIpfsTransactionType.DposIpfs;
-    public static key: string = "dposIpfs";
+export class SetFileTransaction extends Transactions.Transaction {
+    public static typeGroup: number = FileTransactionGroup;
+    public static type: number = FileTransactionType.SetFile;
+    public static key: string = "setFile";
 
     public static getSchema(): Transactions.schemas.TransactionSchema {
         return schemas.extend(schemas.transactionBaseSchema, {
             $id: "dpofIpfs",
             required: ["asset", "typeGroup"],
             properties: {
-                type: { transactionType: DposIpfsTransactionType.DposIpfs },
-                typeGroup: { const: DposIpfsTransactionGroup },
+                type: { transactionType: FileTransactionType.SetFile },
+                typeGroup: { const: FileTransactionGroup },
                 amount: { bignumber: { minimum: 0, maximum: 0 } },
                 fee: { bignumber: { minimum: 0 } },
                 asset: {
                     type: "object",
-                    required: ["ipfsKey", "ipfsHash"],
+                    required: ["fileKey", "ipfsHash"],
                     properties: {
-                        ipfsKey: {
-                            allOf: [{ type: "string" }, { enum: IpfsKeys }],
+                        fileKey: {
+                            allOf: [{ type: "string" }, { enum: FileKeys }],
                         },
                         ipfsHash: {
                             allOf: [{ minLength: 2, maxLength: 90 }, { $ref: "base58" }],
@@ -41,14 +41,14 @@ export class DposIpfsTransaction extends Transactions.Transaction {
 
     public serialize(options?: Interfaces.ISerializeOptions): ByteBuffer {
         const { data } = this;
-        const dposIpfsAsset = data.asset as IDposIpfsAsset;
-        const ipfsKey: Buffer = Buffer.from(dposIpfsAsset.ipfsKey, "utf8");
-        const ipfsHash: Buffer = Buffer.from(dposIpfsAsset.ipfsHash, "utf8");
+        const ipfsAsset = data.asset as IIpfsAsset;
+        const fileKey: Buffer = Buffer.from(ipfsAsset.fileKey, "utf8");
+        const ipfsHash: Buffer = Buffer.from(ipfsAsset.ipfsHash, "utf8");
 
-        const buffer: ByteBuffer = new ByteBuffer(ipfsKey.length + ipfsHash.length + 2, true);
+        const buffer: ByteBuffer = new ByteBuffer(fileKey.length + ipfsHash.length + 2, true);
 
-        buffer.writeByte(ipfsKey.length);
-        buffer.append(ipfsKey, "hex");
+        buffer.writeByte(fileKey.length);
+        buffer.append(fileKey, "hex");
 
         buffer.writeByte(ipfsHash.length);
         buffer.append(ipfsHash, "hex");
@@ -59,14 +59,14 @@ export class DposIpfsTransaction extends Transactions.Transaction {
     public deserialize(buf: ByteBuffer): void {
         const { data } = this;
 
-        const ipfsKeyLength: number = buf.readUint8();
-        const ipfsKey: string = buf.readString(ipfsKeyLength);
+        const fileKeyLength: number = buf.readUint8();
+        const fileKey: string = buf.readString(fileKeyLength);
 
         const ipfsHashLength: number = buf.readUint8();
         const ipfsHash: string = buf.readString(ipfsHashLength);
 
         data.asset = {
-            ipfsKey,
+            fileKey,
             ipfsHash,
         };
     }

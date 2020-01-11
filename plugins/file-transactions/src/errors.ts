@@ -8,7 +8,7 @@ export class IpfsHashAlreadyExists extends Errors.TransactionError {
     }
 }
 
-export class IpfsKeyInvalid extends Errors.TransactionError {
+export class FileKeyInvalid extends Errors.TransactionError {
     constructor() {
         super(`Failed to apply transaction: Invalid IPFS Key.`);
     }
@@ -24,7 +24,7 @@ export class SenderNotActiveDelegate extends Errors.TransactionError {
     constructor() {
         super(
             `Failed to apply transaction: Sender must be active delegate or pay minimum transaction fee of ${
-                Managers.configManager.getMilestone().fees.staticFees.dposIpfs
+                Managers.configManager.getMilestone().fees.staticFees.setFile
             }.`,
         );
     }

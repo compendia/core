@@ -25,8 +25,8 @@ module.exports = {
         cors: true
     },
     "@nosplatform/supply-tracker": {},
-    "@nosplatform/dpos-ipfs": {
-        ipfsKeys: ["description", "curation"],
+    "@nosplatform/file-transactions": {
+        fileKeys: ["description", "db.apps"],
         port: 6003,
         wsPort: 6004
     },
@@ -52,7 +52,7 @@ module.exports = {
                 htlcRefund: 0,
                 stakeCreate: 0,
                 stakeRedeem: 0,
-                dposIpfs: 0
+                setFile: 0
             },
         },
     },

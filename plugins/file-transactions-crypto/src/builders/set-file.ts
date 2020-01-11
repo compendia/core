@@ -1,21 +1,21 @@
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 
-import { DposIpfsTransaction } from "../transactions";
+import { SetFileTransaction } from "../transactions";
 
-export class DposIpfsBuilder extends Transactions.TransactionBuilder<DposIpfsBuilder> {
+export class SetFileBuilder extends Transactions.TransactionBuilder<SetFileBuilder> {
     constructor() {
         super();
         this.data.version = 2;
-        this.data.type = DposIpfsTransaction.type;
-        this.data.typeGroup = DposIpfsTransaction.typeGroup;
-        this.data.fee = DposIpfsTransaction.staticFee();
+        this.data.type = SetFileTransaction.type;
+        this.data.typeGroup = SetFileTransaction.typeGroup;
+        this.data.fee = SetFileTransaction.staticFee();
         this.data.amount = Utils.BigNumber.ZERO;
         this.data.asset = {};
     }
 
-    public ipfsAsset(ipfsKey: string, ipfsHash: string): DposIpfsBuilder {
+    public ipfsAsset(fileKey: string, ipfsHash: string): SetFileBuilder {
         this.data.asset = {
-            ipfsKey,
+            fileKey,
             ipfsHash,
         };
         return this;
@@ -28,7 +28,7 @@ export class DposIpfsBuilder extends Transactions.TransactionBuilder<DposIpfsBui
         return struct;
     }
 
-    protected instance(): DposIpfsBuilder {
+    protected instance(): SetFileBuilder {
         return this;
     }
 }

@@ -1,3 +1,5 @@
+// import { delegates } from "../../../utils/fixtures/testnet/delegates";
+import { delegates } from "../../../../__tests__/utils/fixtures/testnet/delegates";
 import { stateStorageStub } from "../__fixtures__/state-storage-stub";
 import { emitter } from "./emitter";
 
@@ -58,6 +60,9 @@ jest.mock("@arkecosystem/core-container", () => {
                                     publicKey: "03a02b9d5fdd1307c2ee4652ba54d492d1fd11a7d1bb3f3a44c4a05e79f19de933",
                                 };
                             },
+                        },
+                        getActiveDelegates: height => {
+                            return delegates;
                         },
                     };
                 }

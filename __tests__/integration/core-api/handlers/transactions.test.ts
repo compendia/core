@@ -182,7 +182,7 @@ describe("API 2.0 - Transactions", () => {
                     StakeRedeem: 1,
                 },
                 101: {
-                    DposIpfs: 0,
+                    SetFile: 0,
                 },
             });
         });
@@ -636,7 +636,7 @@ describe("API 2.0 - Transactions", () => {
                     stakeRedeem: "0",
                 },
                 "101": {
-                    dposIpfs: "500000000",
+                    setFile: "500000000",
                 },
                 "2": {
                     bridgechainRegistration: "5000000000",

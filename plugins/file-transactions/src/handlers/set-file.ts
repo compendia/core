@@ -2,15 +2,15 @@ import { app } from "@arkecosystem/core-container";
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
-import { Enums, Transactions as DposIpfsTransactions } from "@nosplatform/dpos-ipfs-crypto";
+import { Enums, Transactions as FileTransactions } from "@nosplatform/file-transactions-crypto";
 
-import { IpfsHashAlreadyExists, IpfsKeyInvalid, SenderNotActiveDelegate, SenderNotDelegate } from "../errors";
+import { FileKeyInvalid, IpfsHashAlreadyExists, SenderNotActiveDelegate, SenderNotDelegate } from "../errors";
 
 // const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
-export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
+export class SetFileTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
-        return DposIpfsTransactions.DposIpfsTransaction;
+        return FileTransactions.SetFileTransaction;
     }
 
     public dependencies(): ReadonlyArray<Handlers.TransactionHandlerConstructor> {
@@ -18,10 +18,10 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public walletAttributes(): ReadonlyArray<string> {
-        const attributes = ["dpos.ipfs"];
-        const keys = Enums.IpfsKeys;
+        const attributes = ["files"];
+        const keys = Enums.FileKeys;
         for (const key of keys) {
-            attributes.push(`dpos.ipfs.${key}`);
+            attributes.push(`files.${key}`);
         }
         return attributes;
     }
@@ -32,9 +32,9 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
             const transactions = await reader.read();
             for (const transaction of transactions) {
                 const wallet = walletManager.findByPublicKey(transaction.senderPublicKey);
-                const ipfsKey = transaction.asset.ipfsKey;
+                const fileKey = transaction.asset.fileKey;
                 const ipfsHash = transaction.asset.ipfsHash;
-                wallet.setAttribute(`dpos.ipfs.${ipfsKey}`, ipfsHash);
+                wallet.setAttribute(`files.${fileKey}`, ipfsHash);
                 walletManager.reindex(wallet);
             }
         }
@@ -69,19 +69,19 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
 
         if (
             !delegates.find(delegate => delegate.publicKey === transaction.data.senderPublicKey) &&
-            transaction.data.fee.isLessThan(Managers.configManager.getMilestone().fees.staticFees.dposIpfs)
+            transaction.data.fee.isLessThan(Managers.configManager.getMilestone().fees.staticFees.setFile)
         ) {
             throw new SenderNotActiveDelegate();
         }
 
-        const ipfsKey = transaction.data.asset.ipfsKey;
+        const fileKey = transaction.data.asset.fileKey;
         const ipfsHash = transaction.data.asset.ipfsHash;
 
-        if (!Enums.IpfsKeys.includes(ipfsKey)) {
-            throw new IpfsKeyInvalid();
+        if (!Enums.FileKeys.includes(fileKey)) {
+            throw new FileKeyInvalid();
         }
 
-        if (wallet.getAttribute(`dpos.ipfs.${ipfsKey}`, "") === ipfsHash) {
+        if (wallet.getAttribute(`files.${fileKey}`, "") === ipfsHash) {
             throw new IpfsHashAlreadyExists();
         }
 
@@ -96,13 +96,13 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
         if (
             await pool.senderHasTransactionsOfType(
                 data.senderPublicKey,
-                Enums.DposIpfsTransactionType.DposIpfs,
-                Enums.DposIpfsTransactionGroup,
+                Enums.FileTransactionType.SetFile,
+                Enums.FileTransactionGroup,
             )
         ) {
             return {
                 type: "ERR_PENDING",
-                message: `DPOS IPFS transaction for wallet already in the pool`,
+                message: `File transaction for wallet already in the pool`,
             };
         }
         return null;
@@ -110,7 +110,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
 
     /*
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("dpos.ipfs.updated", transaction.data);
+        emitter.emit("files.updated", transaction.data);
     }
     */
 
@@ -120,7 +120,7 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
     ): Promise<void> {
         await super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, transaction.data.asset.ipfsHash);
+        sender.setAttribute(`files.${transaction.data.asset.fileKey}`, transaction.data.asset.ipfsHash);
         walletManager.reindex(sender);
     }
 
@@ -133,17 +133,17 @@ export class DposIpfsTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const reader = await TransactionReader.create(connection, this.getConstructor());
 
-        const DposIpfsTransactions: Database.IBootstrapTransaction[] = [];
+        const FileTransactions: Database.IBootstrapTransaction[] = [];
         while (reader.hasNext()) {
-            DposIpfsTransactions.push(...(await reader.read()));
+            FileTransactions.push(...(await reader.read()));
         }
 
-        if (DposIpfsTransactions.length) {
-            const DposIpfsTransaction: Database.IBootstrapTransaction = DposIpfsTransactions.pop();
-            const previousIpfsHash = DposIpfsTransaction.asset.ipfsHash;
-            sender.setAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`, previousIpfsHash);
+        if (FileTransactions.length) {
+            const setFileTransaction: Database.IBootstrapTransaction = FileTransactions.pop();
+            const previousIpfsHash = setFileTransaction.asset.ipfsHash;
+            sender.setAttribute(`files.${transaction.data.asset.fileKey}`, previousIpfsHash);
         } else {
-            sender.forgetAttribute(`dpos.ipfs.${transaction.data.asset.ipfsKey}`);
+            sender.forgetAttribute(`files.${transaction.data.asset.fileKey}`);
         }
 
         walletManager.reindex(sender);

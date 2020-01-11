@@ -1,6 +1,6 @@
 {
     "private": true,
-    "name": "@nosplatform/dpos-ipfs",
+    "name": "@nosplatform/file-transactions",
     "description": "Provides curator transactions for the nOS blockchain",
     "version": "0.0.1-alpha.1",
     "author": "Dean van Dugteren <dean@nos.io>",
@@ -29,7 +29,7 @@
         "@arkecosystem/core-interfaces": "^2.6.0-next.7",
         "@arkecosystem/core-transactions": "^2.6.0-next.7",
         "@arkecosystem/crypto": "^2.6.0-next.7",
-        "@nosplatform/dpos-ipfs-crypto": "^0.0.1-alpha.1",
+        "@nosplatform/file-transactions-crypto": "^0.0.1-alpha.1",
         "ipfs": "^0.40.0"
     },
     "devDependencies": {
