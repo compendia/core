@@ -16,13 +16,28 @@ const index = async request => {
 };
 
 const show = async request => {
-    const wallet = databaseService.wallets.findById(Database.SearchScope.Wallets, request.params.id);
+    let publicKey: string;
 
-    if (!wallet || !wallet.hasAttribute("business")) {
+    if (request.params.id.length === 66) {
+        publicKey = request.params.id;
+    } else {
+        try {
+            publicKey = databaseService.wallets.findById(Database.SearchScope.Wallets, request.params.id).publicKey;
+        } catch (error) {
+            return Boom.notFound("Business not found");
+        }
+    }
+
+    const business = databaseService.wallets.search(Database.SearchScope.Businesses, {
+        publicKey,
+        ...request.query,
+    }).rows[0];
+
+    if (!business) {
         return Boom.notFound("Business not found");
     }
 
-    return respondWithResource(wallet, "business");
+    return respondWithResource(business, "business");
 };
 
 const bridgechains = async request => {

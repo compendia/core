@@ -351,7 +351,7 @@ export class DatabaseService implements Database.IDatabaseService {
                         .getGenesisBlock();
                 }
 
-                return Blocks.BlockFactory.fromData(block);
+                return Blocks.BlockFactory.fromData(block, { deserializeTransactionsUnchecked: true });
             },
         );
     }

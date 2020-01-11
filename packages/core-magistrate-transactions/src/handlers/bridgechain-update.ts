@@ -43,9 +43,13 @@ export class BridgechainUpdateTransactionHandler extends MagistrateTransactionHa
                     "business",
                 );
 
-                const { bridgechainId, seedNodes, ports } = transaction.asset.bridgechainUpdate;
-                businessAttributes.bridgechains[bridgechainId].bridgechainAsset.seedNodes = seedNodes;
-                businessAttributes.bridgechains[bridgechainId].bridgechainAsset.ports = ports;
+                const bridgechainUpdate = transaction.asset.bridgechainUpdate;
+                const bridgechainAsset =
+                    businessAttributes.bridgechains[bridgechainUpdate.bridgechainId].bridgechainAsset;
+
+                const shallowCloneBridgechainUpdate = { ...bridgechainUpdate };
+                delete shallowCloneBridgechainUpdate.bridgechainId; // we don't want id in wallet bridgechain asset
+                Object.assign(bridgechainAsset, shallowCloneBridgechainUpdate);
 
                 walletManager.reindex(wallet);
             }
@@ -68,6 +72,10 @@ export class BridgechainUpdateTransactionHandler extends MagistrateTransactionHa
         const businessAttributes: IBusinessWalletAttributes = wallet.getAttribute<IBusinessWalletAttributes>(
             "business",
         );
+        if (!businessAttributes.bridgechains) {
+            throw new BridgechainIsNotRegisteredByWalletError();
+        }
+
         const bridgechainUpdate: MagistrateInterfaces.IBridgechainUpdateAsset =
             transaction.data.asset.bridgechainUpdate;
         const bridgechainAttributes: IBridgechainWalletAttributes =
@@ -134,13 +142,9 @@ export class BridgechainUpdateTransactionHandler extends MagistrateTransactionHa
         const bridgechainAttributes: IBridgechainWalletAttributes =
             businessAttributes.bridgechains[bridgechainUpdate.bridgechainId];
 
-        if (bridgechainUpdate.seedNodes) {
-            bridgechainAttributes.bridgechainAsset.seedNodes = bridgechainUpdate.seedNodes;
-        }
-
-        if (bridgechainUpdate.ports) {
-            bridgechainAttributes.bridgechainAsset.ports = bridgechainUpdate.ports;
-        }
+        const shallowCloneBridgechainUpdate = { ...bridgechainUpdate };
+        delete shallowCloneBridgechainUpdate.bridgechainId; // we don't want id in wallet bridgechain asset
+        Object.assign(bridgechainAttributes.bridgechainAsset, shallowCloneBridgechainUpdate);
 
         walletManager.reindex(wallet);
     }

@@ -9,6 +9,7 @@ export const index: object = {
             orderBy: orderBy(businessIteratees),
             publicKey,
             isResigned: Joi.bool(),
+            transform: Joi.bool().default(true),
         },
     },
 };
@@ -16,6 +17,9 @@ export const index: object = {
 export const show: object = {
     params: {
         id: walletId,
+    },
+    query: {
+        transform: Joi.bool().default(true),
     },
 };
 
@@ -49,5 +53,6 @@ export const search: object = {
             .max(15),
         repository: Joi.string().max(80),
         isResigned: Joi.bool(),
+        transform: Joi.bool().default(true),
     },
 };

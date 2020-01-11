@@ -229,7 +229,7 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
 
     private searchBusinesses(params: Database.IParameters = {}): ISearchContext<any> {
         const query: Record<string, string[]> = {
-            exact: ["isResigned", "publicKey", "vat"],
+            exact: ["address", "isResigned", "publicKey", "vat"],
             like: ["name", "repository", "website"],
         };
 
@@ -238,15 +238,14 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
             .values()
             .map(wallet => {
                 const business: any = wallet.getAttribute("business");
-
-                const businessData = {
-                    address: wallet.address,
-                    publicKey: wallet.publicKey,
-                    ...business.businessAsset,
-                    isResigned: !!business.resigned,
-                };
-
-                return businessData;
+                return params.transform
+                    ? {
+                          address: wallet.address,
+                          publicKey: wallet.publicKey,
+                          ...business.businessAsset,
+                          isResigned: !!business.resigned,
+                      }
+                    : wallet;
             });
 
         return {
@@ -273,6 +272,7 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
 
                     const bridgechainData = {
                         publicKey: wallet.publicKey,
+                        address: wallet.address,
                         ...bridgechain.bridgechainAsset,
                         isResigned: !!bridgechain.resigned,
                     };
