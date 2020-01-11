@@ -1,3 +1,4 @@
+import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
