@@ -49,6 +49,14 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             description: "the amount of the block reward",
             default: 200000000,
         }),
+        topRewardAmount: flags.integer({
+            description: "the amount of the top delegates' block reward",
+            default: 200000000,
+        }),
+        topDelegatesAmount: flags.integer({
+            description: "the number of the top delegates",
+            default: 5,
+        }),
         pubKeyHash: flags.integer({
             description: "the public key hash",
         }),
@@ -150,6 +158,8 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
                 flags.maxBlockPayload,
                 flags.rewardHeight,
                 flags.rewardAmount,
+                flags.topRewardAmount,
+                flags.topDelegatesAmount,
             );
 
             fs.writeJsonSync(resolve(cryptoConfigDest, "network.json"), network, { spaces: 2 });
@@ -218,11 +228,15 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         maxBlockPayload: number,
         rewardHeight: number,
         rewardAmount: number,
+        topRewardAmount: number,
+        topDelegatesAmount: number,
     ) {
         return [
             {
                 height: 1,
                 reward: 0,
+                topDelegates: 0,
+                topReward: 0,
                 activeDelegates,
                 blocktime,
                 block: {
@@ -265,6 +279,8 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             {
                 height: rewardHeight,
                 reward: rewardAmount,
+                topReward: topRewardAmount,
+                topDelegates: topDelegatesAmount,
             },
         ];
     }

@@ -2,6 +2,8 @@
     {
         "height": 1,
         "reward": 0,
+        "topReward": 0,
+        "topDelegates": 0,
         "activeDelegates": 47,
         "blocktime": 6,
         "block": {
@@ -30,7 +32,6 @@
         },
         "balanceWeight": 1,
         "stakeLevels": {
-            "120": 30,
             "7889400": 60,
             "15778800": 85,
             "31557600": 110
@@ -46,6 +47,8 @@
     },
     {
         "height": 100800,
-        "reward": 390000000
+        "reward": 380000000,
+        "topReward": 20000000,
+        "topDelegates": 5
     }
 ]
