@@ -42,8 +42,10 @@
     },
     {
         "height": 2,
-        "idFullSha256": true,
-        "aip11": true
+        "aip11": true,
+        "block": {
+            "idFullSha256": true
+        }
     },
     {
         "height": 100800,
