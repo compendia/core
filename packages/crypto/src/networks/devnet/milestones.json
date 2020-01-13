@@ -8,7 +8,6 @@
             "version": 0,
             "maxTransactions": 150,
             "maxPayload": 6300000,
-            "idFullSha256": true,
             "acceptExpiredTransactionTimestamps": false
         },
         "epoch": "2017-03-21T13:00:00.000Z",
@@ -38,8 +37,12 @@
         },
         "minimumStake": 1000000000000,
         "vendorFieldLength": 255,
-        "aip11": true,
         "multiPaymentLimit": 64
+    },
+    {
+        "height": 2,
+        "idFullSha256": true,
+        "aip11": true
     },
     {
         "height": 100800,
