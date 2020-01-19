@@ -1,7 +1,7 @@
 import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 
-import { FileKeys, FileTransactionGroup, FileTransactionType } from "../enums";
+import { FileTransactionGroup, FileTransactionType } from "../enums";
 import { IIpfsAsset } from "../interfaces";
 
 const { schemas } = Transactions;
@@ -25,7 +25,7 @@ export class SetFileTransaction extends Transactions.Transaction {
                     required: ["fileKey", "ipfsHash"],
                     properties: {
                         fileKey: {
-                            allOf: [{ type: "string" }, { enum: FileKeys }],
+                            allOf: [{ type: "string", minimum: 6, maximum: 24, transform: ["toLowerCase"] }],
                         },
                         ipfsHash: {
                             allOf: [{ minLength: 2, maxLength: 90 }, { $ref: "base58" }],
