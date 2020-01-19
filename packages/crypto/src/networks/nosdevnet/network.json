@@ -1,0 +1,18 @@
+{
+    "name": "nosdevnet",
+    "messagePrefix": "devnet message:\n",
+    "bip32": {
+        "public": 70617039,
+        "private": 70615956
+    },
+    "pubKeyHash": 112,
+    "nethash": "621909dd6dd6ebae05aacc9b20b16db393364cf852d72c62a4dd702e1f28b39e",
+    "wif": 170,
+    "slip44": 1,
+    "aip20": 0,
+    "client": {
+        "token": "NOS",
+        "symbol": "◎",
+        "explorer": "https://explorer.nos.dev"
+    }
+}

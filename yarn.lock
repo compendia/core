@@ -2210,14 +2210,6 @@
     tiny-glob "^0.2.6"
     wif "^2.0.6"
 
-"@nosplatform/stake-transactions-crypto@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@nosplatform/stake-transactions-crypto/-/stake-transactions-crypto-0.0.1.tgz#600e5a2f911667a5e5961e6bf0df613376fda387"
-  integrity sha512-aT9IYaSOUlLoWSMC1JVOoLnbmsvSTDyaXWv9A42jZX08Vxwyao+Tyyv2sQiTimCfhXWtjfX06qvDcQVVZDmtog==
-  dependencies:
-    "@arkecosystem/core-interfaces" "^2.6.0-next.6"
-    "@arkecosystem/crypto" "^2.6.0-next.6"
-
 "@nosplatform/storage@^0.0.1":
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/@nosplatform/storage/-/storage-0.0.1.tgz#6143be306b068b3bdd31e03572a631e47d389880"

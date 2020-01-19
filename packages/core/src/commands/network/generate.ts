@@ -264,7 +264,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
                         stakeRedeem: 0,
                     },
                 },
-                balanceWeight: 1,
+                balancePower: 1,
                 stakeLevels: {
                     120: 30,
                     7889400: 60,

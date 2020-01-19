@@ -69,8 +69,8 @@ export const transactionIteratees = [
 
 export const walletIteratees = [
     "address",
-    "totalWeight",
-    "stakeWeight",
+    "stakePower",
+    "power",
     "balance",
     "resigned",
     "lockedBalance",

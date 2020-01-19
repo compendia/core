@@ -3,11 +3,10 @@ module.exports = {
     "@arkecosystem/core-logger-pino": {},
     "@arkecosystem/core-p2p": {
         server: {
-            port: process.env.CORE_P2P_PORT || 4000,
+            port: process.env.CORE_P2P_PORT || 4002,
         },
         minimumNetworkReach: 5,
     },
-    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -19,19 +18,8 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
-    "@nosplatform/storage": {
-        port: 6002,
-        host: "0.0.0.0",
-        cors: true
-    },
-    "@nosplatform/supply-tracker": {},
-    "@nosplatform/file-transactions": {
-        fileKeys: ["description", "db.apps"],
-        port: 6003,
-        wsPort: 6004
-    },
     "@arkecosystem/core-transaction-pool": {
-        enabled: true,
+        enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
         allowedSenders: [],
         dynamicFees: {
@@ -50,9 +38,6 @@ module.exports = {
                 htlcLock: 100,
                 htlcClaim: 0,
                 htlcRefund: 0,
-                stakeCreate: 0,
-                stakeRedeem: 0,
-                setFile: 0
             },
         },
     },

@@ -32,7 +32,7 @@
         },
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
-        "balanceWeight": 1,
+        "balancePower": 1,
         "stakeLevels": {
             "20": 20,
             "120": 30,

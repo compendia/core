@@ -52,7 +52,7 @@ jest.mock("@arkecosystem/core-container", () => {
                                     balance: "9000000000000",
                                     nonce: "1",
                                     attributes: {
-                                        stakeWeight: "6000000000000",
+                                        stakePower: "6000000000000",
                                         stakes: {
                                             f4572c8e5602cd5e512e395c62fc02ec790720a73f059c3db9e82aa4d7679b58: [Object],
                                         },

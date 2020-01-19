@@ -30,7 +30,7 @@ export const transformWallet = (wallet: State.IWallet) => {
                 timestamp: formatTimestamp(stake.timestamp).unix,
                 amount: stake.amount,
                 duration: stake.duration,
-                weight: stake.weight,
+                power: stake.power,
                 redeemableTimestamp: formatTimestamp(epochTime).unix,
                 redeemed: stake.redeemed,
                 halved: stake.halved,
@@ -52,8 +52,8 @@ export const transformWallet = (wallet: State.IWallet) => {
         vote: wallet.getAttribute("vote"),
         multiSignature,
         business,
-        stakeWeight: wallet.getAttribute("stakeWeight", "0"),
-        totalWeight: Utils.BigNumber.make(wallet.getAttribute("stakeWeight", "0"))
+        stakePower: wallet.getAttribute("stakePower", "0"),
+        power: Utils.BigNumber.make(wallet.getAttribute("stakePower", "0"))
             .plus(Utils.BigNumber.make(wallet.balance))
             .toFixed(),
         stakes: unixStakes,

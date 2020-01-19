@@ -54,12 +54,12 @@ export const plugin: Container.IPluginDescriptor = {
             await staked.save();
         }
 
-        let totalStakeWeight = await Statistic.findOne({ name: `stakeWeight` });
-        if (!totalStakeWeight) {
-            totalStakeWeight = new Statistic();
-            totalStakeWeight.name = `stakeWeight`;
-            totalStakeWeight.value = "0";
-            await totalStakeWeight.save();
+        let totalStakePower = await Statistic.findOne({ name: `stakePower` });
+        if (!totalStakePower) {
+            totalStakePower = new Statistic();
+            totalStakePower.name = `stakePower`;
+            totalStakePower.value = "0";
+            await totalStakePower.save();
         }
 
         const findOrCreate = async (model, id) => {
@@ -118,7 +118,12 @@ export const plugin: Container.IPluginDescriptor = {
 
                 // Store round top delegates if not already stored
                 if (round.topDelegates === "") {
-                    const delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
+                    let delegates = [];
+                    try {
+                        delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
+                    } catch (e) {
+                        logger.error(e);
+                    }
                     const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
                     const topDelegates = [];
                     let i = 0;
@@ -249,10 +254,7 @@ export const plugin: Container.IPluginDescriptor = {
         emitter.on("stake.created", async txData => {
             q(async () => {
                 const tx: Interfaces.ITransactionData = txData;
-                const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(
-                    tx.asset.stakeCreate,
-                    tx.id,
-                );
+                const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(tx.asset.stakeCreate, tx.id);
                 const lastSupply = Utils.BigNumber.make(supply.value);
 
                 supply.value = lastSupply.minus(o.amount).toString();
@@ -290,10 +292,10 @@ export const plugin: Container.IPluginDescriptor = {
                     .toFixed();
                 await stat.save();
 
-                totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
-                    .plus(o.weight)
+                totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
+                    .plus(o.power)
                     .toString();
-                await totalStakeWeight.save();
+                await totalStakePower.save();
 
                 logger.info(
                     `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
@@ -341,11 +343,11 @@ export const plugin: Container.IPluginDescriptor = {
                     .toFixed();
                 await stat.save();
 
-                totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
-                    .minus(stakeObj.prevStakeWeight)
-                    .plus(stake.weight)
+                totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
+                    .minus(stakeObj.prevStakePower)
+                    .plus(stake.power)
                     .toString();
-                await totalStakeWeight.save();
+                await totalStakePower.save();
 
                 logger.info(
                     `Supply updated. Previous: ${lastSupply.dividedBy(
@@ -360,23 +362,20 @@ export const plugin: Container.IPluginDescriptor = {
             // On stake revert
             if (tx.typeGroup === 100 && tx.type === 0) {
                 const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
-                const o: StakeInterfaces.IStakeObject = StakeHelpers.VoteWeight.stakeObject(
-                    tx.asset.stakeCreate,
-                    tx.id,
-                );
+                const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(tx.asset.stakeCreate, tx.id);
 
                 supply.value = lastSupply.plus(tx.asset.stakeCreate.amount).toString();
                 staked.value = Utils.BigNumber.make(staked.value)
                     .minus(tx.asset.stakeCreate.amount)
                     .toString();
 
-                totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
-                    .minus(o.weight)
+                totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
+                    .minus(o.power)
                     .toString();
 
                 await supply.save();
                 await staked.save();
-                await totalStakeWeight.save();
+                await totalStakePower.save();
 
                 // Save round data
                 const lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
@@ -409,12 +408,12 @@ export const plugin: Container.IPluginDescriptor = {
                     staked.value = Utils.BigNumber.make(staked.value)
                         .plus(tx.asset.stakeCreate.amount)
                         .toString();
-                    totalStakeWeight.value = Utils.BigNumber.make(totalStakeWeight.value)
-                        .plus(stake.weight)
+                    totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
+                        .plus(stake.power)
                         .toString();
                     await supply.save();
                     await staked.save();
-                    await totalStakeWeight.save();
+                    await totalStakePower.save();
                     logger.info(
                         `Supply updated. Previous: ${lastSupply.dividedBy(
                             Constants.ARKTOSHI,
