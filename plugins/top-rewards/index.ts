@@ -6,7 +6,11 @@ import { Round } from "@nosplatform/storage";
 import { asValue } from "awilix";
 
 class TopRewards {
-    public static async applyReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): Promise<void> {
+    public static async applyReward(
+        block: Interfaces.IBlockData,
+        walletManager: State.IWalletManager,
+        emitEvents: boolean = true,
+    ): Promise<void> {
         const roundInfo = roundCalculator.calculateRound(block.height);
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
@@ -65,17 +69,23 @@ class TopRewards {
                         app.register("top.delegates", asValue(tdGlobal));
                     }
 
-                    app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
-                        "top.delegates.rewarded",
-                        rewardedDelegates,
-                        topDelegateReward,
-                    );
+                    if (emitEvents) {
+                        app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
+                            "top.delegates.rewarded",
+                            rewardedDelegates,
+                            topDelegateReward,
+                        );
+                    }
                 }
             }
         }
     }
 
-    public static async revertReward(block: Interfaces.IBlockData, walletManager: State.IWalletManager): Promise<void> {
+    public static async revertReward(
+        block: Interfaces.IBlockData,
+        walletManager: State.IWalletManager,
+        emitEvents: boolean = true,
+    ): Promise<void> {
         const roundInfo = roundCalculator.calculateRound(block.height);
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
@@ -120,11 +130,13 @@ class TopRewards {
                     rewardedDelegates[i] = delegate.publicKey;
                     walletManager.reindex(delegate);
                 }
-                app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
-                    "top.delegate.rewards.reverted",
-                    rewardedDelegates,
-                    topDelegateReward,
-                );
+                if (emitEvents) {
+                    app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
+                        "top.delegate.rewards.reverted",
+                        rewardedDelegates,
+                        topDelegateReward,
+                    );
+                }
                 let tdGlobal = [];
                 if (app.has("top.delegates")) {
                     tdGlobal = app.resolve("top.delegates");
