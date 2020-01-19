@@ -16,10 +16,10 @@
         "fees": {
             "staticFees": {
                 "transfer": 10000000,
-                "secondSignature": 500000000,
-                "delegateRegistration": 2500000000,
+                "secondSignature": 50000000,
+                "delegateRegistration": 10000000000,
                 "vote": 100000000,
-                "multiSignature": 500000000,
+                "multiSignature": 10000000,
                 "ipfs": 500000000,
                 "multiPayment": 10000000,
                 "delegateResignation": 2500000000,
@@ -28,7 +28,7 @@
                 "htlcRefund": 0,
                 "stakeCreate": 0,
                 "stakeRedeem": 0,
-                "setFile": 500000000
+                "setFile": 10000000
             }
         },
         "balancePower": 1,
@@ -38,6 +38,11 @@
             "31557600": 110
         },
         "minimumStake": 1000000000000,
+        "ipfs": {
+            "maxFileSize": {
+                "description": 25000
+            }
+        },
         "vendorFieldLength": 255,
         "multiPaymentLimit": 64
     },
