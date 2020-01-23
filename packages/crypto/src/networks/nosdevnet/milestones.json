@@ -50,17 +50,14 @@
         "multiPaymentLimit": 64
     },
     {
-        "height": 2,
-        "aip11": true,
-        "block": {
-            "idFullSha256": true
-        }
-    },
-    {
         "height": 47,
         "reward": 380000000,
         "topReward": 20000000,
         "topDelegates": 5,
-        "minimumStake": 10000000000
+        "minimumStake": 10000000000,
+        "aip11": true,
+        "block": {
+            "idFullSha256": true
+        }
     }
 ]
