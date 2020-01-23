@@ -25,40 +25,18 @@
                 "htlcLock": 10000000,
                 "htlcClaim": 0,
                 "htlcRefund": 0,
+                "setFile": 10000000,
                 "stakeCreate": 0,
-                "stakeRedeem": 0,
-                "setFile": 500000000
+                "stakeRedeem": 0
             }
         },
         "vendorFieldLength": 64,
-        "multiPaymentLimit": 256,
-        "balancePower": 1,
-        "stakeLevels": {
-            "20": 20,
-            "120": 30,
-            "7889400": 60,
-            "15778800": 85,
-            "31557600": 110
-        },
-        "ipfs": {
-            "maxFileSize": {
-                "description": 25000,
-                "db": 500000000
-            }
-        },
-        "minimumStake": 1000000000000,
-        "vestedWalletPublicKey": ""
+        "multiPaymentLimit": 256
     },
     {
         "height": 2,
         "aip11": true,
         "htlcEnabled": true
-    },
-    {
-        "height": 5,
-        "reward": 380000000,
-        "topReward": 20000000,
-        "topDelegates": 5
     },
     {
         "height": 75600,

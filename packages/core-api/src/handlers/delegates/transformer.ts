@@ -4,11 +4,7 @@ import { Utils } from "@arkecosystem/crypto";
 
 export const transformDelegate = (delegate: State.IWallet) => {
     const attributes: State.IWalletDelegateAttributes = delegate.getAttribute("delegate");
-
-    let files = {};
-    if (delegate.hasAttribute("files")) {
-        files = delegate.getAttribute("files", false);
-    }
+    const files = delegate.getAttribute("files", {});
 
     const data = {
         username: attributes.username,

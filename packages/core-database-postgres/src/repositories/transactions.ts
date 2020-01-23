@@ -204,7 +204,6 @@ export class TransactionsRepository extends Repository implements Database.ITran
     public async statistics(): Promise<{
         count: number;
         totalFee: Utils.BigNumber;
-        removedFee: Utils.BigNumber;
         totalAmount: Utils.BigNumber;
     }> {
         return this.db.one(queries.transactions.statistics);

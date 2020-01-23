@@ -516,7 +516,6 @@ export class DatabaseService implements Database.IDatabaseService {
         const transactionStats: {
             count: number;
             totalFee: Utils.BigNumber;
-            removedFee: Utils.BigNumber;
             totalAmount: Utils.BigNumber;
         } = await this.connection.transactionsRepository.statistics();
 
@@ -527,10 +526,16 @@ export class DatabaseService implements Database.IDatabaseService {
             );
         }
 
-        // Sum of all tx fees equals the sum of block.totalFee
-        if (blockStats.totalFee !== transactionStats.totalFee) {
+        // Sum of all tx fees equals the sum of block.totalFee + block.removedFee
+        if (
+            !Utils.BigNumber.make(blockStats.totalFee)
+                .plus(blockStats.removedFee)
+                .isEqualTo(transactionStats.totalFee)
+        ) {
             errors.push(
-                `Total transaction fees: ${transactionStats.totalFee}, total of block.totalFee : ${blockStats.totalFee}`,
+                `Total transaction fees: ${transactionStats.totalFee}, total of block.totalFee (${
+                    blockStats.totalFee
+                }) + block.removedFee (${blockStats.removedFee}) : ${blockStats.totalFee.plus(blockStats.removedFee)}`,
             );
         }
 
