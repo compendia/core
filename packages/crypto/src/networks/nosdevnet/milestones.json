@@ -57,6 +57,7 @@
         "height": 52640,
         "reward": 380000000,
         "topReward": 20000000,
-        "topDelegates": 5
+        "topDelegates": 5,
+        "minimumStake": 10000000000
     }
 ]
