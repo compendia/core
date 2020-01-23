@@ -15,7 +15,7 @@
             "maxPayload": 6300000,
             "acceptExpiredTransactionTimestamps": false
         },
-        "epoch": "2017-03-21T13:00:00.000Z",
+        "epoch": "2020-01-23T13:00:00.000Z",
         "fees": {
             "staticFees": {
                 "transfer": 10000000,
