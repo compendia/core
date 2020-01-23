@@ -9,6 +9,11 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@nosplatform/storage": {},
+    "@nosplatform/file-transactions": {
+        fileKeys: ["db.apps", "description"],
+        port: 6003,
+        wsPort: 6004
+    },
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},

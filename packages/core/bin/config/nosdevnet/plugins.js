@@ -26,7 +26,7 @@ module.exports = {
     },
     "@nosplatform/supply-tracker": {},
     "@nosplatform/file-transactions": {
-        fileKeys: ["description", "db.apps"],
+        fileKeys: ["description"],
         port: 6003,
         wsPort: 6004
     },

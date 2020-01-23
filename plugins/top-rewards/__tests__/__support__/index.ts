@@ -34,6 +34,7 @@ export const setUp = async (): Promise<void> => {
                 "@arkecosystem/core-api",
                 "@nosplatform/storage",
                 "@nosplatform/stake-transactions",
+                "@nosplatform/file-transactions",
                 "@arkecosystem/core-forger",
                 "@nosplatform/supply-tracker",
             ],

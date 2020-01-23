@@ -25,6 +25,7 @@
                 "htlcLock": 10000000,
                 "htlcClaim": 0,
                 "htlcRefund": 0,
+                "setFile": 0,
                 "stakeCreate": 0,
                 "stakeRedeem": 0
             }

@@ -15,67 +15,65 @@ class TopRewards {
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
 
-        if (topDelegateCount > 0) {
+        if (topDelegateCount > 0 && Utils.BigNumber.make(block.topReward).isGreaterThan(0)) {
             const topDelegateRewardVal = Utils.BigNumber.make(block.topReward).dividedBy(topDelegateCount);
             const topDelegateReward = topDelegateRewardVal ? topDelegateRewardVal : Utils.BigNumber.ZERO;
 
-            if (topDelegateReward.isGreaterThan(0)) {
-                let roundDelegates;
-                let delegates;
-                let delegatesList = [];
-                roundDelegates = await Round.findOne(roundInfo.round);
-                // Check if Round exists in db, otherwise get latest active delegates
-                if (roundDelegates) {
-                    delegates = roundDelegates.topDelegates.split(",");
-                    delegatesList = delegates;
-                } else {
-                    delegates = walletManager.loadActiveDelegateList(roundInfo);
-                    for (const delegate of delegates) {
-                        delegatesList.push(delegate.publicKey);
-                    }
+            let roundDelegates;
+            let delegates;
+            let delegatesList = [];
+            roundDelegates = await Round.findOne(roundInfo.round);
+            // Check if Round exists in db, otherwise get latest active delegates
+            if (roundDelegates && String(roundDelegates.topDelegates.split(",")[0]).length === 66) {
+                delegatesList = roundDelegates.topDelegates.split(",");
+            } else {
+                delegates = walletManager.loadActiveDelegateList(roundInfo);
+                for (const delegate of delegates) {
+                    delegatesList.push(delegate.publicKey);
                 }
-                const rewardedDelegates = [];
-                if (delegatesList.length > 0) {
-                    for (let i = 0; i < topDelegateCount; i++) {
-                        const delegate = walletManager.findByPublicKey(delegatesList[i]);
-                        delegate.balance = delegate.balance.plus(topDelegateReward);
-                        delegate.setAttribute(
-                            "delegate.forgedTopRewards",
-                            delegate.getAttribute<Utils.BigNumber>("delegate.forgedTopRewards").plus(topDelegateReward),
-                        );
-                        if (delegate.hasVoted()) {
-                            const votedDelegate: State.IWallet = walletManager.findByPublicKey(
-                                delegate.getAttribute("vote"),
-                            );
-                            votedDelegate.setAttribute(
-                                "delegate.voteBalance",
-                                Utils.BigNumber.make(
-                                    votedDelegate
-                                        .getAttribute<Utils.BigNumber>("delegate.voteBalance")
-                                        .plus(topDelegateReward),
-                                ),
-                            );
-                            walletManager.reindex(votedDelegate);
-                        }
-                        rewardedDelegates[i] = delegate.publicKey;
-                        walletManager.reindex(delegate);
-                    }
-                    let tdGlobal = [];
-                    if (app.has("top.delegates")) {
-                        tdGlobal = app.resolve("top.delegates");
-                    }
-                    if (!(roundInfo.round in tdGlobal) && rewardedDelegates.length > 0) {
-                        tdGlobal[roundInfo.round] = rewardedDelegates;
-                        app.register("top.delegates", asValue(tdGlobal));
-                    }
+            }
 
-                    if (emitEvents) {
-                        app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
-                            "top.delegates.rewarded",
-                            rewardedDelegates,
-                            topDelegateReward,
+            const rewardedDelegates = [];
+            if (delegatesList.length > 0) {
+                for (let i = 0; i < topDelegateCount; i++) {
+                    const delegate = walletManager.findByPublicKey(delegatesList[i]);
+                    delegate.balance = delegate.balance.plus(topDelegateReward);
+                    delegate.setAttribute(
+                        "delegate.forgedTopRewards",
+                        delegate.getAttribute<Utils.BigNumber>("delegate.forgedTopRewards").plus(topDelegateReward),
+                    );
+                    if (delegate.hasVoted()) {
+                        const votedDelegate: State.IWallet = walletManager.findByPublicKey(
+                            delegate.getAttribute("vote"),
                         );
+                        votedDelegate.setAttribute(
+                            "delegate.voteBalance",
+                            Utils.BigNumber.make(
+                                votedDelegate
+                                    .getAttribute<Utils.BigNumber>("delegate.voteBalance")
+                                    .plus(topDelegateReward),
+                            ),
+                        );
+                        walletManager.reindex(votedDelegate);
                     }
+                    rewardedDelegates[i] = delegate.publicKey;
+                    walletManager.reindex(delegate);
+                }
+                let tdGlobal = [];
+                if (app.has("top.delegates")) {
+                    tdGlobal = app.resolve("top.delegates");
+                }
+                if (!(roundInfo.round in tdGlobal) && rewardedDelegates.length > 0) {
+                    tdGlobal[roundInfo.round] = rewardedDelegates;
+                    app.register("top.delegates", asValue(tdGlobal));
+                }
+
+                if (emitEvents) {
+                    app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
+                        "top.delegates.rewarded",
+                        rewardedDelegates,
+                        topDelegateReward,
+                    );
                 }
             }
         }
@@ -90,61 +88,57 @@ class TopRewards {
         const topDelegateCountVal = Managers.configManager.getMilestone(block.height).topDelegates;
         const topDelegateCount = topDelegateCountVal ? topDelegateCountVal : Utils.BigNumber.ZERO;
 
-        if (topDelegateCount > 0) {
+        if (topDelegateCount > 0 && Utils.BigNumber.make(block.topReward).isGreaterThan(0)) {
             const topDelegateRewardVal = Utils.BigNumber.make(block.topReward).dividedBy(topDelegateCount);
             const topDelegateReward = topDelegateRewardVal ? topDelegateRewardVal : Utils.BigNumber.ZERO;
-            if (topDelegateReward.isGreaterThan(0)) {
-                let roundDelegates;
-                let delegates;
-                let delegatesList = [];
-                roundDelegates = await Round.findOne(roundInfo.round);
-                if (roundDelegates) {
-                    delegates = roundDelegates.topDelegates.split(",");
-                    delegatesList = delegates;
-                } else {
-                    delegates = walletManager.loadActiveDelegateList(roundInfo);
-                    for (const delegate of delegates) {
-                        delegatesList.push(delegate.publicKey);
-                    }
+            let roundDelegates;
+            let delegates;
+            let delegatesList = [];
+            roundDelegates = await Round.findOne(roundInfo.round);
+            // Check if Round exists in db, otherwise get latest active delegates
+            if (roundDelegates && String(roundDelegates.topDelegates.split(",")[0]).length === 66) {
+                delegatesList = roundDelegates.topDelegates.split(",");
+            } else {
+                delegates = walletManager.loadActiveDelegateList(roundInfo);
+                for (const delegate of delegates) {
+                    delegatesList.push(delegate.publicKey);
                 }
-                const rewardedDelegates = [];
-                for (let i = 0; i < topDelegateCount; i++) {
-                    const delegate = walletManager.findByPublicKey(delegatesList[i]);
-                    delegate.balance = delegate.balance.minus(topDelegateReward);
-                    delegate.setAttribute(
-                        "delegate.forgedTopRewards",
-                        delegate.getAttribute("delegate.forgedTopRewards").minus(topDelegateReward),
+            }
+            const rewardedDelegates = [];
+            for (let i = 0; i < topDelegateCount; i++) {
+                const delegate = walletManager.findByPublicKey(delegatesList[i]);
+                delegate.balance = delegate.balance.minus(topDelegateReward);
+                delegate.setAttribute(
+                    "delegate.forgedTopRewards",
+                    delegate.getAttribute("delegate.forgedTopRewards").minus(topDelegateReward),
+                );
+                if (delegate.hasVoted()) {
+                    const votedDelegate: State.IWallet = walletManager.findByPublicKey(delegate.getAttribute("vote"));
+                    votedDelegate.setAttribute(
+                        "delegate.voteBalance",
+                        Utils.BigNumber.make(
+                            votedDelegate.getAttribute("delegate.voteBalance").minus(topDelegateReward.toFixed()),
+                        ),
                     );
-                    if (delegate.hasVoted()) {
-                        const votedDelegate: State.IWallet = walletManager.findByPublicKey(
-                            delegate.getAttribute("vote"),
-                        );
-                        votedDelegate.setAttribute(
-                            "delegate.voteBalance",
-                            Utils.BigNumber.make(
-                                votedDelegate.getAttribute("delegate.voteBalance").minus(topDelegateReward.toFixed()),
-                            ),
-                        );
-                        walletManager.reindex(votedDelegate);
-                    }
-                    rewardedDelegates[i] = delegate.publicKey;
-                    walletManager.reindex(delegate);
+                    walletManager.reindex(votedDelegate);
                 }
-                if (emitEvents) {
-                    app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
-                        "top.delegate.rewards.reverted",
-                        rewardedDelegates,
-                        topDelegateReward,
-                    );
-                }
-                let tdGlobal = [];
-                if (app.has("top.delegates")) {
-                    tdGlobal = app.resolve("top.delegates");
-                }
-                if (roundInfo.round in tdGlobal) {
-                    delete tdGlobal[roundInfo.round];
-                    app.register("top.delegates", asValue(tdGlobal));
-                }
+                rewardedDelegates[i] = delegate.publicKey;
+                walletManager.reindex(delegate);
+            }
+            if (emitEvents) {
+                app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter").emit(
+                    "top.delegate.rewards.reverted",
+                    rewardedDelegates,
+                    topDelegateReward,
+                );
+            }
+            let tdGlobal = [];
+            if (app.has("top.delegates")) {
+                tdGlobal = app.resolve("top.delegates");
+            }
+            if (roundInfo.round in tdGlobal) {
+                delete tdGlobal[roundInfo.round];
+                app.register("top.delegates", asValue(tdGlobal));
             }
         }
     }

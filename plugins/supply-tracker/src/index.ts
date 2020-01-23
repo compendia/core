@@ -22,6 +22,7 @@ export const plugin: Container.IPluginDescriptor = {
     alias: "supply-tracker",
     async register(container: Container.IContainer, options) {
         logger.info(`Registering Supply Tracker.`);
+        let roundsCleaned;
 
         /**
          * Bootstrap Database
@@ -139,6 +140,16 @@ export const plugin: Container.IPluginDescriptor = {
                 }
 
                 await round.save();
+
+                // After the first block, remove any rounds stored later than latest round on the node
+                if (!roundsCleaned) {
+                    const laterRounds = await Round.find({ where: { id: MoreThan(roundData.round) } });
+                    for (const laterRound of laterRounds) {
+                        logger.info(`Round ${laterRound.id} doesn't exist yet. Deleting round info. `);
+                        await laterRound.remove();
+                    }
+                    roundsCleaned = true;
+                }
 
                 logger.info(
                     `Block ${blockData.height} applied. Supply updated. Previous: ${lastSupply.dividedBy(

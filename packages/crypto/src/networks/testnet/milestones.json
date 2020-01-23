@@ -55,6 +55,12 @@
         "htlcEnabled": true
     },
     {
+        "height": 5,
+        "reward": 380000000,
+        "topReward": 20000000,
+        "topDelegates": 5
+    },
+    {
         "height": 75600,
         "reward": 200000000
     },
