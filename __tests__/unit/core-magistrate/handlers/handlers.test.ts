@@ -17,7 +17,7 @@ Managers.configManager.setHeight(2); // aip11 (v2 transactions) is true from hei
 describe("Registry test", () => {
     Managers.configManager.setFromPreset("testnet");
 
-    it("should not throw when registering market place transactions", () => {
+    it("should not throw when registering magistrate transactions", () => {
         Handlers.Registry.registerTransactionHandler(BusinessRegistrationTransactionHandler);
         Handlers.Registry.registerTransactionHandler(BusinessResignationTransactionHandler);
         Handlers.Registry.registerTransactionHandler(BridgechainRegistrationTransactionHandler);
@@ -45,13 +45,5 @@ describe("Registry test", () => {
             Handlers.Registry.get(Enums.MagistrateTransactionType.BusinessUpdate, Enums.MagistrateTransactionGroup);
             Handlers.Registry.get(Enums.MagistrateTransactionType.BridgechainUpdate, Enums.MagistrateTransactionGroup);
         }).not.toThrowError();
-    });
-
-    it("should return static fee for dynamic fee", () => {
-        for (const handler of Handlers.Registry.getAll().filter(
-            handler => handler.getConstructor().typeGroup === Enums.MagistrateTransactionGroup,
-        )) {
-            expect(handler.dynamicFee({} as any)).toEqual(handler.getConstructor().staticFee({} as any));
-        }
     });
 });
