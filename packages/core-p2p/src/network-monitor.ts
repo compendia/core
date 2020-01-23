@@ -230,6 +230,10 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
         };
     }
 
+    public getRateLimitedEndpoints(): string[] {
+        return this.rateLimiter.getRateLimitedEndpoints();
+    }
+
     public async isBlockedByRateLimit(ip: string): Promise<boolean> {
         return this.rateLimiter.isBlocked(ip);
     }

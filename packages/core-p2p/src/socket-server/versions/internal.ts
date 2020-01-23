@@ -99,3 +99,7 @@ export const syncBlockchain = (): void => {
 
     app.resolvePlugin<Blockchain.IBlockchain>("blockchain").forceWakeup();
 };
+
+export const getRateLimitedEndpoints = ({ service }: { service: P2P.IPeerService }): string[] => {
+    return service.getMonitor().getRateLimitedEndpoints();
+};
