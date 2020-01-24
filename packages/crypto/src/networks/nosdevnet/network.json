@@ -1,12 +1,12 @@
 {
     "name": "nosdevnet",
-    "messagePrefix": "nosdevnet message:\n",
+    "messagePrefix": "devnet message:\n",
     "bip32": {
         "public": 70617039,
         "private": 70615956
     },
-    "pubKeyHash": 90,
-    "nethash": "254a744a6d90d61636fd48de647583889be84989f1c6ae91250e48833e8d6b30",
+    "pubKeyHash": 112,
+    "nethash": "621909dd6dd6ebae05aacc9b20b16db393364cf852d72c62a4dd702e1f28b39e",
     "wif": 170,
     "slip44": 1,
     "aip20": 0,

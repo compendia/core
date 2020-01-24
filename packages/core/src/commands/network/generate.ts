@@ -428,7 +428,7 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
     }
 
     private getBytes(genesisBlock) {
-        const size = 4 + 4 + 4 + 4 + 8 + 4 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + 64;
+        const size = 4 + 4 + 4 + 8 + 4 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + 64;
 
         const byteBuffer = new ByteBuffer(size, true);
         byteBuffer.writeInt(genesisBlock.version);
