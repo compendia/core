@@ -1,9 +1,9 @@
 [
     {
+        "height": 1,
         "p2p": {
             "minimumVersions": ["^2.6 || ^2.6.0-next.9"]
         },
-        "height": 1,
         "reward": 0,
         "topReward": 0,
         "topDelegates": 0,
@@ -50,9 +50,9 @@
         "multiPaymentLimit": 64
     },
     {
-        "height": 47,
-        "reward": 380000000,
-        "topReward": 20000000,
+        "height": 48,
+        "reward": 390000000,
+        "topReward": 10000000,
         "topDelegates": 5,
         "minimumStake": 10000000000,
         "aip11": true,

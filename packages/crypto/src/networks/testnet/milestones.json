@@ -34,7 +34,7 @@
         "multiPaymentLimit": 256
     },
     {
-        "height": 2,
+        "height": 52,
         "aip11": true,
         "htlcEnabled": true
     },
