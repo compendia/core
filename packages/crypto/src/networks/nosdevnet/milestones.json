@@ -1,19 +1,16 @@
 [
     {
         "height": 1,
-        "p2p": {
-            "minimumVersions": ["^2.6 || ^2.6.0-next.9"]
-        },
         "reward": 0,
-        "topReward": 0,
         "topDelegates": 0,
+        "topReward": 0,
         "activeDelegates": 47,
         "blocktime": 6,
         "block": {
             "version": 0,
             "maxTransactions": 150,
             "maxPayload": 6300000,
-            "acceptExpiredTransactionTimestamps": true
+            "acceptExpiredTransactionTimestamps": false
         },
         "epoch": "2020-01-23T13:00:00.000Z",
         "fees": {
@@ -36,6 +33,7 @@
         },
         "balancePower": 1,
         "stakeLevels": {
+            "86400": 25,
             "7889400": 60,
             "15778800": 85,
             "31557600": 110
