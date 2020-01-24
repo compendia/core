@@ -66,7 +66,7 @@ export const isSupportedTransactionVersion = (version: number): boolean => {
     const aip11: boolean = configManager.getMilestone().aip11;
 
     // TODO Dean: Workaround for milestone not being correctly passed on batch tx download on new node init, since all non-genesis transactions will be v2.
-    if (version === 2) {
+    if (process.env.CORE_ENV !== "test" && version === 2) {
         return true;
     }
 
