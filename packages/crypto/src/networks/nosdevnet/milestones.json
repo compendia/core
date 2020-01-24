@@ -13,7 +13,7 @@
             "version": 0,
             "maxTransactions": 150,
             "maxPayload": 6300000,
-            "acceptExpiredTransactionTimestamps": false
+            "acceptExpiredTransactionTimestamps": true
         },
         "epoch": "2020-01-23T13:00:00.000Z",
         "fees": {
