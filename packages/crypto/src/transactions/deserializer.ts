@@ -12,11 +12,7 @@ import { TransactionTypeFactory } from "./types";
 
 // Reference: https://github.com/ArkEcosystem/AIPs/blob/master/AIPS/aip-11.md
 export class Deserializer {
-    public static deserialize(
-        serialized: string | Buffer,
-        options: IDeserializeOptions = {},
-        height: number = 0,
-    ): ITransaction {
+    public static deserialize(serialized: string | Buffer, options: IDeserializeOptions = {}): ITransaction {
         const data = {} as ITransactionData;
 
         const buffer: ByteBuffer = this.getByteBuffer(serialized);
