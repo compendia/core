@@ -104,7 +104,7 @@ export class Deserializer {
             const transactionBytes = buf.readBytes(length).toBuffer();
             const transaction = deserializeTransactionsUnchecked
                 ? TransactionFactory.fromBytesUnsafe(transactionBytes)
-                : TransactionFactory.fromBytes(transactionBytes);
+                : TransactionFactory.fromBytes(transactionBytes, true, block.height);
             transactions.push(transaction);
             block.transactions.push(transaction.data);
         }
