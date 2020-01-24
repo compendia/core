@@ -7,12 +7,16 @@ import {
 } from "../errors";
 import { Address } from "../identities";
 import { IDeserializeOptions, ITransaction, ITransactionData } from "../interfaces";
-import { BigNumber, isSupportedTansactionVersion } from "../utils";
+import { BigNumber, isSupportedTransactionVersion } from "../utils";
 import { TransactionTypeFactory } from "./types";
 
 // Reference: https://github.com/ArkEcosystem/AIPs/blob/master/AIPS/aip-11.md
 export class Deserializer {
-    public static deserialize(serialized: string | Buffer, options: IDeserializeOptions = {}): ITransaction {
+    public static deserialize(
+        serialized: string | Buffer,
+        options: IDeserializeOptions = {},
+        height: number = 0,
+    ): ITransaction {
         const data = {} as ITransactionData;
 
         const buffer: ByteBuffer = this.getByteBuffer(serialized);
@@ -26,7 +30,7 @@ export class Deserializer {
 
         this.deserializeSignatures(data, buffer);
 
-        if (options.acceptLegacyVersion || isSupportedTansactionVersion(data.version)) {
+        if (options.acceptLegacyVersion || isSupportedTransactionVersion(data.version, height)) {
             if (data.version === 1) {
                 this.applyV1Compatibility(data);
             }
