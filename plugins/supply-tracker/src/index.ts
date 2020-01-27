@@ -226,7 +226,10 @@ export const plugin: Container.IPluginDescriptor = {
                     tx.type === Enums.TransactionType.Transfer &&
                     tx.blockId !== genesisBlock.id
                 ) {
-                    if (senderAddress === genesisBlock.transactions[0].recipientId) {
+                    if (
+                        senderAddress === genesisBlock.transactions[0].recipientId &&
+                        senderAddress !== tx.recipientId
+                    ) {
                         // Add coins to supply when sent from mint address
                         supply.value = Utils.BigNumber.make(supply.value)
                             .plus(tx.amount)
