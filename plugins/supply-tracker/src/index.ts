@@ -228,7 +228,7 @@ export const plugin: Container.IPluginDescriptor = {
                 ) {
                     if (
                         senderAddress === genesisBlock.transactions[0].recipientId &&
-                        senderAddress !== tx.recipientId
+                        tx.recipientId !== genesisBlock.transactions[0].recipientId
                     ) {
                         // Add coins to supply when sent from mint address
                         supply.value = Utils.BigNumber.make(supply.value)
