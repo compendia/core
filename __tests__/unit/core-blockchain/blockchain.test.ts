@@ -190,9 +190,9 @@ describe("Blockchain", () => {
 
             const mockCallback = jest.fn(() => true);
             const lastBlock = blockchain.getLastBlock().data;
-            const spyGetSlotNumber = jest
-                .spyOn(Crypto.Slots, "getSlotNumber")
-                .mockReturnValue(Math.floor(lastBlock.timestamp / 8000));
+            // const spyGetSlotNumber = jest
+            //     .spyOn(Crypto.Slots, "getSlotNumber")
+            //     .mockReturnValue(Math.floor(lastBlock.timestamp / 8000));
 
             // const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
 

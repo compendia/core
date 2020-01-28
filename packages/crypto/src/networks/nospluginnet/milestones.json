@@ -32,7 +32,6 @@
         },
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
-        "aip11": true,
         "balancePower": 1,
         "stakeLevels": {
             "20": 20,
@@ -43,6 +42,10 @@
         },
         "minimumStake": 1000000000000,
         "vestedWalletPublicKey": "none"
+    },
+    {
+        "height": 12,
+        "aip11": true
     },
     {
         "height": 75600,

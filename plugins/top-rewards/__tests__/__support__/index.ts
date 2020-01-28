@@ -37,6 +37,7 @@ export const setUp = async (): Promise<void> => {
                 "@nosplatform/file-transactions",
                 "@arkecosystem/core-forger",
                 "@nosplatform/supply-tracker",
+                "@nosplatform/top-rewards",
             ],
             network: "nospluginnet",
         });

@@ -1,7 +1,6 @@
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Enums, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
-import { TopRewards } from "@nosplatform/top-rewards";
 import {
     NotSupportedForMultiSignatureWalletError,
     WalletIsAlreadyDelegateError,
@@ -82,7 +81,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
 
         for (const block of lastForgedBlocks) {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
-            await TopRewards.applyReward(block, walletManager);
             wallet.setAttribute("delegate.lastBlock", block);
         }
     }

@@ -24,6 +24,7 @@ module.exports = {
         host: "0.0.0.0",
         cors: true
     },
+    "@nosplatform/top-rewards": {},
     "@nosplatform/supply-tracker": {},
     "@nosplatform/file-transactions": {
         fileKeys: ["description"],

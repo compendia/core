@@ -8,6 +8,7 @@ module.exports = {
         minimumVersions: [">=2.0.0"],
         minimumNetworkReach: 5,
     },
+    "@nosplatform/top-rewards": {},
     "@nosplatform/storage": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},

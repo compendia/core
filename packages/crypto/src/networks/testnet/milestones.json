@@ -24,17 +24,14 @@
                 "delegateResignation": 2500000000,
                 "htlcLock": 10000000,
                 "htlcClaim": 0,
-                "htlcRefund": 0,
-                "setFile": 10000000,
-                "stakeCreate": 0,
-                "stakeRedeem": 0
+                "htlcRefund": 0
             }
         },
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256
     },
     {
-        "height": 52,
+        "height": 2,
         "aip11": true,
         "htlcEnabled": true
     },
