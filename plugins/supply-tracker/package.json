@@ -23,7 +23,9 @@
         "@arkecosystem/core-transactions": "^2.6.0-next.9",
         "@arkecosystem/crypto": "^2.6.0-next.9",
         "@nosplatform/stake-transactions": "^0.0.2",
-        "bytebuffer": "^5.0.1"
+        "bytebuffer": "^5.0.1",
+        "handy-redis": "^1.7.0",
+        "redis": "^2.8.0"
     },
     "devDependencies": {
         "@types/bytebuffer": "^5.0.40",

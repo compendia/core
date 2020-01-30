@@ -1,16 +1,18 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
-import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
+import { Container, Database, EventEmitter, Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Constants, Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { q, Round, Statistic } from "@nosplatform/storage";
+import { TopRewards } from "@nosplatform/top-rewards";
 import { asValue } from "awilix";
+import { createHandyClient } from "handy-redis";
 import { MoreThan } from "typeorm";
 
-import { defaults } from "./defaults";
-
+const redis = createHandyClient();
+const defaults = {};
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
@@ -85,18 +87,72 @@ export const plugin: Container.IPluginDescriptor = {
          * Event Listeners
          */
 
+        const getTopDelegates = (roundData: Shared.IRoundInfo) => {
+            const topDelegateCount = Managers.configManager.getMilestone(roundData.round).topDelegates;
+            const topDelegates = [];
+            let i = 0;
+            let delegates = [];
+            const getDelegates = () => {
+                let delegates = [];
+                try {
+                    delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
+                } catch (e) {
+                    throw new Error(e);
+                }
+                return delegates;
+            };
+
+            delegates = getDelegates();
+
+            for (const delegate of delegates) {
+                if (i < topDelegateCount) {
+                    topDelegates.push(delegate.publicKey);
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            return topDelegates;
+        };
+
         // On new block
-        emitter.on("block.applied", async block => {
+        emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
+            // Save round data
+            // NOTE: Putting this block outside of q() didn't work (kept syncing for round 34)
+            // q(async () => {
+            const roundData = roundCalculator.calculateRound(blockData.height);
+            const hasTopReward = blockData.topReward;
+            if (hasTopReward && (roundData.roundHeight === blockData.height || blockData.height === 2)) {
+                const topDelegates = getTopDelegates(roundData);
+                await redis.set(`topDelegates:${Number(roundData.round)}`, topDelegates.join(","));
+                const lastTop = await redis.get(`topDelegates:${Number(roundData.round) - 1}`);
+                console.log("lastTop:");
+                console.log(lastTop);
+                if (Number(roundData.round) > 1 && lastTop) {
+                    const reward = await TopRewards.applyTopRewardsForRound(Number(roundData.round) - 1, lastTop);
+                    console.log("Rewards:");
+                    console.log(reward);
+                    if (reward) {
+                        await redis.hmset(
+                            `rewards:${Number(reward.roundInfo.round)}`,
+                            ["rewardedDelegates", reward.rewardedDelegates.join(",")],
+                            ["totalReward", reward.totalReward.toString()],
+                            ["round", reward.roundInfo.round],
+                        );
+                    }
+                }
+            }
+            // });
+
             q(async () => {
-                const blockData: Interfaces.IBlockData = block;
                 // supply global state
                 const lastSupply = Utils.BigNumber.make(supply.value);
+                const roundData = roundCalculator.calculateRound(blockData.height);
                 supply.value = lastSupply
                     .plus(blockData.reward)
-                    .plus(blockData.topReward)
                     .minus(blockData.removedFee)
                     .toString();
-                await supply.save();
 
                 // fees.removed global state
                 if (Utils.BigNumber.make(blockData.removedFee).isGreaterThan(Utils.BigNumber.ZERO)) {
@@ -106,40 +162,34 @@ export const plugin: Container.IPluginDescriptor = {
                     await removedFees.save();
                 }
 
-                // Save round data
-                const roundData = roundCalculator.calculateRound(blockData.height);
                 const round = await findOrCreate("Round", roundData.round);
                 round.forged = Utils.BigNumber.make(round.forged)
                     .plus(blockData.reward)
-                    .plus(blockData.topReward)
                     .toString();
                 round.removed = Utils.BigNumber.make(round.removed)
                     .plus(blockData.removedFee)
                     .toString();
 
-                // Store round top delegates if not already stored
-                if (round.topDelegates === "") {
-                    let delegates = [];
-                    try {
-                        delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
-                    } catch (e) {
-                        logger.error(e);
+                // Store previous round's rewards
+                const topDelegates = await redis.get(`topDelegates:${Number(roundData.round) - 1}`);
+                if (roundData.roundHeight === blockData.height && topDelegates && blockData.height > 1) {
+                    const reward = await redis.hmget(`rewards:${Number(roundData.round) - 1}`, "totalReward");
+                    if (reward && !Utils.BigNumber.make(reward[0] || 0).isZero()) {
+                        const lastSupply = Utils.BigNumber.make(supply.value);
+                        supply.value = lastSupply.plus(reward[0]).toString();
+                        round.forged = Utils.BigNumber.make(round.forged)
+                            .plus(reward[0])
+                            .toString();
+
+                        round.topDelegates = topDelegates;
                     }
-                    const topDelegateCount = Managers.configManager.getMilestone(blockData.height).topDelegates;
-                    const topDelegates = [];
-                    let i = 0;
-                    for (const delegate of delegates) {
-                        if (i < topDelegateCount) {
-                            topDelegates.push(delegate.publicKey);
-                        } else {
-                            break;
-                        }
-                        i++;
-                    }
-                    round.topDelegates = topDelegates.toString();
+
+                    await redis.del(`rewards:${Number(roundData.round) - 2}`);
+                    await redis.del(`topDelegates:${Number(roundData.round) - 2}`);
                 }
 
                 await round.save();
+                await supply.save();
 
                 // After the first block, remove any rounds stored later than latest round on the node
                 if (!roundsCleaned) {
@@ -165,7 +215,6 @@ export const plugin: Container.IPluginDescriptor = {
             const lastSupply = Utils.BigNumber.make(supply.value);
             supply.value = lastSupply
                 .minus(blockData.reward)
-                .minus(blockData.topReward)
                 .plus(blockData.removedFee)
                 .toString();
             await supply.save();
@@ -176,7 +225,6 @@ export const plugin: Container.IPluginDescriptor = {
 
             round.forged = Utils.BigNumber.make(round.forged)
                 .minus(blockData.reward)
-                .minus(blockData.topReward)
                 .toString();
 
             if (blockData.removedFee.isGreaterThan(Utils.BigNumber.ZERO)) {
@@ -206,6 +254,24 @@ export const plugin: Container.IPluginDescriptor = {
             );
         });
 
+        // emitter.on("top.delegates.rewarded", async ({ rewardedDelegates, totalReward, roundInfo }: { rewardedDelegates: Array<string>, totalReward: Utils.BigNumber, roundInfo: Shared.IRoundInfo }) => {
+        //     q(async () => {
+        //         if (rewardedDelegates.length && !totalReward.isZero()) {
+        //             const lastSupply = Utils.BigNumber.make(supply.value);
+        //             supply.value = lastSupply
+        //                 .plus(totalReward)
+        //                 .toString();
+        //             await supply.save();
+        //             const round = await findOrCreate("Round", roundInfo.round);
+        //             round.forged = Utils.BigNumber.make(round.forged)
+        //                 .plus(totalReward)
+        //                 .toString();
+        //             if (round.topDelegates === "") round.topDelegates = rewardedDelegates.toString();
+        //             await round.save();
+        //         }
+        //     });
+        // });
+
         // All transfers from the mint wallet are added to supply
         emitter.on(ApplicationEvents.TransactionApplied, async txData => {
             q(async () => {
@@ -226,10 +292,7 @@ export const plugin: Container.IPluginDescriptor = {
                     tx.type === Enums.TransactionType.Transfer &&
                     tx.blockId !== genesisBlock.id
                 ) {
-                    if (
-                        senderAddress === genesisBlock.transactions[0].recipientId &&
-                        tx.recipientId !== genesisBlock.transactions[0].recipientId
-                    ) {
+                    if (senderAddress === genesisBlock.transactions[0].recipientId) {
                         // Add coins to supply when sent from mint address
                         supply.value = Utils.BigNumber.make(supply.value)
                             .plus(tx.amount)
