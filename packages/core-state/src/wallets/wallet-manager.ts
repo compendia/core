@@ -2,7 +2,6 @@ import { app } from "@arkecosystem/core-container";
 import { Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces } from "@arkecosystem/core-transactions";
 import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
-import { TopRewards } from "@nosplatform/top-rewards";
 import pluralize from "pluralize";
 
 import { WalletIndexAlreadyRegisteredError, WalletIndexNotFoundError } from "./errors";
@@ -283,8 +282,6 @@ export class WalletManager implements State.IWalletManager {
                 appliedTransactions.push(transaction);
             }
 
-            await TopRewards.applyReward(block.data, this);
-
             const applied: boolean = delegate.applyBlock(block.data);
 
             // If the block has been applied to the delegate, the balance is increased
@@ -326,8 +323,6 @@ export class WalletManager implements State.IWalletManager {
                 await this.revertTransaction(transaction);
                 revertedTransactions.push(transaction);
             }
-
-            await TopRewards.revertReward(block.data, this);
 
             const reverted: boolean = delegate.revertBlock(block.data);
 

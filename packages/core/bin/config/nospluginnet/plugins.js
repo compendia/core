@@ -8,11 +8,6 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@nosplatform/stake-transactions": {},
-    "@nosplatform/file-transactions": {
-        fileKeys: ["db.apps", "description"],
-        port: 6003,
-        wsPort: 6004
-    },
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -25,7 +20,11 @@ module.exports = {
         },
     },
     "@nosplatform/storage": {},
-    "@nosplatform/supply-tracker": {},
+    "@nosplatform/file-transactions": {
+        fileKeys: ["db.apps", "description"],
+        port: 6003,
+        wsPort: 6004
+    },
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -51,6 +50,7 @@ module.exports = {
             },
         },
     },
+    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
@@ -75,4 +75,5 @@ module.exports = {
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
     "@arkecosystem/core-snapshots": {},
+    "@nosplatform/supply-tracker": {},
 };

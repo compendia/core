@@ -62,6 +62,7 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
                     rank: undefined,
                 });
                 walletManager.reindex(wallet);
+                await TopRewards.bootstrap(wallet.publicKey, walletManager);
             }
         }
 
@@ -82,7 +83,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
 
         for (const block of lastForgedBlocks) {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
-            await TopRewards.applyReward(block, walletManager);
             wallet.setAttribute("delegate.lastBlock", block);
         }
     }

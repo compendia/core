@@ -7,6 +7,7 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
@@ -19,6 +20,7 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
+    "@nosplatform/top-rewards": {},
     "@nosplatform/storage": {
         port: 6002,
         host: "0.0.0.0",
