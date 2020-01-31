@@ -57,6 +57,7 @@ module.exports = {
     },
     "@nosplatform/supply-tracker": {},
     "@arkecosystem/core-blockchain": {},
+    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
         host: process.env.CORE_API_HOST || "0.0.0.0",
@@ -72,7 +73,6 @@ module.exports = {
         },
     },
     "@arkecosystem/core-forger": {},
-    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-exchange-json-rpc": {
         enabled: process.env.CORE_EXCHANGE_JSON_RPC_ENABLED,
         host: process.env.CORE_EXCHANGE_JSON_RPC_HOST || "0.0.0.0",
