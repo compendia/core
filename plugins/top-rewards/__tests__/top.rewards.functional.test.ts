@@ -24,14 +24,15 @@ describe("Blockchain - Top Rewards", () => {
             const delegate10 = dbs.walletManager.findByPublicKey(delegatesApi[10].publicKey);
             const delegates = [delegate1, delegate2];
             const oldBalance = Utils.BigNumber.make(JSON.parse(JSON.stringify(delegate1.balance)));
+            expect(delegates[0].getAttribute("delegate.forgedTopRewards").toString()).toBe("0");
 
-            await support.snoozeForBlock(1.5);
+            await support.snoozeForBlock(5.5);
 
-            expect(delegates[0].getAttribute("delegate.forgedTopRewards").toString()).toBe("50000000");
+            expect(delegates[0].getAttribute("delegate.forgedTopRewards").toString()).toBe("250000000");
 
             await support.snoozeForBlock(1);
 
-            expect(delegate1.getAttribute("delegate.forgedTopRewards").toString()).toBe("100000000");
+            expect(delegate1.getAttribute("delegate.forgedTopRewards").toString()).toBe("250000000");
             expect(delegate1.getAttribute("delegate.voteBalance").toString()).toBe(delegate1.balance.toString());
             expect(delegate10.getAttribute("delegate.forgedTopRewards").toString()).toBe("0");
             expect(delegate1.balance.minus(oldBalance).toString()).toBe(
@@ -43,6 +44,7 @@ describe("Blockchain - Top Rewards", () => {
             );
 
             await support.snoozeForBlock(1);
+            expect(true);
         });
     });
 });

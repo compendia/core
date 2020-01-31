@@ -24,8 +24,6 @@ module.exports = {
         host: "0.0.0.0",
         cors: true
     },
-    "@nosplatform/top-rewards": {},
-    "@nosplatform/supply-tracker": {},
     "@nosplatform/file-transactions": {
         fileKeys: ["description"],
         port: 6003,
@@ -57,6 +55,7 @@ module.exports = {
             },
         },
     },
+    "@nosplatform/supply-tracker": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
@@ -73,6 +72,7 @@ module.exports = {
         },
     },
     "@arkecosystem/core-forger": {},
+    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-exchange-json-rpc": {
         enabled: process.env.CORE_EXCHANGE_JSON_RPC_ENABLED,
         host: process.env.CORE_EXCHANGE_JSON_RPC_HOST || "0.0.0.0",
