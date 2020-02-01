@@ -194,6 +194,7 @@ export const plugin: Container.IPluginDescriptor = {
         };
 
         emitter.on(ApplicationEvents.StateBuilderFinished, async () => {
+            await TopRewards.bootstrap();
             await syncLatestRound();
         });
 

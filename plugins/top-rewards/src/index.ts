@@ -137,12 +137,32 @@ class TopRewards {
         return undefined;
     }
 
-    public static async bootstrap(publicKey: string, walletManager: State.IWalletManager): Promise<void> {
-        const dbDelegate: Delegate = await Delegate.findOne({ where: { publicKey } });
-        if (dbDelegate) {
-            const topReward = Utils.BigNumber.make(dbDelegate.topRewards);
-            const delegate = walletManager.findByPublicKey(dbDelegate.publicKey);
-            this.addRewards(delegate, topReward, walletManager);
+    public static async bootstrap(publicKey?: string, walletManager?: State.IWalletManager): Promise<void> {
+        if (publicKey && walletManager) {
+            const dbDelegate: Delegate = await Delegate.findOne({ where: { publicKey } });
+            if (dbDelegate) {
+                const topReward = Utils.BigNumber.make(dbDelegate.topRewards);
+                const delegate = walletManager.findByPublicKey(dbDelegate.publicKey);
+                this.addRewards(delegate, topReward, walletManager);
+            }
+        } else if (!publicKey && !walletManager) {
+            const dbDelegates: Delegate[] = await Delegate.find();
+            if (dbDelegates.length) {
+                const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>(
+                    "database",
+                );
+                const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
+                    "transaction-pool",
+                );
+                for (const dbDel of dbDelegates) {
+                    const topReward = Utils.BigNumber.make(dbDel.topRewards);
+                    const delegate = walletManager.findByPublicKey(dbDel.publicKey);
+                    this.addRewards(delegate, topReward, databaseService.walletManager);
+                    this.addRewards(delegate, topReward, poolService.walletManager);
+                }
+            }
+        } else {
+            throw new Error("Top Rewards bootstrap loaded without correct parameters");
         }
     }
 

@@ -1,7 +1,6 @@
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Enums, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
-import { TopRewards } from "@nosplatform/top-rewards";
 import {
     NotSupportedForMultiSignatureWalletError,
     WalletIsAlreadyDelegateError,
@@ -62,7 +61,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
                     rank: undefined,
                 });
                 walletManager.reindex(wallet);
-                await TopRewards.bootstrap(wallet.publicKey, walletManager);
             }
         }
 
