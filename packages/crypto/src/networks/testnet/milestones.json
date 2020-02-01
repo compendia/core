@@ -27,6 +27,15 @@
                 "htlcRefund": 0
             }
         },
+        "balancePower": 1,
+        "stakeLevels": {
+            "20": 20,
+            "120": 30,
+            "7889400": 60,
+            "15778800": 85,
+            "31557600": 110
+        },
+        "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256
     },

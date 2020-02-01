@@ -7,7 +7,6 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
-    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
@@ -56,6 +55,7 @@ module.exports = {
         },
     },
     "@nosplatform/supply-tracker": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@nosplatform/top-rewards": {},
     "@arkecosystem/core-api": {
