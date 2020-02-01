@@ -156,9 +156,10 @@ class TopRewards {
                 );
                 for (const dbDel of dbDelegates) {
                     const topReward = Utils.BigNumber.make(dbDel.topRewards);
-                    const delegate = walletManager.findByPublicKey(dbDel.publicKey);
+                    const delegate = databaseService.walletManager.findByPublicKey(dbDel.publicKey);
+                    const poolDelegate = poolService.walletManager.findByPublicKey(dbDel.publicKey);
                     this.addRewards(delegate, topReward, databaseService.walletManager);
-                    this.addRewards(delegate, topReward, poolService.walletManager);
+                    this.addRewards(poolDelegate, topReward, poolService.walletManager);
                 }
             }
         } else {
