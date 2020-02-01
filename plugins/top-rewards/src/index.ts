@@ -19,16 +19,15 @@ export const plugin: Container.IPluginDescriptor = {
     },
 };
 
+const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>("transaction-pool");
+
 class TopRewards {
     public static async applyTopRewardsForRound(
         roundHeight: number,
         lastTop: string,
         emitEvents: boolean = true,
     ): Promise<{ rewardedDelegates; totalReward; roundInfo; topDelegateReward } | void> {
-        const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-        const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
-            "transaction-pool",
-        );
         const roundInfo = roundCalculator.calculateRound(roundHeight);
         const delegatesCount = Managers.configManager.getMilestone(roundInfo.roundHeight).activeDelegates;
         const topReward = Managers.configManager.getMilestone(roundInfo.roundHeight).topReward;
@@ -83,10 +82,6 @@ class TopRewards {
         lastTop: string,
         emitEvents: boolean = true,
     ): Promise<{ rewardedDelegates; totalReward; roundInfo } | void> {
-        const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-        const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
-            "transaction-pool",
-        );
         const roundInfo = roundCalculator.calculateRound(round);
         const delegatesCount = Managers.configManager.getMilestone(round).activeDelegates;
         const topReward = Managers.configManager.getMilestone(round).topReward;
@@ -148,12 +143,6 @@ class TopRewards {
         } else if (!publicKey && !walletManager) {
             const dbDelegates: Delegate[] = await Delegate.find();
             if (dbDelegates.length) {
-                const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>(
-                    "database",
-                );
-                const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
-                    "transaction-pool",
-                );
                 for (const dbDel of dbDelegates) {
                     const topReward = Utils.BigNumber.make(dbDel.topRewards);
                     const delegate = databaseService.walletManager.findByPublicKey(dbDel.publicKey);
