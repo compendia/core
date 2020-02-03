@@ -5,7 +5,7 @@ import { roundCalculator } from "@arkecosystem/core-utils";
 import { Constants, Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
-import { Delegate, q, Round, Statistic } from "@nosplatform/storage";
+import { q, Round, Statistic } from "@nosplatform/storage";
 import { asValue } from "awilix";
 import { MoreThan } from "typeorm";
 
@@ -78,16 +78,6 @@ export const plugin: Container.IPluginDescriptor = {
                     }
                     res = round;
                     break;
-
-                case "Delegate":
-                    let delegate = await Delegate.findOne({ where: { publicKey: id } });
-                    if (!delegate) {
-                        delegate = new Delegate();
-                        delegate.publicKey = id;
-                        delegate.topRewards = "0";
-                    }
-                    res = delegate;
-                    break;
             }
 
             return res;
@@ -95,11 +85,21 @@ export const plugin: Container.IPluginDescriptor = {
 
         const rounds: Array<{ forged: string; removed: string; count: number }> = [];
 
-        emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
+        let blockEvent;
+        if (options.topRewards) {
+            blockEvent = "topRewards.block.applied";
+        } else {
+            blockEvent = "block.applied";
+        }
+
+        emitter.on(blockEvent, async (blockData: Interfaces.IBlockData) => {
             const roundData = roundCalculator.calculateRound(blockData.height);
             let forged = "0";
             let removed = "0";
             let count = 0;
+            if (roundData.roundHeight === 1) {
+                count = 1;
+            }
             const roundCache = rounds[roundData.round];
             if (roundCache) {
                 forged = roundCache.forged;
@@ -126,7 +126,7 @@ export const plugin: Container.IPluginDescriptor = {
                     const roundData = roundCalculator.calculateRound(blockData.height);
                     // Get data from redis cache
                     const lastSupply = Utils.BigNumber.make(supply.value);
-                    const roundCache = rounds[roundData.round - 1];
+                    const roundCache = rounds[roundData.round - 1 || 1];
                     const reward = roundCache.forged;
                     const removed = roundCache.removed;
                     // supply global state
@@ -172,6 +172,7 @@ export const plugin: Container.IPluginDescriptor = {
                         roundsCleaned = true;
                     }
                     app.register("supply.lastblock", asValue(blockData.height));
+                    emitter.emit("top.supply.applied", roundData.round - 1);
                 });
             }
         });

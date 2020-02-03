@@ -21,13 +21,15 @@ const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>("transaction-pool");
 const logger: Logger.ILogger = app.resolvePlugin<Logger.ILogger>("logger");
-const rounds: Array<{ forged: string; removed: string; count: number }> = [];
+const rounds: Array<{ count: number }> = [];
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
     defaults,
     alias: "top-rewards",
     async register(container: Container.IContainer, options) {
+        logger.info("Registering Top Rewards plug-in");
+
         // After state finishes building, apply the topRewards to wallets and cache the last round's blocks.
         emitter.on(ApplicationEvents.StateBuilderFinished, async () => {
             logger.info("Bootstrapping Top Rewards");
@@ -38,12 +40,8 @@ export const plugin: Container.IPluginDescriptor = {
 
         // On a new block, handle the cache and top rewards.
         emitter.on(ApplicationEvents.BlockApplied, async (block: Interfaces.IBlockData) => {
-            let trackSupply = false;
-            if (options.trackSupply) {
-                trackSupply = true;
-            }
-
-            await TopRewards.handleCacheAndTopRewards(block, trackSupply);
+            await TopRewards.handleCacheAndTopRewards(block);
+            emitter.emit("topRewards.block.applied", block);
         });
 
         // On a reverted block, handle the cache and top rewards.
@@ -64,7 +62,7 @@ export const plugin: Container.IPluginDescriptor = {
 };
 
 class TopRewards {
-    // Global rounds store for applying forged + removed on newRound (count === 47)
+    // Set the topRewards for the nodes
     public static async bootstrap(publicKey?: string, walletManager?: State.IWalletManager): Promise<void> {
         if (publicKey && walletManager) {
             const dbDelegate: Delegate = await Delegate.findOne({ where: { publicKey } });
@@ -100,6 +98,7 @@ class TopRewards {
             const neededBlocks = [];
             for (let i = Number(roundData.roundHeight); i <= Number(lastBlock.height); i++) {
                 neededBlocks.push(i);
+                console.log(i);
             }
             const blocks = await databaseService.getBlocksByHeight(neededBlocks);
 
@@ -110,73 +109,44 @@ class TopRewards {
         }
     }
 
-    public static async handleCacheAndTopRewards(blockData: Interfaces.IBlockData, trackSupply: boolean = false) {
+    public static async handleCacheAndTopRewards(blockData: Interfaces.IBlockData) {
         const roundData = roundCalculator.calculateRound(blockData.height);
-        let forged = "0";
-        let removed = "0";
-        let count = 0;
-        const roundCache = rounds[roundData.round];
-        if (roundCache) {
-            forged = roundCache.forged;
-            removed = roundCache.removed;
-            count = roundCache.count;
-        }
-        const newForged = Utils.BigNumber.make(forged)
-            .plus(blockData.reward)
-            .toFixed();
-        const newRemoved = Utils.BigNumber.make(removed)
-            .plus(blockData.removedFee)
-            .toFixed();
-        const newCount = count + 1;
 
-        // Set the global variable's round data
-        rounds[roundData.round] = { forged: newForged, removed: newRemoved, count: newCount };
-
-        // Pay out Top Rewards & cache the data for later caching in SQLite Storage
-        const hasTopReward = !Utils.BigNumber.make(blockData.topReward).isZero();
-
-        // If there's a top reward and this is a new round (or 2nd block in first round)
-        // We use the rounds global var instead of checking isNewRound() because sometimes the sync gets a new round block before all the round's blocks are cached
-        if (hasTopReward && (roundCalculator.isNewRound(blockData.height) || blockData.height === 2)) {
+        if (!this.topDelegates[roundData.round]) {
+            console.log(`Set top ${roundData.round}`);
             // Get the top delegates of this round
-            const topDelegates = this.getTopDelegates(roundData);
-            // Store the round top delegates in redis for later use
-            await redis.set(`topDelegates:${Number(roundData.round)}`, topDelegates.join(","));
-            // Get the previous round's top delegates stored in redis
-            const lastTop = await redis.get(`topDelegates:${Number(roundData.round) - 1}`);
-            // If the previous round had top delegates
-            if (Number(roundData.round) > 1 && lastTop) {
-                // Apply top rewards
-                const reward = await TopRewards.applyTopRewardsForRound(Number(roundData.roundHeight) - 1, lastTop);
-                // If rewards are sent, store them in redis for supply tracker
-                if (reward) {
-                    await redis.hmset(
-                        `rewards:${Number(reward.roundInfo.round)}`,
-                        ["rewardedDelegates", reward.rewardedDelegates.join(",")],
-                        ["totalReward", reward.totalReward.toString()],
-                        ["round", reward.roundInfo.round],
-                    );
-                    // Store the rewarded delegates' topRewards state in SQLite for TopRewards.bootstrap()
-                    q(async () => {
-                        for (const publicKey of reward.rewardedDelegates) {
-                            const delegate = await this.findOrCreate("Delegate", publicKey);
-                            const delegateRewards = Utils.BigNumber.make(
-                                databaseService.walletManager
-                                    .findByPublicKey(publicKey)
-                                    .getAttribute("delegate.forgedTopRewards"),
-                            ).toString();
-                            if (delegate.topRewards !== Utils.BigNumber.make(delegateRewards).toString()) {
-                                delegate.topRewards = delegateRewards;
-                                await delegate.save();
-                            }
+            const newTopDelegates = this.getTopDelegates(roundData);
+            this.topDelegates[roundData.round] = newTopDelegates;
+        }
+
+        // We use the rounds global var instead of checking isNewRound() because sometimes the sync gets a new round block before all the round's blocks are cached
+        const lastRound = roundCalculator.calculateRound(roundData.roundHeight - 1 || 1);
+        // Get the previous round's top delegates stored in redis
+        const lastTop = this.topDelegates[lastRound.round];
+        // If the previous round has top delegates
+        if (lastTop && roundData.roundHeight === blockData.height) {
+            console.log(`Apply top rewards for round ${lastRound.round}`);
+            // Apply top rewards
+            const reward = await TopRewards.applyTopRewardsForRound(Number(lastRound.roundHeight), lastTop.join(","));
+            // If rewards are sent, store them in redis for supply tracker
+            if (reward) {
+                // Store the rewarded delegates' topRewards state in SQLite for TopRewards.bootstrap()
+                q(async () => {
+                    for (const publicKey of reward.rewardedDelegates) {
+                        const delegate = await this.findOrCreate("Delegate", publicKey);
+                        const delegateRewards = Utils.BigNumber.make(
+                            databaseService.walletManager
+                                .findByPublicKey(publicKey)
+                                .getAttribute("delegate.forgedTopRewards"),
+                        ).toString();
+                        if (delegate.topRewards !== Utils.BigNumber.make(delegateRewards).toString()) {
+                            delegate.topRewards = delegateRewards;
+                            await delegate.save();
                         }
-                    });
-                    // Emit event for supply-tracker to update supply with the reward object { rewardedDelegates, totalReward, roundInfo }
-                    emitter.emit("top.rewards.applied", reward);
-                    if (!trackSupply) {
-                        emitter.emit("top.supply.applied", reward.roundInfo.round);
                     }
-                }
+                });
+                emitter.emit("top.rewards.applied", reward);
+                delete this.topDelegates[reward.roundInfo.round];
             }
         }
     }
@@ -186,8 +156,7 @@ class TopRewards {
         lastTop: string,
     ): Promise<{ rewardedDelegates; totalReward; roundInfo; topDelegateReward } | void> {
         const roundInfo = roundCalculator.calculateRound(roundHeight);
-        logger.info(`Distributing Top Rewards for round height ${roundInfo.round}`);
-        const delegatesCount = Managers.configManager.getMilestone(roundInfo.roundHeight).activeDelegates;
+        const delegatesCount = roundInfo.maxDelegates;
         const topReward = Managers.configManager.getMilestone(roundInfo.roundHeight).topReward;
         const topDelegatesStr = lastTop;
         if (topDelegatesStr) {
@@ -212,6 +181,7 @@ class TopRewards {
                         }
                     }
                 }
+
                 return {
                     rewardedDelegates,
                     totalReward,
@@ -228,7 +198,7 @@ class TopRewards {
         lastTop: string,
     ): Promise<{ revertedDelegates; totalReward; roundInfo } | void> {
         const roundInfo = roundCalculator.calculateRound(roundHeight);
-        const delegatesCount = Managers.configManager.getMilestone(roundHeight).activeDelegates;
+        const delegatesCount = roundInfo.maxDelegates;
         const topReward = Managers.configManager.getMilestone(roundHeight).topReward;
         const topDelegatesStr = lastTop;
         if (topDelegatesStr) {
@@ -269,25 +239,15 @@ class TopRewards {
     // Function to apply top rewards & cache round data
     public static async handleRevertCacheAndTopRewards(blockData: Interfaces.IBlockData, trackSupply: boolean = false) {
         const roundData = roundCalculator.calculateRound(blockData.height);
-        let forged = "0";
-        let removed = "0";
         let count = 0;
         const roundCache = rounds[roundData.round];
 
         if (roundCache) {
-            forged = roundCache.forged || "0";
-            removed = roundCache.removed || "0";
             count = roundCache.count || 0;
         }
 
-        const newForged = Utils.BigNumber.make(forged)
-            .minus(blockData.reward)
-            .toFixed();
-        const newRemoved = Utils.BigNumber.make(removed)
-            .minus(blockData.removedFee)
-            .toFixed();
         const newCount = count - 1;
-        rounds[roundData.round] = { forged: newForged, removed: newRemoved, count: newCount };
+        rounds[roundData.round] = { count: newCount };
 
         // If the reverted block has a top reward and it was a new round block: Revert Top Rewards for last round & cache the new data
         const hasTopReward = !Utils.BigNumber.make(blockData.topReward).isZero();
@@ -300,12 +260,6 @@ class TopRewards {
             if (topDelegates) {
                 const reward = await TopRewards.revertTopRewardsForRound(lastRound.round, topDelegates.join(","));
                 if (reward) {
-                    await redis.hmset(
-                        `rewards:${Number(reward.roundInfo.round)}`,
-                        ["revertedDelegates", reward.revertedDelegates.join(",")],
-                        ["totalReward", reward.totalReward.toString()],
-                        ["round", reward.roundInfo.round],
-                    );
                     emitter.emit("top.rewards.reverted", reward);
                     if (!trackSupply) {
                         emitter.emit("top.supply.reverted", reward.roundInfo.round);
@@ -314,6 +268,8 @@ class TopRewards {
             }
         }
     }
+
+    private static topDelegates: string[][] = [];
 
     private static addRewards(delegate: State.IWallet, topDelegateReward, walletManager) {
         delegate.balance = delegate.balance.plus(topDelegateReward);
