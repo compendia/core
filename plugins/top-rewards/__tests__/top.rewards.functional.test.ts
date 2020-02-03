@@ -26,7 +26,7 @@ describe("Blockchain - Top Rewards", () => {
             const oldBalance = Utils.BigNumber.make(JSON.parse(JSON.stringify(delegate1.balance)));
             expect(delegates[0].getAttribute("delegate.forgedTopRewards").toString()).toBe("0");
 
-            await support.snoozeForBlock(5.5);
+            await support.snoozeForBlock(6);
 
             expect(delegates[0].getAttribute("delegate.forgedTopRewards").toString()).toBe("250000000");
 

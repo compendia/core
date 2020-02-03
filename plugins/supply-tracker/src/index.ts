@@ -6,12 +6,9 @@ import { Constants, Enums, Identities, Interfaces, Managers, Utils } from "@arke
 import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { Delegate, q, Round, Statistic } from "@nosplatform/storage";
-import { TopRewards } from "@nosplatform/top-rewards";
 import { asValue } from "awilix";
-import { createHandyClient } from "handy-redis";
 import { MoreThan } from "typeorm";
 
-const redis = createHandyClient();
 const defaults = {};
 const logger = app.resolvePlugin<Logger.ILogger>("logger");
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
@@ -96,47 +93,12 @@ export const plugin: Container.IPluginDescriptor = {
             return res;
         };
 
-        /**
-         * Event Listeners
-         */
+        const rounds: Array<{ forged: string; removed: string; count: number }> = [];
 
-        const getTopDelegates = (roundData: Shared.IRoundInfo) => {
-            const topDelegateCount = Managers.configManager.getMilestone(roundData.round).topDelegates;
-            const topDelegates = [];
-            let i = 0;
-            let delegates = [];
-            const getDelegates = () => {
-                let delegates = [];
-                try {
-                    delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
-                } catch (e) {
-                    throw new Error(e);
-                }
-                return delegates;
-            };
-
-            delegates = getDelegates();
-
-            for (const delegate of delegates) {
-                if (i < topDelegateCount) {
-                    topDelegates.push(delegate.publicKey);
-                } else {
-                    break;
-                }
-                i++;
-            }
-
-            return topDelegates;
-        };
-
-        // Global rounds store for applying forged + removed on newRound (count === 47)
-        const rounds: Array<{ forged; removed; count }> = [];
-
-        // Function to apply top rewards & cache round data
-        const handleCacheAndTopRewards = async (blockData: Interfaces.IBlockData) => {
+        emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
             const roundData = roundCalculator.calculateRound(blockData.height);
-            let forged = 0;
-            let removed = 0;
+            let forged = "0";
+            let removed = "0";
             let count = 0;
             const roundCache = rounds[roundData.round];
             if (roundCache) {
@@ -151,227 +113,140 @@ export const plugin: Container.IPluginDescriptor = {
                 .plus(blockData.removedFee)
                 .toFixed();
             const newCount = count + 1;
+
+            // Set the global variable's round data
             rounds[roundData.round] = { forged: newForged, removed: newRemoved, count: newCount };
 
-            // Pay out Top Rewards & cache the data for later caching in SQLite Storage
-            const hasTopReward = !Utils.BigNumber.make(blockData.topReward).isZero();
-            if (hasTopReward && (roundData.roundHeight === blockData.height || blockData.height === 2)) {
-                const topDelegates = getTopDelegates(roundData);
-                await redis.set(`topDelegates:${Number(roundData.round)}`, topDelegates.join(","));
-                const lastTop = await redis.get(`topDelegates:${Number(roundData.round) - 1}`);
-                if (Number(roundData.round) > 1 && lastTop) {
-                    const reward = await TopRewards.applyTopRewardsForRound(Number(roundData.roundHeight) - 1, lastTop);
-                    if (reward) {
-                        await redis.hmset(
-                            `rewards:${Number(reward.roundInfo.round)}`,
-                            ["rewardedDelegates", reward.rewardedDelegates.join(",")],
-                            ["totalReward", reward.totalReward.toString()],
-                            ["round", reward.roundInfo.round],
-                        );
-                    }
-                }
-            }
-        };
-
-        const syncLatestRound = async () => {
-            const lastBlock: Interfaces.IBlockData = await databaseService.connection.blocksRepository.latest();
-            if (lastBlock.height > 1) {
-                const roundData = roundCalculator.calculateRound(lastBlock.height);
-                await redis.del(`topDelegates:${Number(roundData.round)}`);
-                await redis.del(`rewards:${Number(roundData.round)}`);
-                delete rounds[roundData.round];
-                const neededBlocks = [];
-                for (let i = Number(roundData.roundHeight); i <= Number(lastBlock.height); i++) {
-                    neededBlocks.push(i);
-                }
-                const blocks = await databaseService.getBlocksByHeight(neededBlocks);
-
-                // Cache block forged + removed in roundCache to store later in persistent SQLite storage
-                for (const blockData of blocks) {
-                    await handleCacheAndTopRewards(blockData);
-                }
-            }
-        };
-
-        emitter.on(ApplicationEvents.StateBuilderFinished, async () => {
-            await TopRewards.bootstrap();
-            await syncLatestRound();
-        });
-
-        // let missedRounds: string[] = [];
-        // emitter.on(ApplicationEvents.RoundMissed, async (delegate: State.IWallet) => {
-        //     const lastBlock = await databaseService.connection.blocksRepository.latest();
-        //     const round = roundCalculator.calculateRound(lastBlock.height);
-        //     missedRounds[round.round] = delegate.publicKey;
-        // });
-
-        // On new block
-        emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
-            await handleCacheAndTopRewards(blockData);
-
-            q(async () => {
-                const roundData = roundCalculator.calculateRound(blockData.height);
-                const roundToHandle = Number(roundData.round) - 1;
-                const roundCache = rounds[roundToHandle];
-                if (
-                    roundCache &&
-                    roundCache.count === Number(Managers.configManager.getMilestone(roundToHandle).activeDelegates) &&
-                    blockData.height > 1
-                ) {
+            if (
+                rounds[roundData.round].count ===
+                    Managers.configManager.getMilestone(blockData.height).activeDelegates &&
+                blockData.height > 1
+            ) {
+                q(async () => {
+                    const roundData = roundCalculator.calculateRound(blockData.height);
                     // Get data from redis cache
                     const lastSupply = Utils.BigNumber.make(supply.value);
-                    const forged = roundCache.forged;
+                    const roundCache = rounds[roundData.round - 1];
+                    const reward = roundCache.forged;
                     const removed = roundCache.removed;
-
                     // supply global state
-
                     supply.value = lastSupply
-                        .plus(forged)
+                        .plus(reward)
                         .minus(removed)
                         .toString();
-
                     // fees.removed global state
-                    if (Utils.BigNumber.make(removed).isGreaterThan(Utils.BigNumber.ZERO)) {
+                    if (Utils.BigNumber.make(reward).isGreaterThan(Utils.BigNumber.ZERO)) {
                         removedFees.value = Utils.BigNumber.make(removedFees.value)
                             .plus(removed)
                             .toString();
                         await removedFees.save();
                     }
-
                     // Update Round using cached data
-                    const round = await findOrCreate("Round", roundToHandle);
-                    round.forged = Utils.BigNumber.make(round.forged)
-                        .plus(forged)
+                    const dbRound: Round = await findOrCreate("Round", roundData.round);
+                    dbRound.forged = Utils.BigNumber.make(dbRound.forged)
+                        .plus(reward)
                         .toString();
-                    round.removed = Utils.BigNumber.make(round.removed)
+                    dbRound.removed = Utils.BigNumber.make(dbRound.removed)
                         .plus(removed)
                         .toString();
-
-                    // If there are top delegates: distribute and store topRewards
-                    const topDelegates = await redis.get(`topDelegates:${roundToHandle}`);
-                    if (topDelegates) {
-                        const reward = await redis.hmget(
-                            `rewards:${roundToHandle}`,
-                            "totalReward",
-                            "rewardedDelegates",
+                    try {
+                        await dbRound.save();
+                        await supply.save();
+                        delete rounds[roundData.round - 1];
+                        logger.info(
+                            `Round ${roundData.round} applied. Supply updated. Previous: ${lastSupply.dividedBy(
+                                Constants.ARKTOSHI,
+                            )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                         );
-                        if (reward && !Utils.BigNumber.make(reward[0] || 0).isZero()) {
-                            const lastSupply = Utils.BigNumber.make(supply.value);
-                            supply.value = lastSupply.plus(reward[0]).toString();
-                            round.forged = Utils.BigNumber.make(round.forged)
-                                .plus(reward[0])
-                                .toString();
-                            round.topDelegates = topDelegates;
+                    } catch (e) {
+                        throw e;
+                    }
 
-                            // Store each individual delegate's reward to their publicKey in SQLite
-                            for (const publicKey of reward[1].split(",")) {
-                                const delegate = await findOrCreate("Delegate", publicKey);
-                                const delegateRewards = Utils.BigNumber.make(
-                                    databaseService.walletManager
-                                        .findByPublicKey(publicKey)
-                                        .getAttribute("delegate.forgedTopRewards"),
-                                ).toString();
-                                if (delegate.topRewards !== Utils.BigNumber.make(delegateRewards).toString()) {
-                                    delegate.topRewards = delegateRewards;
-                                    await delegate.save();
-                                }
-                            }
+                    // After the first block, remove any rounds stored later than latest round on the node
+                    if (!roundsCleaned) {
+                        const laterRounds = await Round.find({ where: { id: MoreThan(roundData.round) } });
+                        for (const laterRound of laterRounds) {
+                            logger.info(`Round ${laterRound.id} doesn't exist yet. Deleting round info. `);
+                            await laterRound.remove();
                         }
+                        roundsCleaned = true;
                     }
-
-                    await redis.del(`rewards:${roundToHandle}`);
-                    await redis.del(`topDelegates:${roundToHandle}`);
-                    delete rounds[roundToHandle];
-
-                    await round.save();
-                    await supply.save();
-
-                    logger.info(
-                        `Round ${roundToHandle} applied. Supply updated. Previous: ${lastSupply.dividedBy(
-                            Constants.ARKTOSHI,
-                        )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
-                    );
-                }
-
-                // After the first block, remove any rounds stored later than latest round on the node
-                if (!roundsCleaned) {
-                    const laterRounds = await Round.find({ where: { id: MoreThan(roundData.round) } });
-                    for (const laterRound of laterRounds) {
-                        logger.info(`Round ${laterRound.id} doesn't exist yet. Deleting round info. `);
-                        await laterRound.remove();
-                    }
-                    roundsCleaned = true;
-                }
-
-                app.register("supply.lastblock", asValue(blockData.height));
-            });
+                    app.register("supply.lastblock", asValue(blockData.height));
+                });
+            }
         });
 
-        // Function to apply top rewards & cache round data
-        const handleRevertCacheAndTopRewards = async (blockData: Interfaces.IBlockData) => {
-            const roundData = roundCalculator.calculateRound(blockData.height);
-            let forged = 0;
-            let removed = 0;
-            let count = 0;
-            const roundCache = rounds[roundData.round];
-            if (roundCache) {
-                forged = roundCache.forged;
-                removed = roundCache.removed;
-                count = roundCache.count;
-            }
-            const newForged = Utils.BigNumber.make(forged)
-                .minus(blockData.reward)
-                .toFixed();
-            const newRemoved = Utils.BigNumber.make(removed)
-                .minus(blockData.removedFee)
-                .toFixed();
-            const newCount = count - 1;
-            rounds[roundData.round] = { forged: newForged, removed: newRemoved, count: newCount };
-
-            // Pay out Top Rewards & cache the data for later caching in SQLite Storage
-            const hasTopReward = !Utils.BigNumber.make(blockData.topReward).isZero();
-            if (hasTopReward && (roundData.roundHeight === blockData.height || blockData.height === 2)) {
-                const topDelegates = getTopDelegates(roundData);
-                await redis.set(`topDelegates:${Number(roundData.round)}`, topDelegates.join(","));
-                const lastTop = await redis.get(`topDelegates:${Number(roundData.round) - 1}`);
-                if (Number(roundData.round) > 1 && lastTop) {
-                    const reward = await TopRewards.revertTopRewardsForRound(
-                        Number(roundData.roundHeight) - 1,
-                        lastTop,
-                    );
-                    if (reward) {
-                        await redis.hmset(
-                            `rewards:${Number(reward.roundInfo.round)}`,
-                            ["rewardedDelegates", reward.rewardedDelegates.join(",")],
-                            ["totalReward", reward.totalReward.toString()],
-                            ["round", reward.roundInfo.round],
+        emitter.on(
+            "top.rewards.applied",
+            async (reward: {
+                rewardedDelegates: string[];
+                totalReward: Utils.BigNumber;
+                roundInfo: Shared.IRoundInfo;
+                topDelegateReward: Utils.BigNumber;
+            }) => {
+                q(async () => {
+                    const roundToHandle = reward.roundInfo.round;
+                    // If there are top delegates: store topRewards to Round and Supply
+                    if (reward.rewardedDelegates) {
+                        const dbRound = await findOrCreate("Round", roundToHandle);
+                        const lastSupply = Utils.BigNumber.make(supply.value);
+                        supply.value = lastSupply.plus(reward.totalReward).toString();
+                        dbRound.forged = Utils.BigNumber.make(dbRound.forged)
+                            .plus(reward.totalReward)
+                            .toString();
+                        dbRound.topDelegates = reward.rewardedDelegates.join(",");
+                        await dbRound.save();
+                        await supply.save();
+                        logger.info(
+                            `Top Rewards distributed for Round ${roundToHandle}. Supply updated. Previous: ${lastSupply.dividedBy(
+                                Constants.ARKTOSHI,
+                            )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                         );
                     }
-                }
-            }
-        };
+                    emitter.emit("top.supply.applied", reward.roundInfo.round);
+                });
+            },
+        );
+
+        emitter.on(
+            "top.rewards.reverted",
+            async (reward: {
+                revertedDelegates: string[];
+                totalReward: Utils.BigNumber;
+                roundInfo: Shared.IRoundInfo;
+                topDelegateReward: Utils.BigNumber;
+            }) => {
+                q(async () => {
+                    const roundToHandle = reward.roundInfo.round;
+                    // If there are top delegates: store topRewards to Round and Supply
+                    if (reward.revertedDelegates) {
+                        const dbRound = await findOrCreate("Round", roundToHandle);
+                        const lastSupply = Utils.BigNumber.make(supply.value);
+                        supply.value = lastSupply.minus(reward.totalReward).toString();
+                        dbRound.forged = Utils.BigNumber.make(dbRound.forged)
+                            .minus(reward.totalReward)
+                            .toString();
+                        dbRound.topDelegates = reward.revertedDelegates.join(",");
+                        await dbRound.save();
+                        await supply.save();
+                    }
+                    emitter.emit("top.supply.reverted", reward.roundInfo.round);
+                });
+            },
+        );
 
         emitter.on("block.reverted", async (blockData: Interfaces.IBlockData) => {
-            const roundData = roundCalculator.calculateRound(blockData.height);
-            const round = await Round.findOne(roundData.round);
-            rounds[roundData.round] = {
-                forged: round.forged,
-                removed: round.removed,
-                count: Number(Managers.configManager.getMilestone(roundData.roundHeight).activeDelegates),
-            };
-            await handleRevertCacheAndTopRewards(blockData);
-
             q(async () => {
-                if (roundData.roundHeight === blockData.height && blockData.height > 1) {
+                const roundData = roundCalculator.calculateRound(blockData.height);
+                if (roundCalculator.isNewRound(blockData.height)) {
                     const roundToHandle = Number(roundData.round) - 1;
+                    let lastSupply: Utils.BigNumber;
                     const round = await Round.findOne(roundToHandle);
-
-                    const lastSupply = Utils.BigNumber.make(supply.value);
+                    lastSupply = Utils.BigNumber.make(supply.value);
                     supply.value = lastSupply
                         .minus(round.forged)
                         .plus(round.removed)
                         .toString();
-                    await supply.save();
 
                     if (!Utils.BigNumber.make(round.removed).isZero()) {
                         removedFees.value = Utils.BigNumber.make(removedFees.value)
@@ -380,32 +255,7 @@ export const plugin: Container.IPluginDescriptor = {
                         await removedFees.save();
                     }
 
-                    const topDelegates = await redis.get(`topDelegates:${roundToHandle}`);
-                    if (topDelegates) {
-                        const reward = await redis.hmget(
-                            `rewards:${roundToHandle}`,
-                            "totalReward",
-                            "rewardedDelegates",
-                        );
-                        if (reward && !Utils.BigNumber.make(reward[0] || 0).isZero()) {
-                            const lastSupply = Utils.BigNumber.make(supply.value);
-                            supply.value = lastSupply.minus(reward[0]).toString();
-                            // Store each individual delegate's reward to their publicKey in SQLite
-                            for (const publicKey of reward[1].split(",")) {
-                                const delegate = await Delegate.findOne({ where: { publicKey } });
-                                const delegateRewards = Utils.BigNumber.make(
-                                    databaseService.walletManager
-                                        .findByPublicKey(publicKey)
-                                        .getAttribute("delegate.forgedTopRewards"),
-                                ).toString();
-                                if (delegate.topRewards !== Utils.BigNumber.make(delegateRewards).toString()) {
-                                    delegate.topRewards = delegateRewards;
-                                    await delegate.save();
-                                }
-                            }
-                        }
-                    }
-
+                    await supply.save();
                     await round.remove();
 
                     logger.info(
@@ -413,16 +263,43 @@ export const plugin: Container.IPluginDescriptor = {
                             Constants.ARKTOSHI,
                         )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                     );
-                }
 
-                // Remove any rounds stored later than latest round the node reverted to
-                const laterRounds = await Round.find({ where: { id: MoreThan(roundData.round) } });
-                for (const laterRound of laterRounds) {
-                    logger.info(`Round ${laterRound.id} reverted. Deleting round info. `);
-                    await laterRound.remove();
+                    // Remove any rounds stored later than latest round the node reverted to
+                    const laterRounds = await Round.find({ where: { id: MoreThan(roundData.round) } });
+                    for (const laterRound of laterRounds) {
+                        logger.info(`Round ${laterRound.id} reverted. Deleting round info. `);
+                        await laterRound.remove();
+                    }
                 }
             });
         });
+
+        emitter.on(
+            "top.rewards.reverted",
+            async (reward: {
+                rewardedDelegates: string[];
+                totalReward: Utils.BigNumber;
+                roundInfo: Shared.IRoundInfo;
+                topDelegateReward: Utils.BigNumber;
+            }) => {
+                q(async () => {
+                    const roundToHandle = reward.roundInfo.round;
+                    // If there are top delegates: store topRewards to Round and Supply
+                    if (reward.rewardedDelegates) {
+                        const dbRound = await findOrCreate("Round", roundToHandle);
+                        const lastSupply = Utils.BigNumber.make(supply.value);
+                        supply.value = lastSupply.plus(reward.totalReward).toString();
+                        dbRound.forged = Utils.BigNumber.make(dbRound.forged)
+                            .minus(reward.totalReward)
+                            .toString();
+                        dbRound.topDelegates = reward.rewardedDelegates.join(",");
+                        await dbRound.save();
+                        await supply.save();
+                    }
+                    emitter.emit("top.supply.reverted", reward.roundInfo.round);
+                });
+            },
+        );
 
         // All transfers from the mint wallet are added to supply
         emitter.on(ApplicationEvents.TransactionApplied, async txData => {

@@ -30,7 +30,10 @@ module.exports = {
             minFeeBroadcast: 1000,
         },
     },
-    "@nosplatform/top-rewards": {},
+    "@nosplatform/supply-tracker": {},
+    "@nosplatform/top-rewards": {
+        trackSupply: true
+    },
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
@@ -59,5 +62,4 @@ module.exports = {
         port: 6003,
         wsPort: 6004
     },
-    "@nosplatform/supply-tracker": {},
 };
