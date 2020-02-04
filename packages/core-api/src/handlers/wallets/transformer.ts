@@ -10,7 +10,10 @@ export const transformWallet = (wallet: State.IWallet) => {
     let attributes = {};
 
     if (wallet.hasAttribute("delegate")) {
-        const delegate = wallet.getAttribute("delegate");
+        const delegate = JSON.parse(JSON.stringify(wallet.getAttribute("delegate")));
+        if (delegate.lastBlock && delegate.lastBlock.timestamp) {
+            delegate.lastBlock.timestamp = formatTimestamp(delegate.lastBlock.timestamp).unix;
+        }
         attributes = { delegate };
     }
 
