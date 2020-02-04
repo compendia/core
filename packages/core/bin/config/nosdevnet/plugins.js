@@ -54,10 +54,11 @@ module.exports = {
             },
         },
     },
-    "@nosplatform/supply-tracker": {},
+    "@nosplatform/top-rewards": {
+        trackSupply: false
+    },
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
-    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
         host: process.env.CORE_API_HOST || "0.0.0.0",
