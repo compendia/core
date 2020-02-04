@@ -220,7 +220,7 @@ class TopRewards {
     }
 
     // Function to apply top rewards & cache round data
-    public static async handleRevertCacheAndTopRewards(blockData: Interfaces.IBlockData, trackSupply: boolean = false) {
+    public static async handleRevertCacheAndTopRewards(blockData: Interfaces.IBlockData) {
         const roundData = roundCalculator.calculateRound(blockData.height);
 
         // If the reverted block has a top reward and it was a new round block: Revert Top Rewards for last round & cache the new data
@@ -234,9 +234,7 @@ class TopRewards {
                 const reward = await TopRewards.revertTopRewardsForRound(lastRound.round, topDelegates.join(","));
                 if (reward) {
                     emitter.emit("top.rewards.reverted", reward);
-                    if (!trackSupply) {
-                        emitter.emit("top.supply.reverted", reward.roundInfo.round);
-                    }
+                    emitter.emit("top.supply.reverted", reward.roundInfo.round);
                 }
             }
         }
