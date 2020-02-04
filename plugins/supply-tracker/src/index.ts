@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Container, Database, EventEmitter, Logger, Shared, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Constants, Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Constants, Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
 import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { q, Round, Statistic } from "@nosplatform/storage";
@@ -166,12 +166,8 @@ export const plugin: Container.IPluginDescriptor = {
             // Set the global variable's round data
             rounds[roundData.round] = { forged: newForged, removed: newRemoved, count: newCount };
 
-            if (
-                rounds[roundData.round].count ===
-                    Managers.configManager.getMilestone(blockData.height).activeDelegates &&
-                blockData.height > 1
-            ) {
-                q(async () => {
+            q(async () => {
+                if (roundCalculator.isNewRound(blockData.height) && blockData.height > 1) {
                     const roundData = roundCalculator.calculateRound(blockData.height);
                     // Get data from global var cache
                     const lastSupply = Utils.BigNumber.make(supply.value);
@@ -222,8 +218,8 @@ export const plugin: Container.IPluginDescriptor = {
                     }
                     app.register("supply.lastblock", asValue(blockData.height));
                     emitter.emit("top.supply.applied", roundData.round - 1);
-                });
-            }
+                }
+            });
         });
 
         emitter.on(
