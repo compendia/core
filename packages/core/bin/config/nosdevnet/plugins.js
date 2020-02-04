@@ -54,9 +54,7 @@ module.exports = {
             },
         },
     },
-    "@nosplatform/top-rewards": {
-        trackSupply: false
-    },
+    "@nosplatform/top-rewards": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
