@@ -85,11 +85,60 @@ export const plugin: Container.IPluginDescriptor = {
 
         const rounds: Array<{ forged: string; removed: string; count: number }> = [];
 
+        const syncLatestRound = async () => {
+            const lastBlock: Interfaces.IBlockData = await databaseService.connection.blocksRepository.latest();
+            if (lastBlock.height > 1) {
+                const roundData = roundCalculator.calculateRound(lastBlock.height);
+                delete rounds[roundData.round];
+                const neededBlocks = [];
+                for (let i = Number(roundData.roundHeight); i <= Number(lastBlock.height); i++) {
+                    neededBlocks.push(i);
+                }
+                const blocks = await databaseService.getBlocksByHeight(neededBlocks);
+
+                // Cache block forged + removed in roundCache to store later in persistent SQLite storage
+                for (const blockData of blocks) {
+                    let forged = "0";
+                    let removed = "0";
+                    let count = 0;
+                    if (roundData.roundHeight === 1) {
+                        count = 1;
+                    }
+                    const roundCache = rounds[roundData.round];
+                    if (roundCache) {
+                        forged = roundCache.forged;
+                        removed = roundCache.removed;
+                        count = roundCache.count;
+                    }
+                    const newForged = Utils.BigNumber.make(forged)
+                        .plus(blockData.reward)
+                        .toFixed();
+                    const newRemoved = Utils.BigNumber.make(removed)
+                        .plus(blockData.removedFee)
+                        .toFixed();
+                    const newCount = count + 1;
+
+                    // Set the global variable's round data
+                    rounds[roundData.round] = { forged: newForged, removed: newRemoved, count: newCount };
+                }
+            }
+        };
+
+        // After state building finishes, cache the latest round's blocks in the global "rounds" session variable.
+        emitter.on(ApplicationEvents.StateBuilderFinished, async () => {
+            logger.info("Bootstrapping Supply Cache");
+            await syncLatestRound();
+            logger.info("Bootstrapping Supply Cache Completed");
+        });
+
         let blockEvent;
+        let revertBlockEvent;
         if (options.topRewards) {
             blockEvent = "topRewards.block.applied";
+            revertBlockEvent = "topRewards.block.reverted";
         } else {
             blockEvent = "block.applied";
+            revertBlockEvent = "block.reverted";
         }
 
         emitter.on(blockEvent, async (blockData: Interfaces.IBlockData) => {
@@ -236,7 +285,7 @@ export const plugin: Container.IPluginDescriptor = {
             },
         );
 
-        emitter.on("block.reverted", async (blockData: Interfaces.IBlockData) => {
+        emitter.on(revertBlockEvent, async (blockData: Interfaces.IBlockData) => {
             q(async () => {
                 const roundData = roundCalculator.calculateRound(blockData.height);
                 if (roundCalculator.isNewRound(blockData.height)) {
