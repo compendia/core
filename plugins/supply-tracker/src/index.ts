@@ -173,7 +173,7 @@ export const plugin: Container.IPluginDescriptor = {
             ) {
                 q(async () => {
                     const roundData = roundCalculator.calculateRound(blockData.height);
-                    // Get data from redis cache
+                    // Get data from global var cache
                     const lastSupply = Utils.BigNumber.make(supply.value);
                     const roundCache = rounds[roundData.round - 1 || 1];
                     const reward = roundCache.forged;

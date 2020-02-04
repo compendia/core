@@ -12,16 +12,12 @@ import {
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { Delegate, q } from "@nosplatform/storage";
-import { createHandyClient } from "handy-redis";
-
-const redis = createHandyClient();
 
 const defaults = {};
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>("transaction-pool");
 const logger: Logger.ILogger = app.resolvePlugin<Logger.ILogger>("logger");
-const rounds: Array<{ count: number }> = [];
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -47,13 +43,7 @@ export const plugin: Container.IPluginDescriptor = {
         // On a reverted block, handle the cache and top rewards.
         emitter.on(ApplicationEvents.BlockReverted, async (block: Interfaces.IBlockData) => {
             await TopRewards.handleRevertCacheAndTopRewards(block);
-        });
-
-        // When supply tracker stored the Round and Supply info, we can delete the data from cache.
-        emitter.on("top.supply.applied", async (round: number) => {
-            delete rounds[round];
-            await redis.del(`rewards:${round}`);
-            await redis.del(`topDelegates:${round}`);
+            emitter.emit("topRewards.block.reverted", block);
         });
     },
     async deregister(container: Container.IContainer, options) {
@@ -62,6 +52,8 @@ export const plugin: Container.IPluginDescriptor = {
 };
 
 class TopRewards {
+    public static topDelegates: string[][] = [];
+
     // Set the topRewards for the nodes
     public static async bootstrap(publicKey?: string, walletManager?: State.IWalletManager): Promise<void> {
         if (publicKey && walletManager) {
@@ -87,36 +79,28 @@ class TopRewards {
         }
     }
 
-    // Adding the supply data from each block in the latest round to redis
+    // Setting the top delegates of the latest block's round on bootstrap
     public static async syncLatestRound() {
         const lastBlock: Interfaces.IBlockData = await databaseService.connection.blocksRepository.latest();
-        if (lastBlock.height > 1) {
-            const roundData = roundCalculator.calculateRound(lastBlock.height);
-            await redis.del(`topDelegates:${Number(roundData.round)}`);
-            await redis.del(`rewards:${Number(roundData.round)}`);
-            delete rounds[roundData.round];
-            const neededBlocks = [];
-            for (let i = Number(roundData.roundHeight); i <= Number(lastBlock.height); i++) {
-                neededBlocks.push(i);
-                console.log(i);
-            }
-            const blocks = await databaseService.getBlocksByHeight(neededBlocks);
-
-            // Cache block forged + removed in roundCache to store later in persistent SQLite storage
-            for (const blockData of blocks) {
-                await this.handleCacheAndTopRewards(blockData);
-            }
+        const roundData = roundCalculator.calculateRound(lastBlock.height);
+        const newTopDelegates = this.getTopDelegates(roundData);
+        if (newTopDelegates) {
+            this.topDelegates[roundData.round] = newTopDelegates;
         }
     }
 
-    public static async handleCacheAndTopRewards(blockData: Interfaces.IBlockData) {
+    // Handle caching new top delegates and distribute rewards
+    public static async handleCacheAndTopRewards(blockData: Interfaces.IBlockData, bootstrap = false) {
         const roundData = roundCalculator.calculateRound(blockData.height);
 
+        // Only set this block's round's top delegates if not already set
         if (!this.topDelegates[roundData.round]) {
-            console.log(`Set top ${roundData.round}`);
             // Get the top delegates of this round
             const newTopDelegates = this.getTopDelegates(roundData);
-            this.topDelegates[roundData.round] = newTopDelegates;
+            // Store them in session variable
+            if (newTopDelegates) {
+                this.topDelegates[roundData.round] = newTopDelegates;
+            }
         }
 
         // We use the rounds global var instead of checking isNewRound() because sometimes the sync gets a new round block before all the round's blocks are cached
@@ -125,10 +109,9 @@ class TopRewards {
         const lastTop = this.topDelegates[lastRound.round];
         // If the previous round has top delegates
         if (lastTop && roundData.roundHeight === blockData.height) {
-            console.log(`Apply top rewards for round ${lastRound.round}`);
             // Apply top rewards
             const reward = await TopRewards.applyTopRewardsForRound(Number(lastRound.roundHeight), lastTop.join(","));
-            // If rewards are sent, store them in redis for supply tracker
+            // If rewards are distributed, store new delegate stats & fire top rewards event for supply tracker
             if (reward) {
                 // Store the rewarded delegates' topRewards state in SQLite for TopRewards.bootstrap()
                 q(async () => {
@@ -239,15 +222,6 @@ class TopRewards {
     // Function to apply top rewards & cache round data
     public static async handleRevertCacheAndTopRewards(blockData: Interfaces.IBlockData, trackSupply: boolean = false) {
         const roundData = roundCalculator.calculateRound(blockData.height);
-        let count = 0;
-        const roundCache = rounds[roundData.round];
-
-        if (roundCache) {
-            count = roundCache.count || 0;
-        }
-
-        const newCount = count - 1;
-        rounds[roundData.round] = { count: newCount };
 
         // If the reverted block has a top reward and it was a new round block: Revert Top Rewards for last round & cache the new data
         const hasTopReward = !Utils.BigNumber.make(blockData.topReward).isZero();
@@ -255,7 +229,6 @@ class TopRewards {
             // TopDelegates cache is removed after rewards are applied, so we re-retrieve them for the last round and cache them here.
             const lastRound = roundCalculator.calculateRound(roundData.roundHeight - 1);
             const topDelegates = this.getTopDelegates(lastRound);
-            await redis.set(`topDelegates:${Number(lastRound.round)}`, topDelegates.join(","));
             // If there are topDelegates for the round we reverted to: revert their rewards
             if (topDelegates) {
                 const reward = await TopRewards.revertTopRewardsForRound(lastRound.round, topDelegates.join(","));
@@ -268,8 +241,6 @@ class TopRewards {
             }
         }
     }
-
-    private static topDelegates: string[][] = [];
 
     private static addRewards(delegate: State.IWallet, topDelegateReward, walletManager) {
         delegate.balance = delegate.balance.plus(topDelegateReward);
