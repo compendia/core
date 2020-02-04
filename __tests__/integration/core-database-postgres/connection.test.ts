@@ -3,7 +3,7 @@ import "jest-extended";
 import { app } from "@arkecosystem/core-container";
 import { Database, State } from "@arkecosystem/core-interfaces";
 import { Blocks, Interfaces, Managers } from "@arkecosystem/crypto";
-import { genesisBlock } from "../../utils/config/testnet/genesisBlock";
+import { genesisBlock } from "../../utils/config/nospluginnet/genesisBlock";
 import { setUp, tearDown } from "./__support__/setup";
 
 const { BlockFactory } = Blocks;

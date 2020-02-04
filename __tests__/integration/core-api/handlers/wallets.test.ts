@@ -99,6 +99,7 @@ describe("API 2.0 - Wallets", () => {
 
                 const wallet = response.data.data;
                 utils.expectWallet(wallet);
+                console.log(wallet);
                 const apiIdValue = identifier === "username" ? wallet.attributes.delegate.username : wallet[identifier];
                 expect(apiIdValue).toBe(value);
             }

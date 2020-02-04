@@ -7,6 +7,13 @@ export const transformWallet = (wallet: State.IWallet) => {
     const username: string = wallet.getAttribute("delegate.username");
     const multiSignature: Interfaces.IMultiSignatureAsset = wallet.getAttribute("multiSignature");
 
+    let attributes = {};
+
+    if (wallet.hasAttribute("delegate")) {
+        const delegate = wallet.getAttribute("delegate");
+        attributes = { delegate };
+    }
+
     // TODO: cleanup V3
     let business: any;
     if (app.has("core-magistrate-transactions")) {
@@ -57,5 +64,6 @@ export const transformWallet = (wallet: State.IWallet) => {
             .plus(Utils.BigNumber.make(wallet.balance))
             .toFixed(),
         stakes: unixStakes,
+        attributes,
     };
 };

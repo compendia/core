@@ -90,7 +90,7 @@ class TopRewards {
     }
 
     // Handle caching new top delegates and distribute rewards
-    public static async handleCacheAndTopRewards(blockData: Interfaces.IBlockData, bootstrap = false) {
+    public static async handleCacheAndTopRewards(blockData: Interfaces.IBlockData) {
         const roundData = roundCalculator.calculateRound(blockData.height);
 
         // Only set this block's round's top delegates if not already set
@@ -288,6 +288,7 @@ class TopRewards {
         const getDelegates = () => {
             let delegates = [];
             try {
+                // Set databaseService here for integration tests
                 delegates = databaseService.walletManager.loadActiveDelegateList(roundData);
             } catch (e) {
                 throw new Error(e);

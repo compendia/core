@@ -1,6 +1,6 @@
 import { transformerService } from "../../../../packages/core-api/src/services/transformer";
 import { Managers, Transactions } from "../../../../packages/crypto/src";
-import { genesisBlock } from "../../../utils/config/testnet/genesisBlock";
+import { genesisBlock } from "../../../utils/config/nospluginnet/genesisBlock";
 import { setUp, tearDown } from "../__support__/setup";
 import blockRaw from "./block-raw.json";
 import blockTransformed from "./block-transformed.json";

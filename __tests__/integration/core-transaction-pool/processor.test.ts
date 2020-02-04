@@ -754,6 +754,8 @@ describe("Transaction Guard", () => {
                     transactionData.ids.push(Buffer.from(transaction.id, "hex"));
                 }
 
+                const feeObj = Utils.FeeHelper.getFeeObject(transactionData.fee, Utils.BigNumber.ZERO);
+
                 const lastBlock = blockchain.state.getLastBlock();
                 const data = {
                     timestamp: timestamp(),
@@ -763,7 +765,7 @@ describe("Transaction Guard", () => {
                     height: lastBlock.data.height + 1,
                     numberOfTransactions: transactions.length,
                     totalAmount: transactionData.amount,
-                    totalFee: transactionData.fee,
+                    totalFee: feeObj.toReward,
                     reward: Utils.BigNumber.ZERO,
                     payloadLength: 32 * transactions.length,
                     payloadHash: Crypto.HashAlgorithms.sha256(transactionData.ids).toString("hex"),

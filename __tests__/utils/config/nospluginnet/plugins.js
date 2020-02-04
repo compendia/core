@@ -30,10 +30,10 @@ module.exports = {
             minFeeBroadcast: 1000,
         },
     },
-    "@nosplatform/supply-tracker": {},
-    "@nosplatform/top-rewards": {
-        trackSupply: true
+    "@nosplatform/supply-tracker": {
+        topRewards: true
     },
+    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,

@@ -35,6 +35,7 @@ const setUp = async () => {
             "@arkecosystem/core-exchange-json-rpc",
             "@arkecosystem/core-api",
             "@nosplatform/storage",
+            "@nosplatform/top-rewards",
         ],
     });
 

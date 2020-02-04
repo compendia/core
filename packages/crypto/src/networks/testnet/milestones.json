@@ -23,6 +23,7 @@
                 "multiPayment": 10000000,
                 "delegateResignation": 2500000000,
                 "htlcLock": 10000000,
+                "setFile": 500000000,
                 "htlcClaim": 0,
                 "htlcRefund": 0
             }

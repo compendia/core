@@ -22,7 +22,8 @@
                 "multiPayment": 0,
                 "delegateResignation": 2500000000,
                 "stakeCreate": 0,
-                "stakeRedeem": 0
+                "stakeRedeem": 0,
+                "setFile": 500000000
             }
         },
         "vendorFieldLength": 64,
