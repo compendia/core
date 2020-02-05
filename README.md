@@ -1,12 +1,12 @@
-# ARK Core
+# nOS Core
 
 [![License: MIT](https://badgen.now.sh/badge/license/MIT/green)](https://opensource.org/licenses/MIT)
 
-> Lead Maintainer: [Joshua Noack](https://github.com/supaiku0)
+> Lead Maintainer: [Dean van Dugteren](https://github.com/deanpress)
 
 ## Introduction
 
-This repository contains all plugins that make up the nOS Core.
+This repository contains all modules that make up the nOS Core.
 
 Check our [dedicated documentation site](https://docs.ark.io/guidebook/core/plugins/) for information about all available plugins and [How to write a Core Plugin
 ](https://docs.ark.io/tutorials/core/plugins/how-to-write-a-core-plugin.html) if you want to get started with developing your own plugins.
