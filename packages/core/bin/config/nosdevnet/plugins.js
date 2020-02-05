@@ -24,7 +24,7 @@ module.exports = {
         cors: true
     },
     "@nosplatform/file-transactions": {
-        fileKeys: ["description"],
+        fileKeys: ["description", "icon"],
         port: 6003,
         wsPort: 6004
     },
