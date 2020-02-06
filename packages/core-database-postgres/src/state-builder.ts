@@ -3,6 +3,7 @@ import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Utils } from "@arkecosystem/crypto";
+import { TopRewards } from "@nosplatform/top-rewards";
 
 export class StateBuilder {
     private readonly logger: Logger.ILogger = app.resolvePlugin<Logger.ILogger>("logger");
@@ -15,7 +16,7 @@ export class StateBuilder {
 
     public async run(): Promise<void> {
         const transactionHandlers: Handlers.TransactionHandler[] = Handlers.Registry.getAll();
-        const steps = transactionHandlers.length + 3;
+        const steps = transactionHandlers.length + 4;
 
         this.logger.info(`State Generation - Step 1 of ${steps}: Block Rewards`);
         await this.buildBlockRewards();
@@ -36,6 +37,9 @@ export class StateBuilder {
         this.logger.info(`State Generation - Step ${steps} of ${steps}: Vote Balances & Delegate Ranking`);
         this.walletManager.buildVoteBalances();
         this.walletManager.buildDelegateRanking();
+
+        this.logger.info(`State Generation - Step ${steps} of ${steps}: Top Rewards`);
+        await TopRewards.bootstrap(this.walletManager);
 
         this.logger.info(
             `State Generation complete! Wallets in memory: ${Object.keys(this.walletManager.allByAddress()).length}`,

@@ -31,7 +31,7 @@ export const setUp = async () => {
     try {
         return await setUpContainer({
             exit: "@arkecosystem/core-blockchain",
-            exclude: ["@arkecosystem/core-transaction-pool", "@nosplatform/storage"],
+            exclude: ["@arkecosystem/core-transaction-pool"],
             network: "unitnet",
         });
     } catch (error) {
@@ -46,7 +46,7 @@ export const setUpFull = async () => {
     try {
         await setUpContainer({
             exit: "@arkecosystem/core-transaction-pool",
-            exclude: ["@arkecosystem/core-transaction-pool", "@nosplatform/storage"],
+            exclude: ["@arkecosystem/core-transaction-pool"],
             network: "unitnet",
         });
 

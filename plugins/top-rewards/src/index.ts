@@ -15,8 +15,8 @@ import { Delegate, q } from "@nosplatform/storage";
 
 const defaults = {};
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
-const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>("transaction-pool");
+let databaseService: Database.IDatabaseService;
+let poolService: TransactionPool.IConnection;
 const logger: Logger.ILogger = app.resolvePlugin<Logger.ILogger>("logger");
 
 export const plugin: Container.IPluginDescriptor = {
@@ -28,10 +28,12 @@ export const plugin: Container.IPluginDescriptor = {
 
         // After state finishes building, apply the topRewards to wallets and cache the last round's blocks.
         emitter.on(ApplicationEvents.StateBuilderFinished, async () => {
-            logger.info("Bootstrapping Top Rewards");
-            await TopRewards.bootstrap();
+            databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+            poolService = app.resolvePlugin<TransactionPool.IConnection>("transaction-pool");
+            logger.info("Top Rewards: Syncing Latest Round");
+            // await TopRewards.bootstrap();
             await TopRewards.syncLatestRound();
-            logger.info("Bootstrapping Top Rewards Completed");
+            logger.info("Top Rewards: Latest Round Sync Finished");
         });
 
         // On a new block, handle the cache and top rewards.
@@ -55,27 +57,14 @@ class TopRewards {
     public static topDelegates: string[][] = [];
 
     // Set the topRewards for the nodes
-    public static async bootstrap(publicKey?: string, walletManager?: State.IWalletManager): Promise<void> {
-        if (publicKey && walletManager) {
-            const dbDelegate: Delegate = await Delegate.findOne({ where: { publicKey } });
-            if (dbDelegate) {
-                const topReward = Utils.BigNumber.make(dbDelegate.topRewards);
-                const delegate = walletManager.findByPublicKey(dbDelegate.publicKey);
+    public static async bootstrap(walletManager: State.IWalletManager): Promise<void> {
+        const dbDelegates: Delegate[] = await Delegate.find();
+        if (dbDelegates.length) {
+            for (const dbDel of dbDelegates) {
+                const topReward = Utils.BigNumber.make(dbDel.topRewards);
+                const delegate = walletManager.findByPublicKey(dbDel.publicKey);
                 this.addRewards(delegate, topReward, walletManager);
             }
-        } else if (!publicKey && !walletManager) {
-            const dbDelegates: Delegate[] = await Delegate.find();
-            if (dbDelegates.length) {
-                for (const dbDel of dbDelegates) {
-                    const topReward = Utils.BigNumber.make(dbDel.topRewards);
-                    const delegate = databaseService.walletManager.findByPublicKey(dbDel.publicKey);
-                    const poolDelegate = poolService.walletManager.findByPublicKey(dbDel.publicKey);
-                    this.addRewards(delegate, topReward, databaseService.walletManager);
-                    this.addRewards(poolDelegate, topReward, poolService.walletManager);
-                }
-            }
-        } else {
-            throw new Error("Top Rewards bootstrap loaded without correct parameters");
         }
     }
 

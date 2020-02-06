@@ -30,7 +30,7 @@ const applyToDefaults = (defaults, options) => {
 };
 
 export const setUpContainer = async (options: any): Promise<Container.IContainer> => {
-    options.network = options.network || "testnet";
+    options.network = options.network || "nospluginnet";
 
     process.env.CORE_PATH_DATA = options.data || `${process.env.HOME}/.core`;
 
