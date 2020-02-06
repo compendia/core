@@ -8,7 +8,6 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@arkecosystem/core-state": {},
-    "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-database-postgres": {
         connection: {
             host: process.env.CORE_DB_HOST || "localhost",
@@ -22,11 +21,6 @@ module.exports = {
         port: 6002,
         host: "0.0.0.0",
         cors: true
-    },
-    "@nosplatform/file-transactions": {
-        fileKeys: ["description", "icon"],
-        port: 6003,
-        wsPort: 6004
     },
     "@arkecosystem/core-transaction-pool": {
         enabled: true,
@@ -56,6 +50,11 @@ module.exports = {
     },
     "@nosplatform/top-rewards": {},
     "@nosplatform/stake-transactions": {},
+    "@nosplatform/file-transactions": {
+        fileKeys: ["description", "icon"],
+        port: 6003,
+        wsPort: 6004
+    },
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
