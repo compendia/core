@@ -67,7 +67,7 @@ describe("API 2.0 - Loader", () => {
             const response = await utils.request("GET", "node/configuration/crypto");
             expect(response).toBeSuccessfulResponse();
             expect(response.data.data).toBeObject();
-            expect(response.data.data).toEqual(Managers.configManager.getPreset("testnet"));
+            expect(response.data.data).toEqual(Managers.configManager.getPreset("nospluginnet"));
         });
     });
 

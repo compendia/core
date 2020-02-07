@@ -5,6 +5,8 @@ import { Wallets } from "@arkecosystem/core-state";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Blocks, Crypto, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { StakeHelpers } from "@nosplatform/stake-transactions";
+import { TopRewards } from "@nosplatform/top-rewards";
 import assert from "assert";
 import cloneDeep from "lodash.clonedeep";
 
@@ -88,6 +90,14 @@ export class DatabaseService implements Database.IDatabaseService {
         }
 
         this.detectMissedBlocks(block);
+
+        if (!Utils.BigNumber.make(block.data.topReward).isZero()) {
+            await TopRewards.handleCacheAndTopRewards(block.data);
+
+            if (roundCalculator.isNewRound(block.data.height)) {
+                await StakeHelpers.ExpireHelper.processExpirations(block.data);
+            }
+        }
 
         this.emitter.emit(ApplicationEvents.BlockApplied, block.data);
     }
