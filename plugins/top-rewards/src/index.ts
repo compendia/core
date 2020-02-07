@@ -36,12 +36,6 @@ export const plugin: Container.IPluginDescriptor = {
             logger.info("Top Rewards: Latest Round Sync Finished");
         });
 
-        // On a new block, handle the cache and top rewards.
-        emitter.on(ApplicationEvents.BlockApplied, async (block: Interfaces.IBlockData) => {
-            await TopRewards.handleCacheAndTopRewards(block);
-            emitter.emit("topRewards.block.applied", block);
-        });
-
         // On a reverted block, handle the cache and top rewards.
         emitter.on(ApplicationEvents.BlockReverted, async (block: Interfaces.IBlockData) => {
             await TopRewards.handleRevertCacheAndTopRewards(block);
