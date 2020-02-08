@@ -2926,10 +2926,10 @@
   resolved "https://registry.yarnpkg.com/@types/catbox/-/catbox-10.0.6.tgz#8a4c91261cf0afca03351bb82a95b2d6cf43a5d0"
   integrity sha512-qS0VHlL6eBUUoUeBnI/ASCffoniS62zdV6IUtLSIjGKmRhZNawotaOMsTYivZOTZVktfe9koAJkD9XFac7tEEg==
 
-"@types/cli-progress@^1.8.1":
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/@types/cli-progress/-/cli-progress-1.8.1.tgz#f52f2c15ca85acab99617fd91616936faf070bd3"
-  integrity sha512-W31ZRQPQ1CM42pb5iqs3TzQlMv/RDRsPZ6pTCsl71oLFqFI/TYors3Pukj6tMinlUmXmv+Az5RD/94fZPcxMrw==
+"@types/cli-progress@^3.0.0":
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@types/cli-progress/-/cli-progress-3.4.2.tgz#03dfa3d507e9dda85ba4a14006c37e8b7094c605"
+  integrity sha512-9Rlk664JggbgDLDMCM/8HziTh6ZU2IBLVS2/Kkh3T/TNVlpWlwgLrFl7kDyQBOlX1pofPM05ZKG/GyuULJ0FfA==
   dependencies:
     "@types/node" "*"
 
