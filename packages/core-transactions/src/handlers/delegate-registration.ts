@@ -81,6 +81,12 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
 
         for (const block of lastForgedBlocks) {
             const wallet = walletManager.findByPublicKey(block.generatorPublicKey);
+
+            // Genesis wallet is empty
+            if (!wallet.hasAttribute("delegate")) {
+                continue;
+            }
+
             wallet.setAttribute("delegate.lastBlock", block);
         }
     }

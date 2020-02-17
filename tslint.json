@@ -12,7 +12,7 @@
                 "message": "Use a regular for loop instead."
             }
         ],
-        "await-promise": true,
+        "await-promise": false,
         "no-console": false,
         "no-default-export": true,
         "no-shadowed-variable": false,

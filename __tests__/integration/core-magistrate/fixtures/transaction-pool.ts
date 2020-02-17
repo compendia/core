@@ -16,11 +16,6 @@ export const transactionPoolConfig = {
             multiPayment: 500,
             delegateResignation: 400000,
             businessRegistration: 4000000,
-            businessUpdate: 500,
-            businessResignation: 100,
-            bridgechainRegistration: 4000000,
-            bridgechainUpdate: 500,
-            bridgechainResignation: 100,
         },
     },
 };

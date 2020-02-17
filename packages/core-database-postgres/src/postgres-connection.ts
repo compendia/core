@@ -276,8 +276,12 @@ export class PostgresConnection implements Database.IConnection {
     }
 
     private async registerModels(): Promise<void> {
-        for (const [key, Value] of Object.entries(require("./models"))) {
-            this.models[key.toLowerCase()] = new (Value as any)(this.pgp);
+        try {
+            for (const [key, Value] of Object.entries(require("./models"))) {
+                this.models[key.toLowerCase()] = new (Value as any)(this.pgp);
+            }
+        } catch (error) {
+            throw new Error(error);
         }
     }
 

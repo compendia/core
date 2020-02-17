@@ -9,7 +9,6 @@ export const setUp = async (options = {}) =>
     setUpContainer({
         ...options,
         exit: "@arkecosystem/core-blockchain",
-        exclude: "@nosplatform/storage",
     });
 
 export const tearDown = async (): Promise<void> => app.tearDown();

@@ -10,7 +10,6 @@ let server;
 export const setUp = async () => {
     await setUpContainer({
         exit: "@arkecosystem/core-blockchain",
-        exclude: ["@nosplatform/storage"],
     });
 
     app.register("pkg.vote-report.opts", asValue(defaults));

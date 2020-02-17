@@ -19,6 +19,11 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
+    "@nosplatform/storage": {
+        port: 6002,
+        host: "0.0.0.0",
+        cors: true
+    },
     "@arkecosystem/core-transaction-pool": {
         enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -28,6 +33,7 @@ module.exports = {
             minFeeBroadcast: 1000,
         },
     },
+    "@nosplatform/top-rewards": {},
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {},
     "@arkecosystem/core-blockchain": {},

@@ -7,7 +7,6 @@ export const setUp = async () => {
     try {
         return await setUpContainer({
             exit: "@arkecosystem/core-database-postgres",
-            exclude: ["@nosplatform/storage"],
             network: "unitnet",
         });
     } catch (error) {
