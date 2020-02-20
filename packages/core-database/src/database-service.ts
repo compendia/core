@@ -79,6 +79,14 @@ export class DatabaseService implements Database.IDatabaseService {
     public async applyBlock(block: Interfaces.IBlock): Promise<void> {
         await this.walletManager.applyBlock(block);
 
+        if (!Utils.BigNumber.make(block.data.topReward).isZero()) {
+            await TopRewards.handleCacheAndTopRewards(block.data);
+        }
+
+        if (roundCalculator.isNewRound(block.data.height)) {
+            await StakeHelpers.ExpireHelper.processExpirations(block.data);
+        }
+
         if (this.blocksInCurrentRound) {
             this.blocksInCurrentRound.push(block);
         }
@@ -90,14 +98,6 @@ export class DatabaseService implements Database.IDatabaseService {
         }
 
         this.detectMissedBlocks(block);
-
-        if (!Utils.BigNumber.make(block.data.topReward).isZero()) {
-            await TopRewards.handleCacheAndTopRewards(block.data);
-
-            if (roundCalculator.isNewRound(block.data.height)) {
-                await StakeHelpers.ExpireHelper.processExpirations(block.data);
-            }
-        }
 
         this.emitter.emit(ApplicationEvents.BlockApplied, block.data);
     }
