@@ -34,12 +34,12 @@ export class StateBuilder {
             await transactionHandler.bootstrap(this.connection, this.walletManager);
         }
 
-        this.logger.info(`State Generation - Step ${steps} of ${steps}: Vote Balances & Delegate Ranking`);
+        this.logger.info(`State Generation - Step ${steps - 2} of ${steps}: Vote Balances`);
         this.walletManager.buildVoteBalances();
-        this.walletManager.buildDelegateRanking();
-
-        this.logger.info(`State Generation - Step ${steps} of ${steps}: Top Rewards`);
+        this.logger.info(`State Generation - Step ${steps - 1} of ${steps}: Top Rewards`);
         await TopRewards.bootstrap(this.walletManager);
+        this.logger.info(`State Generation - Step ${steps} of ${steps}: Validator Rankings`);
+        this.walletManager.buildDelegateRanking();
 
         this.logger.info(
             `State Generation complete! Wallets in memory: ${Object.keys(this.walletManager.allByAddress()).length}`,

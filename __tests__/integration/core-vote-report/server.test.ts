@@ -11,6 +11,6 @@ describe("Server", () => {
         const { body, statusCode } = await got.get("http://localhost:4006/");
 
         expect(statusCode).toBe(200);
-        expect(body).toContain("Top 51 Delegates Stats");
+        expect(body).toContain("Delegates Stats");
     });
 });

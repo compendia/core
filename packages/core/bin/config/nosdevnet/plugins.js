@@ -7,6 +7,11 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@nosplatform/storage": {
+        port: 6002,
+        host: "0.0.0.0",
+        cors: true
+    },
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-database-postgres": {
         connection: {
@@ -16,11 +21,6 @@ module.exports = {
             user: process.env.CORE_DB_USERNAME || process.env.CORE_TOKEN,
             password: process.env.CORE_DB_PASSWORD || "password",
         },
-    },
-    "@nosplatform/storage": {
-        port: 6002,
-        host: "0.0.0.0",
-        cors: true
     },
     "@arkecosystem/core-transaction-pool": {
         enabled: true,

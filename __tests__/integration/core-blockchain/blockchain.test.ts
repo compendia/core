@@ -63,10 +63,9 @@ const addBlocks = async untilHeight => {
 describe("Blockchain", () => {
     beforeAll(async () => {
         container = await setUp({
-            options: {
-                // 100 years worth of blocks, so that the genesis transactions don't get expired
-                "@arkecosystem/core-transaction-pool": { maxTransactionAge: 394200000 },
-            },
+            // 100 years worth of blocks, so that the genesis transactions don't get expired
+            "@arkecosystem/core-transaction-pool": { maxTransactionAge: 394200000 },
+            network: "testnet",
         });
         blockchain = container.resolvePlugin("blockchain");
         await blockchain.database.restoreCurrentRound(1);
