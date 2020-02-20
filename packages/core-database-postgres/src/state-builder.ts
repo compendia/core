@@ -34,7 +34,7 @@ export class StateBuilder {
             await transactionHandler.bootstrap(this.connection, this.walletManager);
         }
 
-        this.logger.info(`State Generation - Step ${steps - 2} of ${steps}: Vote Balances & Delegate Ranking`);
+        this.logger.info(`State Generation - Step ${steps - 2} of ${steps}: Vote Balances`);
         this.walletManager.buildVoteBalances();
         this.logger.info(`State Generation - Step ${steps - 1} of ${steps}: Top Rewards`);
         await TopRewards.bootstrap(this.walletManager);
