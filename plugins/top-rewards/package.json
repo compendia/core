@@ -18,11 +18,11 @@
         "clean": "rm -rf dist/"
     },
     "dependencies": {
-        "@arkecosystem/crypto": "^2.6.1",
+        "@arkecosystem/crypto": "^2.6.10",
         "@nosplatform/storage": "^0.0.2",
-        "@arkecosystem/core-container": "^2.6.1",
-        "@arkecosystem/core-interfaces": "^2.6.1",
-        "@arkecosystem/core-utils": "^2.6.1"
+        "@arkecosystem/core-container": "^2.6.10",
+        "@arkecosystem/core-interfaces": "^2.6.10",
+        "@arkecosystem/core-utils": "^2.6.10"
     },
     "devDependencies": {
         "@types/bytebuffer": "^5.0.40",
