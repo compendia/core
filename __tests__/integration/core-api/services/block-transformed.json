@@ -9,8 +9,7 @@
         "total": "0",
         "amount": "12500000000000000",
         "collectiveFee": "0",
-        "removedFee": "0",
-        "topReward": "0"
+        "removedFee": "0"
     },
     "payload": {
         "hash": "d9acd04bde4234a81addb8482333b4ac906bed7be5a9970ce8ada428bd083192",
@@ -22,7 +21,6 @@
     },
     "signature": "304402202fe5de5697fa25d3d3c0cb24617ac02ddfb1c915ee9194a89f8392f948c6076402200d07c5244642fe36afa53fb2d048735f1adfa623e8fa4760487e5f72e17d253b",
     "confirmations": 0,
-    "topDelegates": [],
     "transactions": 153,
     "timestamp": {
         "epoch": 0,

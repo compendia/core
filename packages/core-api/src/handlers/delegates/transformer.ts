@@ -23,7 +23,6 @@ export const transformDelegate = (delegate: State.IWallet) => {
             fees: attributes.forgedFees.toFixed(),
             removed: attributes.removedFees.toFixed(),
             rewards: attributes.forgedRewards.toFixed(),
-            topRewards: attributes.forgedTopRewards.toFixed(),
             total: delegateCalculator.calculateForgedTotal(delegate),
         },
         files,

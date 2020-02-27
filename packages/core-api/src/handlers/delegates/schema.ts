@@ -114,9 +114,6 @@ export const blocks: object = {
             reward: Joi.number()
                 .integer()
                 .min(0),
-            topReward: Joi.number()
-                .integer()
-                .min(0),
             payloadLength: Joi.number()
                 .integer()
                 .min(0),

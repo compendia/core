@@ -91,10 +91,7 @@ export class Delegate {
                 this.decryptKeysWithOtp();
             }
 
-            const feeObj = Utils.FeeHelper.getFeeObject(
-                transactionData.fee,
-                Utils.BigNumber.make(options.reward).plus(options.topReward),
-            );
+            const feeObj = Utils.FeeHelper.getFeeObject(transactionData.fee, Utils.BigNumber.make(options.reward));
 
             const block: Interfaces.IBlock = Blocks.BlockFactory.make(
                 {
@@ -109,7 +106,6 @@ export class Delegate {
                     totalFee: feeObj.toReward,
                     removedFee: feeObj.toRemove,
                     reward: options.reward,
-                    topReward: options.topReward,
                     payloadLength: 32 * transactions.length,
                     payloadHash: Crypto.HashAlgorithms.sha256(payloadBuffers).toString("hex"),
                     transactions,

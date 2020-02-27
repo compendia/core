@@ -3,7 +3,6 @@ import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Utils } from "@arkecosystem/crypto";
-import { TopRewards } from "@nosplatform/top-rewards";
 
 export class StateBuilder {
     private readonly logger: Logger.ILogger = app.resolvePlugin<Logger.ILogger>("logger");
@@ -34,10 +33,8 @@ export class StateBuilder {
             await transactionHandler.bootstrap(this.connection, this.walletManager);
         }
 
-        this.logger.info(`State Generation - Step ${steps - 2} of ${steps}: Vote Balances`);
+        this.logger.info(`State Generation - Step ${steps - 1} of ${steps}: Vote Balances`);
         this.walletManager.buildVoteBalances();
-        this.logger.info(`State Generation - Step ${steps - 1} of ${steps}: Top Rewards`);
-        await TopRewards.bootstrap(this.walletManager);
         this.logger.info(`State Generation - Step ${steps} of ${steps}: Validator Rankings`);
         this.walletManager.buildDelegateRanking();
 

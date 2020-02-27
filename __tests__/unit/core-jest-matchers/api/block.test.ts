@@ -14,7 +14,6 @@ beforeEach(() => {
         payloadLength: "",
         previousBlock: "",
         reward: "",
-        topReward: "",
         timestamp: "",
         totalAmount: "",
         totalFee: "",

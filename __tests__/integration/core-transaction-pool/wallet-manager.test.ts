@@ -205,7 +205,6 @@ describe("Apply transactions and block rewards to wallets on new block", () => {
             totalAmount: transfer.amount,
             totalFee: feeObj.toReward,
             removedFee: feeObj.toRemove,
-            topReward: Utils.BigNumber.ZERO,
             payloadLength: 0,
             payloadHash: genesisBlock.payloadHash,
             generatorPublicKey,

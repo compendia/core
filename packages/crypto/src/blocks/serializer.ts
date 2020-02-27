@@ -61,7 +61,6 @@ export class Serializer {
             8 + // totalFee
             8 + // removedFee
             8 + // reward
-            8 + // topReward
             4 + // payloadLength
             block.payloadHash.length / 2 +
             block.generatorPublicKey.length / 2
@@ -94,8 +93,6 @@ export class Serializer {
         buffer.writeUint64(block.removedFee.toString());
         // @ts-ignore - The ByteBuffer types say we can't use strings but the code actually handles them.
         buffer.writeUint64(block.reward.toString());
-        // @ts-ignore - The ByteBuffer types say we can't use strings but the code actually handles them.
-        buffer.writeUint64(block.topReward.toString());
         buffer.writeUint32(block.payloadLength);
         buffer.append(block.payloadHash, "hex");
         buffer.append(block.generatorPublicKey, "hex");

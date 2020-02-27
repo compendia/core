@@ -36,7 +36,6 @@ describe("Block", () => {
         previousBlock: "12123",
         timestamp: 111150,
         reward: Utils.BigNumber.ONE,
-        topReward: Utils.BigNumber.ONE,
         totalAmount: Utils.BigNumber.make(10),
         totalFee: Utils.BigNumber.ONE,
         removedFee: Utils.BigNumber.ONE,
@@ -54,7 +53,6 @@ describe("Block", () => {
             expect(block.data.numberOfTransactions).toBe(dummyBlock.numberOfTransactions);
             expect(block.data.payloadLength).toBe(dummyBlock.payloadLength);
             expect(block.data.reward).toEqual(dummyBlock.reward);
-            expect(block.data.topReward).toEqual(dummyBlock.topReward);
             expect(block.data.timestamp).toBe(dummyBlock.timestamp);
             expect(block.data.totalFee).toEqual(dummyBlock.totalFee);
             expect(block.data.removedFee).toEqual(dummyBlock.removedFee);
@@ -104,7 +102,6 @@ describe("Block", () => {
                     height: 2,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
             const transactions = TransactionFactory.transfer("DB4gFuDztmdGALMb8i1U4Z4R5SktxpNTAY", 10)
                 .withNetwork("devnet")
@@ -127,7 +124,6 @@ describe("Block", () => {
                     height: 2,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
             const transactions = TransactionFactory.transfer("DB4gFuDztmdGALMb8i1U4Z4R5SktxpNTAY", 10)
                 .withNetwork("devnet")
@@ -149,7 +145,6 @@ describe("Block", () => {
                     maxPayload: 0,
                 },
                 reward: 200000000,
-                topReward: 0,
                 vendorFieldLength: 64,
             }));
             block = BlockFactory.fromData(dummyBlock);
@@ -170,7 +165,6 @@ describe("Block", () => {
                     height: 100,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
             const transactions = TransactionFactory.transfer("DB4gFuDztmdGALMb8i1U4Z4R5SktxpNTAY", 10)
                 .withNetwork("devnet")
@@ -194,7 +188,6 @@ describe("Block", () => {
                     height: 100,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 10)
                 .withNetwork("testnet")
@@ -218,7 +211,6 @@ describe("Block", () => {
                     height: 100,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
 
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
@@ -245,7 +237,6 @@ describe("Block", () => {
                     height: 100,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
 
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
@@ -275,7 +266,6 @@ describe("Block", () => {
                     height: 100,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
 
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
@@ -306,7 +296,6 @@ describe("Block", () => {
                     height: 100,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
 
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
@@ -334,7 +323,6 @@ describe("Block", () => {
                     height: 8999999,
                 },
                 reward: Utils.BigNumber.make(0),
-                topReward: Utils.BigNumber.make(0),
             };
 
             const transactions = TransactionFactory.transfer("ANYiQJSPSoDT8U9Quh5vU8timD2RM7RS38", 1)
@@ -379,7 +367,6 @@ describe("Block", () => {
             expect(actual.totalFee).toBe(dummyBlock2.data.totalFee.toFixed());
             expect(actual.removedFee).toBe(dummyBlock2.data.removedFee.toFixed());
             expect(actual.reward).toBe(dummyBlock2.data.reward.toFixed());
-            expect(actual.topReward).toBe(dummyBlock2.data.topReward.toFixed());
             expect(actual.payloadLength).toBe(dummyBlock2.data.payloadLength);
             expect(actual.payloadHash).toBe(dummyBlock2.data.payloadHash);
             expect(actual.generatorPublicKey).toBe(dummyBlock2.data.generatorPublicKey);
@@ -415,7 +402,7 @@ describe("Block", () => {
 
             const data2 = { ...data };
             const header = BlockFactory.fromData(data2).getHeader();
-            const bignumProperties = ["reward", "totalAmount", "totalFee", "topReward", "removedFee"];
+            const bignumProperties = ["reward", "totalAmount", "totalFee", "removedFee"];
 
             for (const key of Object.keys(data)) {
                 if (key !== "transactions") {
@@ -527,14 +514,6 @@ describe("Block", () => {
             ).toEqual(+data.reward);
         });
 
-        it("`topReward` is serialized as a UInt64", () => {
-            expect(
-                serialize(data)
-                    .readUint64(56)
-                    .toNumber(),
-            ).toEqual(+data.topReward);
-        });
-
         it("`payloadLength` of transactions is serialized as a UInt32", () => {
             expect(serialize(data).readUint32(64)).toEqual(data.payloadLength);
         });
@@ -634,7 +613,6 @@ describe("Block", () => {
             totalFee: feeObj.toReward,
             removedFee: feeObj.toRemove,
             reward: Utils.BigNumber.make(200000000),
-            topReward: Utils.BigNumber.make(200000000),
             payloadLength: 64,
             payloadHash: "c2fa2d400b4c823873d476f6e0c9e423cf925e9b48f1b5706c7e2771d4095538",
             generatorPublicKey: "02fa6902e91e127d6d3410f6abc271a79ae24029079caa0db5819757e3c1c1c5a4",
@@ -743,7 +721,6 @@ describe("Block", () => {
                     previousBlock: "12123",
                     timestamp: 111150,
                     reward: Utils.BigNumber.ONE,
-                    topReward: Utils.BigNumber.ONE,
                     totalAmount: Utils.BigNumber.make(10),
                     totalFee: Utils.BigNumber.ZERO,
                     removedFee: Utils.BigNumber.ONE,
@@ -767,7 +744,6 @@ describe("Block", () => {
                     previousBlock: "12123",
                     timestamp: 111150,
                     reward: Utils.BigNumber.ONE,
-                    topReward: Utils.BigNumber.ONE,
                     totalAmount: Utils.BigNumber.make(10),
                     removedFee: Utils.BigNumber.ONE,
                     totalFee: Utils.BigNumber.ONE,

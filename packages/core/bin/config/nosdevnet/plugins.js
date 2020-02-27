@@ -48,7 +48,6 @@ module.exports = {
             },
         },
     },
-    "@nosplatform/top-rewards": {},
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {
         fileKeys: ["description", "icon"],

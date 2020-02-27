@@ -51,7 +51,6 @@ describe("Forger Manager", () => {
                 lastBlock: { id: sampleBlock.data.id, height: sampleBlock.data.height },
                 timestamp: Crypto.Slots.getTime(),
                 reward: 2 * 1e8,
-                topReward: 0,
             };
 
             jest.spyOn(Crypto.Slots, "getTimeInMsUntilNextSlot").mockReturnValueOnce(2000);
@@ -98,7 +97,6 @@ describe("Forger Manager", () => {
                 lastBlock: { id: sampleBlock.data.id, height: sampleBlock.data.height },
                 timestamp: Crypto.Slots.getTime(),
                 reward: 2 * 1e8,
-                topReward: 0,
             };
 
             jest.spyOn(Crypto.Slots, "getTimeInMsUntilNextSlot").mockReturnValueOnce(2000);

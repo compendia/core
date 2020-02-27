@@ -212,7 +212,6 @@ describe("Blockchain", () => {
                 totalFee: feeObj.toReward,
                 removedFee: feeObj.toRemove,
                 reward: Utils.BigNumber.ZERO,
-                topReward: Utils.BigNumber.ZERO,
                 payloadLength: 32 * transactions.length,
                 payloadHash: Crypto.HashAlgorithms.sha256(transactionData.ids).toString("hex"),
                 transactions,

@@ -125,7 +125,6 @@ describe("API 2.0 - Blocks", () => {
                 timestamp: 0,
                 height: 1,
                 reward: "0",
-                topReward: "0",
                 previousBlock: "0",
                 numberOfTransactions: 153,
                 totalAmount: "12500000000000000",

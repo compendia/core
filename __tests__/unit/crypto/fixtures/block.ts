@@ -10,7 +10,6 @@ export const dummyBlock = {
     totalFee: Utils.BigNumber.ZERO,
     removedFee: Utils.BigNumber.make("70000000"),
     reward: Utils.BigNumber.make("200000000"),
-    topReward: Utils.BigNumber.ZERO,
     payloadLength: 224,
     payloadHash: "de56269cae3ab156f6979b94a04c30b82ed7d6f9a97d162583c98215c18c65db",
     generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
@@ -151,7 +150,6 @@ export const dummyBlock3 = {
     totalFee: Utils.BigNumber.make(0),
     removedFee: Utils.BigNumber.make(0),
     reward: Utils.BigNumber.make(0),
-    topReward: Utils.BigNumber.make(0),
     payloadLength: 0,
     payloadHash: "de56269cae3ab156f6979b94a04c30b82ed7d6f9a97d162583c98215c18c65db",
     generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
@@ -166,7 +164,6 @@ export const blockWithExceptions = {
     timestamp: 52310186,
     height: 766787,
     reward: "200000000",
-    topReward: "0",
     removedFee: "20000000",
     transactions: [
         {

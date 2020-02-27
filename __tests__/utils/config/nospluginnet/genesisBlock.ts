@@ -5,7 +5,6 @@ export const genesisBlock = {
     totalAmount: Utils.BigNumber.make(12500000000000000),
     totalFee: Utils.BigNumber.ZERO,
     reward: Utils.BigNumber.ZERO,
-    topReward: Utils.BigNumber.ZERO,
     removedFee: Utils.BigNumber.ZERO,
     payloadHash: "d9acd04bde4234a81addb8482333b4ac906bed7be5a9970ce8ada428bd083192",
     timestamp: 0,

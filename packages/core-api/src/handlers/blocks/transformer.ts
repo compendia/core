@@ -1,12 +1,11 @@
 import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, State } from "@arkecosystem/core-interfaces";
-import { formatTimestamp, roundCalculator } from "@arkecosystem/core-utils";
+import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 
 export const transformBlock = (model, transform) => {
     if (!transform) {
         model.reward = Utils.BigNumber.make(model.reward).toFixed();
-        model.topReward = Utils.BigNumber.make(model.topReward).toFixed();
         model.totalFee = Utils.BigNumber.make(model.totalFee).toFixed();
         model.removedFee = Utils.BigNumber.make(model.removedFee).toFixed();
         model.totalAmount = Utils.BigNumber.make(model.totalAmount).toFixed();
@@ -16,26 +15,10 @@ export const transformBlock = (model, transform) => {
     const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     const generator: State.IWallet = databaseService.walletManager.findByPublicKey(model.generatorPublicKey);
     const lastBlock: Interfaces.IBlock = app.resolvePlugin<Blockchain.IBlockchain>("blockchain").getLastBlock();
-    // const topDelegateCount = Managers.configManager.getMilestone(lastBlock.data.height).topDelegates;
 
     model.reward = Utils.BigNumber.make(model.reward);
-    model.topReward = Utils.BigNumber.make(model.topReward);
     model.totalFee = Utils.BigNumber.make(model.totalFee);
     model.removedFee = Utils.BigNumber.make(model.removedFee);
-
-    // Get top rewarded delegates
-    // TODO: Dean - Get top delegates from Round db
-    const roundInfo = roundCalculator.calculateRound(model.height);
-
-    let tdGlobal = [];
-    if (app.has("top.delegates")) {
-        tdGlobal = app.resolve("top.delegates");
-    }
-
-    let topDelegates = [];
-    if (roundInfo.round in tdGlobal) {
-        topDelegates = tdGlobal[roundInfo.round];
-    }
 
     return {
         id: model.id,
@@ -44,14 +27,10 @@ export const transformBlock = (model, transform) => {
         previous: model.previousBlock,
         forged: {
             reward: model.reward.toFixed(),
-            topReward: model.topReward.toFixed(),
             collectiveFee: model.totalFee.plus(model.removedFee).toFixed(),
             fee: model.totalFee.toFixed(),
             removedFee: model.removedFee.toFixed(),
-            total: model.totalFee
-                .plus(model.reward)
-                .plus(model.topReward)
-                .toFixed(),
+            total: model.totalFee.plus(model.reward).toFixed(),
             amount: Utils.BigNumber.make(model.totalAmount).toFixed(),
         },
         payload: {
@@ -67,6 +46,5 @@ export const transformBlock = (model, transform) => {
         confirmations: lastBlock ? lastBlock.data.height - model.height : 0,
         transactions: model.numberOfTransactions,
         timestamp: formatTimestamp(model.timestamp),
-        topDelegates,
     };
 };

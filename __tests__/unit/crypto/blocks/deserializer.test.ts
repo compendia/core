@@ -30,7 +30,6 @@ describe("block deserializer", () => {
                 "totalFee",
                 "removedFee",
                 "reward",
-                "topReward",
                 "payloadLength",
                 "payloadHash",
                 "generatorPublicKey",

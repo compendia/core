@@ -171,14 +171,6 @@ export const search: object = {
                 .integer()
                 .min(0),
         }),
-        topReward: Joi.object().keys({
-            from: Joi.number()
-                .integer()
-                .min(0),
-            to: Joi.number()
-                .integer()
-                .min(0),
-        }),
         payloadLength: Joi.object().keys({
             from: Joi.number()
                 .integer()

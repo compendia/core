@@ -41,7 +41,6 @@ describe("Models - Wallet", () => {
                 forgedFees: Utils.BigNumber.ZERO,
                 removedFees: Utils.BigNumber.ZERO,
                 forgedRewards: Utils.BigNumber.ZERO,
-                forgedTopRewards: Utils.BigNumber.ZERO,
             } as State.IWalletDelegateAttributes;
 
             testWallet.setAttribute("delegate", delegate);
@@ -50,7 +49,6 @@ describe("Models - Wallet", () => {
                 id: 1,
                 generatorPublicKey: testWallet.publicKey,
                 reward: Utils.BigNumber.make(1000000000),
-                topReward: Utils.BigNumber.make(1000000000),
                 totalFee: Utils.BigNumber.make(1000000000),
                 removedFee: Utils.BigNumber.make(1000000000),
             };
@@ -92,7 +90,6 @@ describe("Models - Wallet", () => {
             forgedFees: Utils.BigNumber.make(10 * SATOSHI),
             forgedRewards: Utils.BigNumber.make(50 * SATOSHI),
             removedFees: Utils.BigNumber.make(50 * SATOSHI),
-            forgedTopRewards: Utils.BigNumber.make(50 * SATOSHI),
             producedBlocks: 1,
             lastBlock: { id: 1234856 },
         });
@@ -101,7 +98,6 @@ describe("Models - Wallet", () => {
             id: 1,
             generatorPublicKey: walletInit.publicKey,
             reward: Utils.BigNumber.make(2 * SATOSHI),
-            topReward: Utils.BigNumber.make(2 * SATOSHI),
             totalFee: Utils.BigNumber.make(1 * SATOSHI),
             removedFee: Utils.BigNumber.make(1 * SATOSHI),
         } as unknown) as Interfaces.IBlockData;

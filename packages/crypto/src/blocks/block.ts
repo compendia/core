@@ -144,7 +144,6 @@ export class Block implements IBlock {
     public toJson(): IBlockJson {
         const data: IBlockJson = JSON.parse(JSON.stringify(this.data));
         data.reward = this.data.reward.toString();
-        data.topReward = this.data.topReward.toFixed();
         data.totalAmount = this.data.totalAmount.toString();
         data.totalFee = this.data.totalFee.toString();
         data.removedFee = this.data.removedFee.toString();
@@ -172,12 +171,6 @@ export class Block implements IBlock {
 
             if (!(block.reward as BigNumber).isEqualTo(constants.reward)) {
                 result.errors.push(["Invalid block reward:", block.reward, "expected:", constants.reward].join(" "));
-            }
-
-            if (!(block.topReward as BigNumber).isEqualTo(constants.topReward)) {
-                result.errors.push(
-                    ["Invalid block top reward:", block.topReward, "expected:", constants.topReward].join(" "),
-                );
             }
 
             const valid = this.verifySignature();
@@ -265,10 +258,7 @@ export class Block implements IBlock {
                 payloadBuffers.push(bytes);
             }
 
-            const feeObj = FeeHelper.getFeeObject(
-                BigNumber.make(totalFee),
-                BigNumber.make(block.reward).plus(block.topReward),
-            );
+            const feeObj = FeeHelper.getFeeObject(BigNumber.make(totalFee), BigNumber.make(block.reward));
 
             totalFee = feeObj.toReward;
             removedFee = feeObj.toRemove;

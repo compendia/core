@@ -49,14 +49,6 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             description: "the amount of the block reward",
             default: 200000000,
         }),
-        topRewardAmount: flags.integer({
-            description: "the amount of the top delegates' block reward",
-            default: 200000000,
-        }),
-        topDelegatesAmount: flags.integer({
-            description: "the number of the top delegates",
-            default: 5,
-        }),
         pubKeyHash: flags.integer({
             description: "the public key hash",
         }),
@@ -158,8 +150,6 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
                 flags.maxBlockPayload,
                 flags.rewardHeight,
                 flags.rewardAmount,
-                flags.topRewardAmount,
-                flags.topDelegatesAmount,
             );
 
             fs.writeJsonSync(resolve(cryptoConfigDest, "network.json"), network, { spaces: 2 });
@@ -228,15 +218,11 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         maxBlockPayload: number,
         rewardHeight: number,
         rewardAmount: number,
-        topRewardAmount: number,
-        topDelegatesAmount: number,
     ) {
         return [
             {
                 height: 1,
                 reward: 0,
-                topDelegates: 0,
-                topReward: 0,
                 activeDelegates,
                 blocktime,
                 block: {
@@ -279,8 +265,6 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             {
                 height: rewardHeight,
                 reward: rewardAmount,
-                topReward: topRewardAmount,
-                topDelegates: topDelegatesAmount,
             },
         ];
     }
@@ -388,7 +372,6 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
             totalFee: totalFee.toString(),
             removedFee: removedFee.toString(),
             reward: "0",
-            topReward: "0",
             payloadHash: payloadHash.toString("hex"),
             timestamp,
             numberOfTransactions: transactions.length,
@@ -428,7 +411,20 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
     }
 
     private getBytes(genesisBlock) {
-        const size = 4 + 4 + 4 + 8 + 4 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + 64;
+        const size =
+            4 + // version
+            4 + // timestamp
+            4 + // height
+            8 + // previousBlock
+            4 + // numberOfTransactions
+            8 + // totalAmount
+            8 + // totalFee
+            8 + // removedFee
+            8 + // reward
+            4 + // payloadLength
+            32 + // payloadHash
+            32 + // generatorPublicKey
+            64; // blockSignature
 
         const byteBuffer = new ByteBuffer(size, true);
         byteBuffer.writeInt(genesisBlock.version);
@@ -444,7 +440,6 @@ $ ark config:generate --network=mynet7 --premine=120000000000 --delegates=47 --b
         byteBuffer.writeLong(genesisBlock.totalFee);
         byteBuffer.writeLong(genesisBlock.removedFee);
         byteBuffer.writeLong(genesisBlock.reward);
-        byteBuffer.writeLong(genesisBlock.topReward);
 
         byteBuffer.writeInt(genesisBlock.payloadLength);
 

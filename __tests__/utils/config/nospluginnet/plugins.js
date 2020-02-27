@@ -30,9 +30,7 @@ module.exports = {
             minFeeBroadcast: 1000,
         },
     },
-    "@nosplatform/supply-tracker": {
-        topRewards: true
-    },
+    "@nosplatform/supply-tracker": {},
     "@nosplatform/top-rewards": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {

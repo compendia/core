@@ -17,7 +17,6 @@ export const block2 = {
     previousBlockHex: "43bf2d2c67d29573",
     timestamp: 1,
     reward: Utils.BigNumber.make(0),
-    topReward: Utils.BigNumber.make(0),
     totalAmount: Utils.BigNumber.make(20),
     totalFee: Utils.BigNumber.make(50000000),
     removedFee: Utils.BigNumber.make(50000000),

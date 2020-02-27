@@ -46,7 +46,6 @@ describe("Fee Removal", () => {
                 height: 1000,
             },
             reward: Utils.BigNumber.make("300000000"),
-            topReward: Utils.BigNumber.make("100000000"),
         };
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
@@ -80,10 +79,7 @@ describe("Fee Removal", () => {
 
         optionsDefault.timestamp = 1234567890;
 
-        const feeObj = Utils.FeeHelper.getFeeObject(
-            Utils.BigNumber.make("25").times(ARKTOSHI),
-            Utils.BigNumber.make(optionsDefault.reward).plus(optionsDefault.topReward),
-        );
+        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("25").times(ARKTOSHI));
 
         expect(feeObj.toRemove.toString()).toEqual(
             Utils.BigNumber.make("145")
@@ -139,7 +135,6 @@ describe("Fee Removal", () => {
                 height: 1000,
             },
             reward: Utils.BigNumber.make("300000000"),
-            topReward: Utils.BigNumber.make("100000000"),
         };
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
@@ -159,10 +154,7 @@ describe("Fee Removal", () => {
 
         transactions.push(tx.data);
 
-        const feeObj = Utils.FeeHelper.getFeeObject(
-            Utils.BigNumber.make("3").times(ARKTOSHI),
-            Utils.BigNumber.make(optionsDefault.reward).plus(optionsDefault.topReward),
-        );
+        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("3").times(ARKTOSHI));
         expect(feeObj.toRemove).toEqual(Utils.BigNumber.make("3").times(ARKTOSHI));
         expect(feeObj.toReward).toEqual(Utils.BigNumber.ZERO);
 
