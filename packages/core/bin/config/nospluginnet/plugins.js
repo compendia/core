@@ -19,7 +19,6 @@ module.exports = {
             password: process.env.CORE_DB_PASSWORD || "password",
         },
     },
-    "@nosplatform/storage": {},
     "@nosplatform/file-transactions": {
         fileKeys: ["db.apps", "description"],
         port: 6003,
@@ -74,5 +73,4 @@ module.exports = {
         whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
     },
     "@arkecosystem/core-snapshots": {},
-    "@nosplatform/supply-tracker": {},
 };

@@ -7,11 +7,6 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
-    "@nosplatform/storage": {
-        port: 6002,
-        host: "0.0.0.0",
-        cors: true
-    },
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-database-postgres": {
         connection: {

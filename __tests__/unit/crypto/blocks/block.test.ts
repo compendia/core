@@ -25,7 +25,7 @@ beforeEach(() => configManager.setFromPreset("devnet"));
 
 describe("Block", () => {
     const data = {
-        id: "12913506394032791288",
+        id: "10198196568228035256",
         blockSignature:
             "304502210083d8cb319022d7dc5a6b3f4469b15a0ae6f8e8656db5c7d6caa9c1dba630623a02205df1f549c63742dd7b909b53b19bb47deac6caf45abe3938344bd76b953e699d",
         generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
@@ -150,7 +150,7 @@ describe("Block", () => {
             block = BlockFactory.fromData(dummyBlock);
 
             expect(block.verification.verified).toBeFalse();
-            expect(block.verification.errors).toContain("Payload is too large: 1307 > 0");
+            expect(block.verification.errors).toContain("Payload is too large: 1299 > 0");
 
             jest.restoreAllMocks();
         });
@@ -515,13 +515,13 @@ describe("Block", () => {
         });
 
         it("`payloadLength` of transactions is serialized as a UInt32", () => {
-            expect(serialize(data).readUint32(64)).toEqual(data.payloadLength);
+            expect(serialize(data).readUint32(56)).toEqual(data.payloadLength);
         });
 
         it("`payloadHash` of transactions is appended, using 32 bytes, as hexadecimal", () => {
             expect(
                 serialize(data)
-                    .slice(68, 68 + 32)
+                    .slice(60, 60 + 32)
                     .toString("hex"),
             ).toEqual(data.payloadHash);
         });
@@ -529,7 +529,7 @@ describe("Block", () => {
         it("`generatorPublicKey` of transactions is appended, using 33 bytes, as hexadecimal", () => {
             expect(
                 serialize(data)
-                    .slice(100, 100 + 33)
+                    .slice(92, 92 + 33)
                     .toString("hex"),
             ).toEqual(data.generatorPublicKey);
         });
@@ -538,13 +538,13 @@ describe("Block", () => {
             it("is not serialized", () => {
                 const data2 = { ...data };
                 delete data2.blockSignature;
-                expect(serialize(data2).limit).toEqual(133);
+                expect(serialize(data2).limit).toEqual(125);
             });
 
             it("is not serialized, even when the `includeSignature` parameter is true", () => {
                 const data2 = { ...data };
                 delete data2.blockSignature;
-                expect(serialize(data2, true).limit).toEqual(133);
+                expect(serialize(data2, true).limit).toEqual(125);
             });
         });
 
@@ -553,13 +553,13 @@ describe("Block", () => {
             it("is serialized", () => {
                 expect(
                     serialize(data)
-                        .slice(133, 204)
+                        .slice(125, 196)
                         .toString("hex"),
                 ).toEqual(data.blockSignature);
             });
 
             it("is serialized unless the `includeSignature` parameter is false", () => {
-                expect(serialize(data, false).limit).toEqual(133);
+                expect(serialize(data, false).limit).toEqual(125);
             });
         });
     });
@@ -587,7 +587,7 @@ describe("Block", () => {
             // @ts-ignore
             const s = Block.serializeWithTransactions(dummyBlock).toString("hex");
             const serialized =
-                "00000000006fb50300db1a002b324b8b33a85802070000000049d971020000000000000000000000801d2c040000000000c2eb0b000000000000000000000000e0000000de56269cae3ab156f6979b94a04c30b82ed7d6f9a97d162583c98215c18c65db02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea93045022100ac0751e8b2a7ad4f07214d08ebfa9bf7178551ecc9921ac17d6da29ac1936ba70220198007b2ef03877d52784622fdb436a68a8be3b0baac944226f63da50607cef5990000009a0000009a0000009a000000990000009a00000099000000ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000006d7c4d00000000000000001e46550551e12d2531ea9d2968696b75f68ae7f29530440220714c2627f0e9c3bd6bf13b8b4faa5ec2d677694c27f580e2f9e3875bde9bc36f02201c33faacab9eafd799d9ceecaa153e3b87b4cd04535195261fd366e552652549ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac3780969800000000000000f1536500000000000000001e46550551e12d2531ea9d2968696b75f68ae7f2953045022100e6039f810684515c0d6b31039040a76c98f3624b6454cb156a0a2137e5f8dba7022001ada19bcca5798e1c7cc8cc39bab5d4019525e3d72a42bd2c4129352b8ead87ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000002f685900000000000000001e46550551e12d2531ea9d2968696b75f68ae7f2953045022100c2b5ef772b36e468e95ec2e457bfaba7bad0e13b3faf57e229ff5d67a0e017c902202339664595ea5c70ce20e4dd182532f7fa385d86575b0476ff3eda9f9785e1e9ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac3780969800000000000000105e5f00000000000000001e46550551e12d2531ea9d2968696b75f68ae7f29530450221009ceb56688705e6b12000bde726ca123d84982231d7434f059612ff5f987409c602200d908667877c902e7ba35024951046b883e0bce9103d4717928d94ecc958884aff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000008c864700000000000000001e46550551e12d2531ea9d2968696b75f68ae7f29530440220464beac6d49943ad8afaac4fdc863c9cd7cf3a84f9938c1d7269ed522298f11a02203581bf180de1966f86d914afeb005e1e818c9213514f96a34e1391c2a08514faff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac3780969800000000000000d2496b00000000000000001e46550551e12d2531ea9d2968696b75f68ae7f2953045022100c7b40d7134d909762d18d6bfb7ac1c32be0ee8c047020131f499faea70ca0b2b0220117c0cf026f571f5a85e3ae800a6fd595185076ff38e64c7a4bd14f34e1d4dd1ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000004e725300000000000000001e46550551e12d2531ea9d2968696b75f68ae7f295304402206a4a8e4e6918fbc15728653b117f51db716aeb04e5ee1de047f80b0476ee4efb02200f486dfaf0def3f3e8636d46ee75a2c07de9714ce4283a25fde9b6218b5e7923";
+                "00000000006fb50300db1a002b324b8b33a85802070000000049d971020000000000000000000000801d2c040000000000c2eb0b00000000e0000000de56269cae3ab156f6979b94a04c30b82ed7d6f9a97d162583c98215c18c65db02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea93045022100b476bf91f373e44c5113510acc3ca60c69b28bdab761b6ab623e39d2ece726ee02202ea914491f893a91b1c0cf8aab40620df42ca4800618a5cebe0004bdc27f0115990000009a0000009a0000009a000000990000009a00000099000000ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000006d7c4d00000000000000001e46550551e12d2531ea9d2968696b75f68ae7f29530440220714c2627f0e9c3bd6bf13b8b4faa5ec2d677694c27f580e2f9e3875bde9bc36f02201c33faacab9eafd799d9ceecaa153e3b87b4cd04535195261fd366e552652549ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac3780969800000000000000f1536500000000000000001e46550551e12d2531ea9d2968696b75f68ae7f2953045022100e6039f810684515c0d6b31039040a76c98f3624b6454cb156a0a2137e5f8dba7022001ada19bcca5798e1c7cc8cc39bab5d4019525e3d72a42bd2c4129352b8ead87ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000002f685900000000000000001e46550551e12d2531ea9d2968696b75f68ae7f2953045022100c2b5ef772b36e468e95ec2e457bfaba7bad0e13b3faf57e229ff5d67a0e017c902202339664595ea5c70ce20e4dd182532f7fa385d86575b0476ff3eda9f9785e1e9ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac3780969800000000000000105e5f00000000000000001e46550551e12d2531ea9d2968696b75f68ae7f29530450221009ceb56688705e6b12000bde726ca123d84982231d7434f059612ff5f987409c602200d908667877c902e7ba35024951046b883e0bce9103d4717928d94ecc958884aff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000008c864700000000000000001e46550551e12d2531ea9d2968696b75f68ae7f29530440220464beac6d49943ad8afaac4fdc863c9cd7cf3a84f9938c1d7269ed522298f11a02203581bf180de1966f86d914afeb005e1e818c9213514f96a34e1391c2a08514faff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac3780969800000000000000d2496b00000000000000001e46550551e12d2531ea9d2968696b75f68ae7f2953045022100c7b40d7134d909762d18d6bfb7ac1c32be0ee8c047020131f499faea70ca0b2b0220117c0cf026f571f5a85e3ae800a6fd595185076ff38e64c7a4bd14f34e1d4dd1ff011e00006fb50303287bfebba4c7881a0509717e71b34b63f31e40021c321f89ae04f84be6d6ac37809698000000000000004e725300000000000000001e46550551e12d2531ea9d2968696b75f68ae7f295304402206a4a8e4e6918fbc15728653b117f51db716aeb04e5ee1de047f80b0476ee4efb02200f486dfaf0def3f3e8636d46ee75a2c07de9714ce4283a25fde9b6218b5e7923";
             const block1 = BlockFactory.fromData(dummyBlock);
             const block2 = BlockFactory.fromData(Block.deserialize(serialized));
 
@@ -618,7 +618,7 @@ describe("Block", () => {
             generatorPublicKey: "02fa6902e91e127d6d3410f6abc271a79ae24029079caa0db5819757e3c1c1c5a4",
             blockSignature:
                 "30440220543f71d6f6445b703459b4f91d2c6f2446cbe6669e9c9008b1c77cc57073af2402206036fee3b434ffd5a31a579dd5b514a1c6384962291fda27b2463de903422834",
-            id: "4087080582909576251",
+            id: "17759982635825194621",
             transactions: [
                 {
                     id: "7a1a43098cd253db395514220f69e3b99afaabb2bfcf5ecfa3b99727b367344b",
@@ -710,7 +710,7 @@ describe("Block", () => {
         describe("apply v1 fix", () => {
             it("should not process a common block", () => {
                 const mock = {
-                    id: "14635240415646648534",
+                    id: "14202596647441907381",
                     blockSignature:
                         "3045022100a6605198e0f590c88798405bc76748d84e280d179bcefed2c993e70cded2a5dd022008c7f915b89fc4f3250fc4b481abb753c68f30ac351871c50bd6cfaf151370e8",
                     generatorPublicKey: "024c8247388a02ecd1de2a3e3fd5b7c61ecc2797fa3776599d558333ef1802d231",

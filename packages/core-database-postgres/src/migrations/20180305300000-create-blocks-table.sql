@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS ${schema~}.blocks (
     "total_fee" BIGINT NOT NULL,
     "removed_fee" BIGINT NOT NULL,
     "reward" BIGINT NOT NULL,
-    "top_reward" BIGINT NOT NULL,
     "payload_length" INTEGER NOT NULL,
     "payload_hash" VARCHAR(64) NOT NULL,
     "generator_public_key" VARCHAR(66) NOT NULL,

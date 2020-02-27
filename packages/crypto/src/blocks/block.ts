@@ -169,8 +169,20 @@ export class Block implements IBlock {
                 }
             }
 
-            if (!(block.reward as BigNumber).isEqualTo(constants.reward)) {
-                result.errors.push(["Invalid block reward:", block.reward, "expected:", constants.reward].join(" "));
+            if (
+                !(block.reward as BigNumber).isEqualTo(constants.reward) &&
+                !(block.reward as BigNumber).isEqualTo(constants.topReward)
+            ) {
+                result.errors.push(
+                    [
+                        "Invalid block reward:",
+                        block.reward,
+                        "expected:",
+                        constants.reward,
+                        "or",
+                        constants.topReward,
+                    ].join(" "),
+                );
             }
 
             const valid = this.verifySignature();

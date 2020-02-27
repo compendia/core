@@ -79,16 +79,16 @@ describe("Fee Removal", () => {
 
         optionsDefault.timestamp = 1234567890;
 
-        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("25").times(ARKTOSHI));
+        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("25").times(ARKTOSHI), optionsDefault.reward);
 
         expect(feeObj.toRemove.toString()).toEqual(
-            Utils.BigNumber.make("145")
+            Utils.BigNumber.make("140")
                 .times(ARKTOSHI)
                 .dividedBy(10)
                 .toString(),
         );
         expect(feeObj.toReward.toString()).toEqual(
-            Utils.BigNumber.make("105")
+            Utils.BigNumber.make("110")
                 .times(ARKTOSHI)
                 .dividedBy(10)
                 .toString(),
@@ -154,7 +154,7 @@ describe("Fee Removal", () => {
 
         transactions.push(tx.data);
 
-        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("3").times(ARKTOSHI));
+        const feeObj = Utils.FeeHelper.getFeeObject(Utils.BigNumber.make("3").times(ARKTOSHI), optionsDefault.reward);
         expect(feeObj.toRemove).toEqual(Utils.BigNumber.make("3").times(ARKTOSHI));
         expect(feeObj.toReward).toEqual(Utils.BigNumber.ZERO);
 

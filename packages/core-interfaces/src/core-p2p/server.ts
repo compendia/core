@@ -7,7 +7,9 @@ export interface IResponse<T> {
 
 export interface ICurrentRound {
     current: number;
+    roundHeight: number;
     reward: string;
+    topReward: string;
     timestamp: number;
     delegates: IWallet[];
     currentForger: IWallet;
