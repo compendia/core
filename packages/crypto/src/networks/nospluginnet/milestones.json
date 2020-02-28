@@ -5,7 +5,7 @@
         "topReward": 400000000,
         "topDelegates": 2,
         "activeDelegates": 5,
-        "blocktime": 6,
+        "blocktime": 4,
         "block": {
             "version": 0,
             "maxTransactions": 150,

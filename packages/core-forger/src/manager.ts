@@ -145,6 +145,7 @@ export class ForgerManager {
 
         let reward: string = round.reward;
         let alreadyForgedRound: boolean = false;
+        const forger: any = JSON.parse(JSON.stringify(round.currentForger));
 
         // Wrap topReward logic in currentForger check (unit tests may not have a round.currentForger mock)
         if (round.currentForger && round.topReward) {
@@ -154,10 +155,9 @@ export class ForgerManager {
              * In case of a rollback, delegates' lastBlock attributes are set to "undefined".
              * In this case we need to retrieve the current round's blocks from db and check if the forger is in there.
              */
-            if (round.currentForger.getAttribute("delegate.lastBlock")) {
+            if (forger.attributes.delegate.lastBlock) {
                 alreadyForgedRound =
-                    roundCalculator.calculateRound(round.currentForger.getAttribute("delegate.lastBlock").height)
-                        .round === round.current;
+                    roundCalculator.calculateRound(forger.attributes.delegate.lastBlock.height).round === round.current;
             } else {
                 // Get round blocks if delegate.lastBlock is undefined (might be because of a rollback).
                 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>(
@@ -178,9 +178,8 @@ export class ForgerManager {
 
             // Set topReward if top delegate and if they haven't already forged this round
             if (
-                round.currentForger &&
-                round.currentForger.getAttribute("delegate.rank") <=
-                    Managers.configManager.getMilestone().topDelegates &&
+                forger &&
+                forger.attributes.delegate.rank <= Managers.configManager.getMilestone().topDelegates &&
                 !alreadyForgedRound
             ) {
                 reward = round.topReward;
