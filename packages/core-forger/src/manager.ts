@@ -145,10 +145,10 @@ export class ForgerManager {
 
         let reward: string = round.reward;
         let alreadyForgedRound: boolean = false;
-        const forger: any = JSON.parse(JSON.stringify(round.currentForger));
+        const forger: any = JSON.parse(JSON.stringify(round.currentForger || {}));
 
         // Wrap topReward logic in currentForger check (unit tests may not have a round.currentForger mock)
-        if (round.currentForger && round.topReward) {
+        if (forger && round.topReward) {
             /**
              * A top delegate should only receive a topReward if it didn't already forge a block this round.
              * We use delegate.lastBlock by default to check their last forged block.
@@ -176,7 +176,7 @@ export class ForgerManager {
                 }
             }
 
-            // Set topReward if top delegate and if they haven't already forged this round
+            // Set topReward if top delegate and they haven't already forged this round
             if (
                 forger &&
                 forger.attributes.delegate.rank <= Managers.configManager.getMilestone().topDelegates &&
