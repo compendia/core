@@ -37,7 +37,12 @@ class TransactionRegistry {
         this.registerTransactionType(DelegateRegistrationTransaction);
         this.registerTransactionType(VoteTransaction);
         this.registerTransactionType(MultiSignatureRegistrationTransaction);
-        this.registerTransactionType(IpfsTransaction);
+
+        // Only register core IPFS transaction for tests
+        if (process.env.NODE_ENV === "test") {
+            this.registerTransactionType(IpfsTransaction);
+        }
+
         this.registerTransactionType(MultiPaymentTransaction);
         this.registerTransactionType(DelegateResignationTransaction);
         this.registerTransactionType(HtlcLockTransaction);
