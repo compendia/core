@@ -7,6 +7,7 @@ import { isBlockChained } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Blockchain } from "../blockchain";
 import { validateGenerator } from "../utils/validate-generator";
+import { validateReward } from "../utils/validate-reward";
 import {
     AcceptBlockHandler,
     AlreadyForgedHandler,
@@ -14,6 +15,7 @@ import {
     ExceptionHandler,
     IncompatibleTransactionsHandler,
     InvalidGeneratorHandler,
+    InvalidRewardHandler,
     NonceOutOfOrderHandler,
     UnchainedHandler,
     VerificationFailedHandler,
@@ -60,6 +62,11 @@ export class BlockProcessor {
 
         if (!isValidGenerator) {
             return new InvalidGeneratorHandler(this.blockchain, block);
+        }
+
+        const isValidReward: boolean = await validateReward(block);
+        if (!isValidReward) {
+            return new InvalidRewardHandler(this.blockchain, block);
         }
 
         const containsForgedTransactions: boolean = await this.checkBlockContainsForgedTransactions(block);

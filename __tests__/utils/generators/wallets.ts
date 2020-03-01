@@ -3,7 +3,7 @@ import { generateMnemonic } from "bip39";
 
 export const generateWallets = (network, quantity = 10) => {
     network = network || "testnet";
-    if (!["testnet", "mainnet", "devnet", "unitnet", "nospluginnet", "nosdevnet"].includes(network)) {
+    if (!["testnet", "mainnet", "devnet", "unitnet", "nospluginnet", "nosdevnet", "realtestnet"].includes(network)) {
         throw new Error("Invalid network");
     }
 
