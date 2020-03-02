@@ -5,7 +5,7 @@ export type NetworkType =
     | typeof networks.devnet.network
     | typeof networks.testnet.network
     | typeof networks.unitnet.network
-    | typeof networks.nosdevnet.network
+    | typeof networks.realdevnet.network
     | typeof networks.nospluginnet.network
     | typeof networks.realtestnet.network;
 

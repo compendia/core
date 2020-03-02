@@ -3,4 +3,4 @@ import genesisBlock from "./genesisBlock.json";
 import milestones from "./milestones.json";
 import network from "./network.json";
 
-export const nosdevnet = { exceptions, genesisBlock, milestones, network };
+export const realdevnet = { exceptions, genesisBlock, milestones, network };

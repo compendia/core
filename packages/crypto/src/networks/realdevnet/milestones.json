@@ -33,11 +33,11 @@
         "balancePower": 1,
         "stakeLevels": {
             "86400": 25,
-            "7889400": 60,
-            "15778800": 85,
-            "31557600": 110
+            "7889400": 50,
+            "15778800": 75,
+            "31557600": 100
         },
-        "minimumStake": 1000000000000,
+        "minimumStake": 10000000000,
         "ipfs": {
             "maxFileSize": {
                 "description": 25000,
@@ -58,7 +58,6 @@
         "height": 48,
         "reward": 390000000,
         "topReward": 484000000,
-        "topDelegates": 5,
-        "minimumStake": 10000000000
+        "topDelegates": 5
     }
 ]
