@@ -27,6 +27,8 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: ${{ matrix.node-version }}
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install & Build
               run: yarn setup
             - name: Test
