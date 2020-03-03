@@ -8,7 +8,7 @@ on:
         types: [ready_for_review, synchronize, opened]
 
 jobs:
-    bridgechain-registration:
+    delegate-registration:
         runs-on: ubuntu-latest
 
         services:
@@ -44,294 +44,6 @@ jobs:
               run: sudo apt-get install -q xsel postgresql-client
             - name: Setup Redis
               uses: zhulik/redis-action@1.1.0
-            - name: Install and build packages
-              run: yarn setup
-            - name: Create .core/database directory
-              run: mkdir -p $HOME/.core/database
-            - name: Functional tests
-              run: yarn test __tests__/functional/transaction-forging/bridgechain-registration.test.ts
-
-              env:
-                  CORE_DB_DATABASE: nos_unitnet
-                  CORE_DB_USERNAME: ark
-                  POSTGRES_USER: ark
-                  POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
-
-    bridgechain-resignation:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: ark
-                    POSTGRES_PASSWORD: password
-                    POSTGRES_DB: nos_unitnet
-                ports:
-                    - 5432:5432
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v1
-            - name: Cache node modules
-              uses: actions/cache@v1
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: ${{ runner.os }}-node-
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - name: Update system
-              run: sudo apt-get update -y
-            - name: Install xsel & postgresql-client
-              run: sudo apt-get install -q xsel postgresql-client
-            - name: Install and build packages
-              run: yarn setup
-            - name: Create .core/database directory
-              run: mkdir -p $HOME/.core/database
-            - name: Functional tests
-              run: yarn test __tests__/functional/transaction-forging/bridgechain-resignation.test.ts
-
-              env:
-                  CORE_DB_DATABASE: nos_unitnet
-                  CORE_DB_USERNAME: ark
-                  POSTGRES_USER: ark
-                  POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
-
-    bridgechain-update:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: ark
-                    POSTGRES_PASSWORD: password
-                    POSTGRES_DB: nos_unitnet
-                ports:
-                    - 5432:5432
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v1
-            - name: Cache node modules
-              uses: actions/cache@v1
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: ${{ runner.os }}-node-
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - name: Update system
-              run: sudo apt-get update -y
-            - name: Install xsel & postgresql-client
-              run: sudo apt-get install -q xsel postgresql-client
-            - name: Install and build packages
-              run: yarn setup
-            - name: Create .core/database directory
-              run: mkdir -p $HOME/.core/database
-            - name: Functional tests
-              run: yarn test __tests__/functional/transaction-forging/bridgechain-update.test.ts
-
-              env:
-                  CORE_DB_DATABASE: nos_unitnet
-                  CORE_DB_USERNAME: ark
-                  POSTGRES_USER: ark
-                  POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
-
-    business-registration:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: ark
-                    POSTGRES_PASSWORD: password
-                    POSTGRES_DB: nos_unitnet
-                ports:
-                    - 5432:5432
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v1
-            - name: Cache node modules
-              uses: actions/cache@v1
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: ${{ runner.os }}-node-
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - name: Update system
-              run: sudo apt-get update -y
-            - name: Install xsel & postgresql-client
-              run: sudo apt-get install -q xsel postgresql-client
-            - name: Install and build packages
-              run: yarn setup
-            - name: Create .core/database directory
-              run: mkdir -p $HOME/.core/database
-            - name: Functional tests
-              run: yarn test __tests__/functional/transaction-forging/business-registration.test.ts
-
-              env:
-                  CORE_DB_DATABASE: nos_unitnet
-                  CORE_DB_USERNAME: ark
-                  POSTGRES_USER: ark
-                  POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
-
-    business-resignation:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: ark
-                    POSTGRES_PASSWORD: password
-                    POSTGRES_DB: nos_unitnet
-                ports:
-                    - 5432:5432
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v1
-            - name: Cache node modules
-              uses: actions/cache@v1
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: ${{ runner.os }}-node-
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - name: Update system
-              run: sudo apt-get update -y
-            - name: Install xsel & postgresql-client
-              run: sudo apt-get install -q xsel postgresql-client
-            - name: Install and build packages
-              run: yarn setup
-            - name: Create .core/database directory
-              run: mkdir -p $HOME/.core/database
-            - name: Functional tests
-              run: yarn test __tests__/functional/transaction-forging/business-resignation.test.ts
-
-              env:
-                  CORE_DB_DATABASE: nos_unitnet
-                  CORE_DB_USERNAME: ark
-                  POSTGRES_USER: ark
-                  POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
-
-    business-update:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: ark
-                    POSTGRES_PASSWORD: password
-                    POSTGRES_DB: nos_unitnet
-                ports:
-                    - 5432:5432
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v1
-            - name: Cache node modules
-              uses: actions/cache@v1
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: ${{ runner.os }}-node-
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - name: Update system
-              run: sudo apt-get update -y
-            - name: Install xsel & postgresql-client
-              run: sudo apt-get install -q xsel postgresql-client
-            - name: Install and build packages
-              run: yarn setup
-            - name: Create .core/database directory
-              run: mkdir -p $HOME/.core/database
-            - name: Functional tests
-              run: yarn test __tests__/functional/transaction-forging/business-update.test.ts
-
-              env:
-                  CORE_DB_DATABASE: nos_unitnet
-                  CORE_DB_USERNAME: ark
-                  POSTGRES_USER: ark
-                  POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
-
-    delegate-registration:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: ark
-                    POSTGRES_PASSWORD: password
-                    POSTGRES_DB: nos_unitnet
-                ports:
-                    - 5432:5432
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v1
-            - name: Cache node modules
-              uses: actions/cache@v1
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: ${{ runner.os }}-node-
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - name: Update system
-              run: sudo apt-get update -y
-            - name: Install xsel & postgresql-client
-              run: sudo apt-get install -q xsel postgresql-client
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -380,6 +92,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -428,6 +142,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -476,6 +192,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -524,6 +242,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -572,6 +292,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -620,6 +342,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -668,6 +392,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -716,6 +442,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -764,6 +492,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
@@ -812,6 +542,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
