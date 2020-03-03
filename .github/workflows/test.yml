@@ -44,7 +44,7 @@ jobs:
                 env:
                     POSTGRES_USER: ark
                     POSTGRES_PASSWORD: password
-                    POSTGRES_DB: ark_unitnet
+                    POSTGRES_DB: nos_unitnet
                 ports:
                     - 5432:5432
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -79,11 +79,11 @@ jobs:
               run: ./node_modules/.bin/codecov --token=${{ secrets.CODECOV_TOKEN }}
 
               env:
-                  CORE_DB_DATABASE: ark_unitnet
+                  CORE_DB_DATABASE: nos_unitnet
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: ark_unitnet
+                  POSTGRES_DB: nos_unitnet
 
     e2e:
         runs-on: ubuntu-latest
