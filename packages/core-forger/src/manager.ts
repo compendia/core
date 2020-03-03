@@ -163,15 +163,17 @@ export class ForgerManager {
                 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>(
                     "database",
                 );
-                if (typeof databaseService.getBlocksByHeight === "function") {
+                if (databaseService && typeof databaseService.getBlocksByHeight !== "undefined") {
                     const neededBlocks = [];
                     for (let i = Number(round.roundHeight); i <= Number(networkState.nodeHeight); i++) {
                         neededBlocks.push(i);
                     }
-                    const blocks = await databaseService.getBlocksByHeight(neededBlocks);
-                    const block = blocks.find(block => block.generatorPublicKey === delegate.publicKey);
-                    if (block) {
-                        alreadyForgedRound = true;
+                    if (neededBlocks.length) {
+                        const blocks = await databaseService.getBlocksByHeight(neededBlocks);
+                        const block = blocks.find(block => block.generatorPublicKey === delegate.publicKey);
+                        if (block) {
+                            alreadyForgedRound = true;
+                        }
                     }
                 }
             }
