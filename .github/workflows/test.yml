@@ -70,6 +70,8 @@ jobs:
               run: sudo apt-get update -y
             - name: Install xsel & postgresql-client
               run: sudo apt-get install -q xsel postgresql-client
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
             - name: Install and build packages
               run: yarn setup
             - name: Create .core/database directory
