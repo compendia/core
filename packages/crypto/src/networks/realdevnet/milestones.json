@@ -1,0 +1,63 @@
+[
+    {
+        "height": 1,
+        "reward": 0,
+        "topDelegates": 0,
+        "topReward": 0,
+        "activeDelegates": 47,
+        "blocktime": 6,
+        "block": {
+            "version": 0,
+            "maxTransactions": 150,
+            "maxPayload": 6300000,
+            "acceptExpiredTransactionTimestamps": false
+        },
+        "epoch": "2020-03-03T21:00:00.000Z",
+        "fees": {
+            "staticFees": {
+                "transfer": 10000000,
+                "secondSignature": 50000000,
+                "delegateRegistration": 10000000000,
+                "vote": 100000000,
+                "multiSignature": 10000000,
+                "multiPayment": 10000000,
+                "delegateResignation": 2500000000,
+                "htlcLock": 10000000,
+                "htlcClaim": 0,
+                "htlcRefund": 0,
+                "stakeCreate": 0,
+                "stakeRedeem": 0,
+                "setFile": 10000000
+            }
+        },
+        "balancePower": 1,
+        "stakeLevels": {
+            "86400": 25,
+            "7889400": 50,
+            "15778800": 75,
+            "31557600": 100
+        },
+        "minimumStake": 10000000000,
+        "ipfs": {
+            "maxFileSize": {
+                "description": 25000,
+                "icon": 256000
+            }
+        },
+        "vendorFieldLength": 255,
+        "multiPaymentLimit": 64
+    },
+    {
+        "height": 2,
+        "aip11": true,
+        "block": {
+            "idFullSha256": true
+        }
+    },
+    {
+        "height": 48,
+        "reward": 390000000,
+        "topReward": 484000000,
+        "topDelegates": 5
+    }
+]

@@ -28,10 +28,6 @@ export const calculateForgedTotal = (wallet: State.IWallet): string => {
     const delegate: State.IWalletDelegateAttributes = wallet.getAttribute("delegate");
     const forgedFees: Utils.BigNumber = Utils.BigNumber.make(delegate.forgedFees || 0);
     const forgedRewards: Utils.BigNumber = Utils.BigNumber.make(delegate.forgedRewards || 0);
-    const forgedTopRewards: Utils.BigNumber = Utils.BigNumber.make(delegate.forgedTopRewards || 0);
 
-    return forgedFees
-        .plus(forgedRewards)
-        .plus(forgedTopRewards)
-        .toFixed();
+    return forgedFees.plus(forgedRewards).toFixed();
 };

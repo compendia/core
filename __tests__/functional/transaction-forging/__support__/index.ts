@@ -27,8 +27,6 @@ export const setUp = async (): Promise<Container.IContainer> => {
                 "@arkecosystem/core-event-emitter",
                 "@arkecosystem/core-logger-pino",
                 "@arkecosystem/core-state",
-                "@nosplatform/storage",
-                "@nosplatform/supply-tracker",
                 "@arkecosystem/core-database-postgres",
                 "@arkecosystem/core-magistrate-transactions",
                 "@arkecosystem/core-transaction-pool",

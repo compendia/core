@@ -6,7 +6,7 @@ import { dummyBlock2, dummyBlock3 } from "../fixtures/block";
 describe("block deserializer", () => {
     describe("deserialize", () => {
         it("should get block id from outlook table", () => {
-            const outlookTableBlockId = "123456";
+            const outlookTableBlockId = "16510621879930923139";
             configManager.set("exceptions.outlookTable", { [dummyBlock3.id]: outlookTableBlockId });
 
             const deserialized = Deserializer.deserialize(Serializer.serialize(dummyBlock3).toString("hex"), true).data;
@@ -30,7 +30,6 @@ describe("block deserializer", () => {
                 "totalFee",
                 "removedFee",
                 "reward",
-                "topReward",
                 "payloadLength",
                 "payloadHash",
                 "generatorPublicKey",

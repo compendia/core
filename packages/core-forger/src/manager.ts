@@ -1,8 +1,9 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
-import { Logger, P2P } from "@arkecosystem/core-interfaces";
+import { Database, Logger, P2P } from "@arkecosystem/core-interfaces";
 import { NetworkStateStatus } from "@arkecosystem/core-p2p";
 import { Wallets } from "@arkecosystem/core-state";
+import { roundCalculator } from "@arkecosystem/core-utils";
 import { Blocks, Crypto, Interfaces, Managers, Transactions, Types } from "@arkecosystem/crypto";
 import isEmpty from "lodash.isempty";
 import uniq from "lodash.uniq";
@@ -142,6 +143,49 @@ export class ForgerManager {
 
         const transactions: Interfaces.ITransactionData[] = await this.getTransactionsForForging();
 
+        let reward: string = round.reward;
+        let alreadyForgedRound: boolean = false;
+        const forger: any = JSON.parse(JSON.stringify(round.currentForger || {}));
+
+        // Wrap topReward logic in currentForger check (unit tests may not have a round.currentForger mock)
+        if (forger && round.topReward) {
+            /**
+             * A top delegate should only receive a topReward if it didn't already forge a block this round.
+             * We use delegate.lastBlock by default to check their last forged block.
+             * In case of a rollback, delegates' lastBlock attributes are set to "undefined".
+             * In this case we need to retrieve the current round's blocks from db and check if the forger is in there.
+             */
+            if (forger.attributes.delegate.lastBlock) {
+                alreadyForgedRound =
+                    roundCalculator.calculateRound(forger.attributes.delegate.lastBlock.height).round === round.current;
+            } else {
+                // Get round blocks if delegate.lastBlock is undefined (might be because of a rollback).
+                const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>(
+                    "database",
+                );
+                if (typeof databaseService.getBlocksByHeight === "function") {
+                    const neededBlocks = [];
+                    for (let i = Number(round.roundHeight); i <= Number(networkState.nodeHeight); i++) {
+                        neededBlocks.push(i);
+                    }
+                    const blocks = await databaseService.getBlocksByHeight(neededBlocks);
+                    const block = blocks.find(block => block.generatorPublicKey === delegate.publicKey);
+                    if (block) {
+                        alreadyForgedRound = true;
+                    }
+                }
+            }
+
+            // Set topReward if top delegate and they haven't already forged this round
+            if (
+                forger &&
+                forger.attributes.delegate.rank <= Managers.configManager.getMilestone().topDelegates &&
+                !alreadyForgedRound
+            ) {
+                reward = round.topReward;
+            }
+        }
+
         const block: Interfaces.IBlock = delegate.forge(transactions, {
             previousBlock: {
                 id: networkState.lastBlockId,
@@ -151,8 +195,7 @@ export class ForgerManager {
                 height: networkState.nodeHeight,
             },
             timestamp: round.timestamp,
-            reward: round.reward,
-            topReward: round.topReward,
+            reward,
         });
 
         const minimumMs: number = 2000;

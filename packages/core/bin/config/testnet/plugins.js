@@ -51,7 +51,6 @@ module.exports = {
         },
     },
     "@nosplatform/supply-tracker": {},
-    "@nosplatform/top-rewards": {},
     "@nosplatform/file-transactions": {
         fileKeys: ["description", "db.apps"],
         port: 6003,

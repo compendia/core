@@ -34,8 +34,6 @@ const setUp = async () => {
             "@arkecosystem/core-forger",
             "@arkecosystem/core-exchange-json-rpc",
             "@arkecosystem/core-api",
-            // "@nosplatform/storage",
-            // "@nosplatform/top-rewards",
         ],
     });
 

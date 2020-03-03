@@ -34,7 +34,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             "delegate.forgedRewards",
             "delegate.forgedTotal",
             "delegate.removedFees",
-            "delegate.forgedTopRewards",
             "delegate.approval",
         ];
     }
@@ -56,7 +55,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
                     forgedFees: Utils.BigNumber.ZERO,
                     removedFees: Utils.BigNumber.ZERO,
                     forgedRewards: Utils.BigNumber.ZERO,
-                    forgedTopRewards: Utils.BigNumber.ZERO,
                     producedBlocks: 0,
                     rank: undefined,
                 });
@@ -184,7 +182,6 @@ export class DelegateRegistrationTransactionHandler extends TransactionHandler {
             forgedFees: Utils.BigNumber.ZERO,
             removedFees: Utils.BigNumber.ZERO,
             forgedRewards: Utils.BigNumber.ZERO,
-            forgedTopRewards: Utils.BigNumber.ZERO,
             producedBlocks: 0,
             round: 0,
         });

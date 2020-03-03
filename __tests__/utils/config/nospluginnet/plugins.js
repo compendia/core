@@ -8,7 +8,6 @@ module.exports = {
         minimumVersions: [">=2.0.0"],
         minimumNetworkReach: 5,
     },
-    "@nosplatform/storage": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
     "@arkecosystem/core-magistrate-transactions": {},
@@ -30,10 +29,6 @@ module.exports = {
             minFeeBroadcast: 1000,
         },
     },
-    "@nosplatform/supply-tracker": {
-        topRewards: true
-    },
-    "@nosplatform/top-rewards": {},
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,

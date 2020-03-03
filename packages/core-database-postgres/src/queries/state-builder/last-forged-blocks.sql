@@ -1,6 +1,5 @@
 SELECT id,
        height,
-       top_reward,
        generator_public_key,
        TIMESTAMP
 FROM blocks

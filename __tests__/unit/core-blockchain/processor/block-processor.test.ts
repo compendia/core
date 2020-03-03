@@ -30,7 +30,6 @@ describe("Block processor", () => {
         timestamp: 46583330,
         height: 2,
         reward: Utils.BigNumber.make(0),
-        topReward: Utils.BigNumber.make(0),
         previousBlock: genesisBlock.id,
         numberOfTransactions: 0,
         transactions: [],

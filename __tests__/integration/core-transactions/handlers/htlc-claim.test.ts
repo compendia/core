@@ -5,8 +5,8 @@ import { Delegate } from "../../../../packages/core-forger/src/delegate";
 import { WalletManager } from "../../../../packages/core-state/src/wallets";
 import { TransactionFactory } from "../../../helpers/transaction-factory";
 import { genesisBlock } from "../../../utils/config/unitnet/genesisBlock";
+import { htlcSecretHashHex, htlcSecretHex } from "../../../utils/fixtures";
 import { wallets } from "../../../utils/fixtures/unitnet";
-import { htlcSecretHex, htlcSecretHashHex } from "../../../utils/fixtures";
 import { setUp, tearDown } from "../__support__/setup";
 
 let container: Container.IContainer;
@@ -50,7 +50,6 @@ describe("Htlc claim handler bootstrap", () => {
                 height: 1,
             },
             reward: Utils.BigNumber.ZERO,
-            topReward: Utils.BigNumber.ZERO,
         };
         const sender = wallets[11];
         const recipientId = "APmKYrtyyP34BdqQKyk71NbzQ2VKjG8sB3";
@@ -88,7 +87,6 @@ describe("Htlc claim handler bootstrap", () => {
                 height: 2,
             },
             reward: Utils.BigNumber.ZERO,
-            topReward: Utils.BigNumber.ZERO,
         });
         await database.connection.saveBlock(blockClaim);
 

@@ -33,7 +33,6 @@ module.exports = {
             minFeeBroadcast: 1000,
         },
     },
-    "@nosplatform/top-rewards": {},
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {},
     "@arkecosystem/core-blockchain": {},

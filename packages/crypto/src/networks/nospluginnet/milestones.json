@@ -2,10 +2,10 @@
     {
         "height": 1,
         "reward": 300000000,
-        "topReward": 100000000,
+        "topReward": 400000000,
         "topDelegates": 2,
         "activeDelegates": 5,
-        "blocktime": 6,
+        "blocktime": 4,
         "block": {
             "version": 0,
             "maxTransactions": 150,

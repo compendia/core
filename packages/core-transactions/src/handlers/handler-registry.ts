@@ -29,7 +29,12 @@ export class TransactionHandlerRegistry {
         this.registerTransactionHandler(DelegateRegistrationTransactionHandler);
         this.registerTransactionHandler(VoteTransactionHandler);
         this.registerTransactionHandler(MultiSignatureTransactionHandler);
-        this.registerTransactionHandler(IpfsTransactionHandler);
+
+        // Only register core IPFS transaction for tests
+        if (process.env.NODE_ENV === "test") {
+            this.registerTransactionHandler(IpfsTransactionHandler);
+        }
+
         this.registerTransactionHandler(MultiPaymentTransactionHandler);
         this.registerTransactionHandler(DelegateResignationTransactionHandler);
         this.registerTransactionHandler(HtlcLockTransactionHandler);

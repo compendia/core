@@ -418,7 +418,6 @@ describe("NetworkMonitor", () => {
                     height: 1,
                 },
                 reward: Utils.BigNumber.ZERO,
-                topReward: Utils.BigNumber.ZERO,
             });
 
             communicator.postBlock = jest.fn();

@@ -12,7 +12,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -32,7 +32,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -52,7 +52,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -72,7 +72,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -92,7 +92,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -112,7 +112,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -132,7 +132,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -152,7 +152,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -172,7 +172,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -192,7 +192,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -212,7 +212,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -232,7 +232,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -252,7 +252,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -272,7 +272,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -292,7 +292,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -312,7 +312,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -332,7 +332,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -352,7 +352,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -372,7 +372,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -392,7 +392,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -412,7 +412,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -432,7 +432,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -452,7 +452,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -472,7 +472,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -492,7 +492,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -512,7 +512,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -532,7 +532,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -552,7 +552,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -572,7 +572,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -592,7 +592,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -612,7 +612,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -632,7 +632,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -652,7 +652,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -672,7 +672,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -692,7 +692,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -712,7 +712,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -732,7 +732,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -752,7 +752,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -772,7 +772,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -792,7 +792,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -812,7 +812,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -832,7 +832,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -852,7 +852,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -872,7 +872,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -892,7 +892,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -912,7 +912,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -932,7 +932,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -952,7 +952,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -972,7 +972,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -992,7 +992,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1012,7 +1012,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1032,7 +1032,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1052,7 +1052,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1072,7 +1072,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1092,7 +1092,7 @@ export const blocks101to155 = [
         totalAmount: Utils.BigNumber.make("0"),
         totalFee: Utils.BigNumber.make("0"),
         removedFee: Utils.BigNumber.make("0"),
-        topReward: Utils.BigNumber.make("0"),
+
         reward: Utils.BigNumber.make("0"),
         payloadLength: 0,
         payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",

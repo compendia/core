@@ -176,6 +176,17 @@ fi
 
 success "Installed PostgreSQL!"
 
+heading "Installing Redis..."
+
+if [[ ! -z $DEB ]]; then
+    sudo apt-get update
+    sudo apt-get install redis-server -y
+elif [[ ! -z $RPM ]]; then
+    sudo yum install redis-server -y
+fi
+
+success "Installed Redis!"
+
 heading "Installing NTP..."
 
 sudo timedatectl set-ntp off > /dev/null 2>&1 || true # disable the default systemd timesyncd service

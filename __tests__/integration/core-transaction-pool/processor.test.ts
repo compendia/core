@@ -769,7 +769,6 @@ describe("Transaction Guard", () => {
                     reward: Utils.BigNumber.ZERO,
                     payloadLength: 32 * transactions.length,
                     payloadHash: Crypto.HashAlgorithms.sha256(transactionData.ids).toString("hex"),
-                    topReward: Utils.BigNumber.make(0),
                     transactions,
                     removedFee: feeObj.toRemove,
                 };

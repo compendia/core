@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
-import { Container, Database, EventEmitter, Logger, Shared, State } from "@arkecosystem/core-interfaces";
+import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Constants, Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
 import { StakeHelpers } from "@nosplatform/stake-transactions";
@@ -73,7 +73,6 @@ export const plugin: Container.IPluginDescriptor = {
                         round.removed = "0";
                         round.staked = "0";
                         round.forged = "0";
-                        round.topDelegates = "";
                         round.released = "0";
                     }
                     res = round;
@@ -131,15 +130,8 @@ export const plugin: Container.IPluginDescriptor = {
             logger.info("Bootstrapping Supply Cache Completed");
         });
 
-        let blockEvent;
-        let revertBlockEvent;
-        if (options.topRewards) {
-            blockEvent = "topRewards.block.applied";
-            revertBlockEvent = "topRewards.block.reverted";
-        } else {
-            blockEvent = "block.applied";
-            revertBlockEvent = "block.reverted";
-        }
+        const blockEvent = "block.applied";
+        const revertBlockEvent = "block.reverted";
 
         emitter.on(blockEvent, async (blockData: Interfaces.IBlockData) => {
             const roundData = roundCalculator.calculateRound(blockData.height);
@@ -222,65 +214,6 @@ export const plugin: Container.IPluginDescriptor = {
             });
         });
 
-        emitter.on(
-            "top.rewards.applied",
-            async (reward: {
-                rewardedDelegates: string[];
-                totalReward: Utils.BigNumber;
-                roundInfo: Shared.IRoundInfo;
-                topDelegateReward: Utils.BigNumber;
-            }) => {
-                q(async () => {
-                    const roundToHandle = reward.roundInfo.round;
-                    // If there are top delegates: store topRewards to Round and Supply
-                    if (reward.rewardedDelegates) {
-                        const dbRound = await findOrCreate("Round", roundToHandle);
-                        const lastSupply = Utils.BigNumber.make(supply.value);
-                        supply.value = lastSupply.plus(reward.totalReward).toString();
-                        dbRound.forged = Utils.BigNumber.make(dbRound.forged)
-                            .plus(reward.totalReward)
-                            .toString();
-                        dbRound.topDelegates = reward.rewardedDelegates.join(",");
-                        await dbRound.save();
-                        await supply.save();
-                        logger.info(
-                            `Top Rewards distributed for Round ${roundToHandle}. Supply updated. Previous: ${lastSupply.dividedBy(
-                                Constants.ARKTOSHI,
-                            )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
-                        );
-                    }
-                    emitter.emit("top.supply.applied", reward.roundInfo.round);
-                });
-            },
-        );
-
-        emitter.on(
-            "top.rewards.reverted",
-            async (reward: {
-                revertedDelegates: string[];
-                totalReward: Utils.BigNumber;
-                roundInfo: Shared.IRoundInfo;
-                topDelegateReward: Utils.BigNumber;
-            }) => {
-                q(async () => {
-                    const roundToHandle = reward.roundInfo.round;
-                    // If there are top delegates: store topRewards to Round and Supply
-                    if (reward.revertedDelegates) {
-                        const dbRound = await findOrCreate("Round", roundToHandle);
-                        const lastSupply = Utils.BigNumber.make(supply.value);
-                        supply.value = lastSupply.minus(reward.totalReward).toString();
-                        dbRound.forged = Utils.BigNumber.make(dbRound.forged)
-                            .minus(reward.totalReward)
-                            .toString();
-                        dbRound.topDelegates = reward.revertedDelegates.join(",");
-                        await dbRound.save();
-                        await supply.save();
-                    }
-                    emitter.emit("top.supply.reverted", reward.roundInfo.round);
-                });
-            },
-        );
-
         emitter.on(revertBlockEvent, async (blockData: Interfaces.IBlockData) => {
             q(async () => {
                 const roundData = roundCalculator.calculateRound(blockData.height);
@@ -319,33 +252,6 @@ export const plugin: Container.IPluginDescriptor = {
                 }
             });
         });
-
-        emitter.on(
-            "top.rewards.reverted",
-            async (reward: {
-                rewardedDelegates: string[];
-                totalReward: Utils.BigNumber;
-                roundInfo: Shared.IRoundInfo;
-                topDelegateReward: Utils.BigNumber;
-            }) => {
-                q(async () => {
-                    const roundToHandle = reward.roundInfo.round;
-                    // If there are top delegates: store topRewards to Round and Supply
-                    if (reward.rewardedDelegates) {
-                        const dbRound = await findOrCreate("Round", roundToHandle);
-                        const lastSupply = Utils.BigNumber.make(supply.value);
-                        supply.value = lastSupply.plus(reward.totalReward).toString();
-                        dbRound.forged = Utils.BigNumber.make(dbRound.forged)
-                            .minus(reward.totalReward)
-                            .toString();
-                        dbRound.topDelegates = reward.rewardedDelegates.join(",");
-                        await dbRound.save();
-                        await supply.save();
-                    }
-                    emitter.emit("top.supply.reverted", reward.roundInfo.round);
-                });
-            },
-        );
 
         // All transfers from the mint wallet are added to supply
         emitter.on(ApplicationEvents.TransactionApplied, async txData => {

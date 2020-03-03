@@ -7,3 +7,4 @@ export * from "./invalid-generator-handler";
 export * from "./nonce-out-of-order-handler";
 export * from "./unchained-handler";
 export * from "./verification-failed-handler";
+export * from "./invalid-reward-handler";

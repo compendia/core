@@ -12,8 +12,6 @@ export class BlockFactory {
                 height: 1,
             },
             reward: Utils.BigNumber.ZERO,
-            topreward: Utils.BigNumber.ZERO,
-            topReward: Utils.BigNumber.ZERO,
         });
     }
 }
