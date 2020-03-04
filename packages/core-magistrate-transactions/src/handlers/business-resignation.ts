@@ -1,10 +1,10 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Enums, Transactions as MagistrateTransactions } from "@arkecosystem/core-magistrate-crypto";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Transactions } from "@arkecosystem/crypto";
-import { BusinessIsNotRegisteredError, BusinessIsResignedError } from "../errors";
+import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { BridechainsAreNotResignedError, BusinessIsNotRegisteredError, BusinessIsResignedError } from "../errors";
 import { MagistrateApplicationEvents } from "../events";
-import { IBusinessWalletAttributes } from "../interfaces";
+import { IBridgechainWalletAttributes, IBusinessWalletAttributes } from "../interfaces";
 import { BusinessRegistrationTransactionHandler } from "./business-registration";
 import { MagistrateTransactionHandler } from "./magistrate-handler";
 
@@ -40,12 +40,21 @@ export class BusinessResignationTransactionHandler extends MagistrateTransaction
         wallet: State.IWallet,
         walletManager: State.IWalletManager,
     ): Promise<void> {
+        if (Utils.isException(transaction.data)) {
+            return;
+        }
+
         if (!wallet.hasAttribute("business")) {
             throw new BusinessIsNotRegisteredError();
         }
 
         if (wallet.getAttribute<IBusinessWalletAttributes>("business").resigned) {
             throw new BusinessIsResignedError();
+        }
+
+        const bridgechains: Record<string, IBridgechainWalletAttributes> = wallet.getAttribute("business.bridgechains");
+        if (bridgechains && Object.values(bridgechains).some(bridgechain => !bridgechain.resigned)) {
+            throw new BridechainsAreNotResignedError();
         }
 
         return super.throwIfCannotBeApplied(transaction, wallet, walletManager);

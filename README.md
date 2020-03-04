@@ -8,19 +8,20 @@
 
 This repository contains all modules that make up the nOS Core.
 
-Check our [dedicated documentation site](https://docs.ark.io/guidebook/core/plugins/) for information about all available plugins and [How to write a Core Plugin
-](https://docs.ark.io/tutorials/core/plugins/how-to-write-a-core-plugin.html) if you want to get started with developing your own plugins.
+Check our [dedicated documentation site](https://learn.ark.dev) for information about all available plugins and [How to write a Core Plugin
+](https://learn.ark.dev/application-development/how-to-write-core-dapps) if you want to get started with developing your own plugins.
 
 ## Documentation
 
 -   Development : https://docs.nos.io
 
 ## API Documentation
- -
+
+-
 
 ## GitHub Development Bounty
 
-- 
+-
 
 ## Security
 

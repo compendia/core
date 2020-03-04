@@ -26,9 +26,9 @@
         "updates": "../../node_modules/npm-check-updates/bin/npm-check-updates -a"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.6.10",
-        "@arkecosystem/core-transactions": "^2.6.10",
-        "@arkecosystem/crypto": "^2.6.10",
+        "@arkecosystem/core-interfaces": "^2.6.24",
+        "@arkecosystem/core-transactions": "^2.6.24",
+        "@arkecosystem/crypto": "^2.6.24",
         "@nosplatform/file-transactions-crypto": "^0.0.1-alpha.1",
         "ipfs": "^0.40.0"
     },

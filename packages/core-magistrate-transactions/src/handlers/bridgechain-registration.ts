@@ -6,12 +6,14 @@ import {
     BridgechainAlreadyRegisteredError,
     BusinessIsResignedError,
     GenesisHashAlreadyRegisteredError,
+    PortKeyMustBeValidPackageNameError,
     WalletIsNotBusinessError,
 } from "../errors";
 import { MagistrateApplicationEvents } from "../events";
 import { IBridgechainWalletAttributes, IBusinessWalletAttributes } from "../interfaces";
 import { BusinessRegistrationTransactionHandler } from "./business-registration";
 import { MagistrateTransactionHandler } from "./magistrate-handler";
+import { packageNameRegex } from "./utils";
 
 export class BridgechainRegistrationTransactionHandler extends MagistrateTransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -74,29 +76,22 @@ export class BridgechainRegistrationTransactionHandler extends MagistrateTransac
 
         if (
             bridgechains &&
-            Object.values(bridgechains).some(bridgechain => {
-                return (
+            Object.values(bridgechains).some(
+                bridgechain =>
                     bridgechain.bridgechainAsset.name.toLowerCase() ===
-                    data.asset.bridgechainRegistration.name.toLowerCase()
-                );
-            })
+                    data.asset.bridgechainRegistration.name.toLowerCase(),
+            )
         ) {
             throw new BridgechainAlreadyRegisteredError();
         }
 
-        for (const wallet of walletManager.getIndex("businesses").values()) {
-            const bridgechains: Record<string, IBridgechainWalletAttributes> = wallet.getAttribute(
-                "business.bridgechains",
-            );
+        if (bridgechains && bridgechains[data.asset.bridgechainRegistration.genesisHash]) {
+            throw new GenesisHashAlreadyRegisteredError();
+        }
 
-            if (bridgechains) {
-                const bridgechainValues: IBridgechainWalletAttributes[] = Object.values(bridgechains);
-
-                for (const bridgechain of bridgechainValues) {
-                    if (bridgechain.bridgechainAsset.genesisHash === data.asset.bridgechainRegistration.genesisHash) {
-                        throw new GenesisHashAlreadyRegisteredError();
-                    }
-                }
+        for (const portKey of Object.keys(data.asset.bridgechainRegistration.ports)) {
+            if (!packageNameRegex.test(portKey)) {
+                throw new PortKeyMustBeValidPackageNameError();
             }
         }
 

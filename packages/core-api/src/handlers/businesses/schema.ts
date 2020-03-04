@@ -36,6 +36,15 @@ export const bridgechains: object = {
     },
 };
 
+export const bridgechain: object = {
+    params: {
+        businessId: walletId,
+        bridgechainId: Joi.string()
+            .hex()
+            .length(64), // genesisHash
+    },
+};
+
 export const search: object = {
     query: {
         ...pagination,
