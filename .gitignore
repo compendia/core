@@ -29,6 +29,7 @@ lib-cov
 
 # Build results
 app.js
+!packages/core/bin/config/*/app.js
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
