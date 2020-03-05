@@ -3,21 +3,20 @@ import "./mocks/core-container";
 
 import * as fs from "fs";
 import * as path from "path";
-import { createConnection } from "typeorm";
 
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Constants, Crypto, Errors, Identities, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Constants, Crypto, Identities, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { configManager } from "@arkecosystem/crypto/dist/managers";
 import { Builders as StakeBuilders } from "@nosplatform/stake-transactions-crypto/src";
-import { Stake } from "@nosplatform/storage";
 
 // import {
 //     DatabaseConnectionStub
 // } from '../../../__tests__/unit/core-database/__fixtures__/database-connection-stub';
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import {
+    LessThanMinimumStakeError,
     NotEnoughBalanceError,
     StakeNotFoundError,
     StakeNotIntegerError,
@@ -33,15 +32,8 @@ beforeAll(async () => {
     if (fs.existsSync(dbPath)) {
         fs.unlinkSync(dbPath);
     }
-    await createConnection({
-        type: "sqlite",
-        database: dbPath,
-        // Import entities to connection
-        entities: [Stake],
-        synchronize: true,
-    });
-    Managers.configManager.setFromPreset("testnet");
-    Managers.configManager.setHeight(2);
+    Managers.configManager.setFromPreset("nospluginnet");
+    Managers.configManager.setHeight(12);
     Handlers.Registry.registerTransactionHandler(StakeCreateTransactionHandler);
     Handlers.Registry.registerTransactionHandler(StakeRedeemTransactionHandler);
 });
@@ -143,16 +135,14 @@ describe("Staking Transactions", () => {
 
     it("should throw if user stakes less than milestone-set minimum", async () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
-        try {
-            stakeBuilder
-                .stakeAsset(7889400, Utils.BigNumber.ONE)
-                .nonce(voter.nonce.plus(1))
-                .sign("secret")
-                .build();
-            fail("This should've resulted in an error");
-        } catch (error) {
-            expect(error).toBeInstanceOf(Errors.TransactionSchemaError);
-        }
+        const tx = stakeBuilder
+            .stakeAsset(7889400, Utils.BigNumber.ONE.times(1e8))
+            .nonce(voter.nonce.plus(1))
+            .sign("secret")
+            .build();
+        await expect(stakeCreateHandler.throwIfCannotBeApplied(tx, voter, walletManager)).rejects.toThrowError(
+            LessThanMinimumStakeError,
+        );
     });
 
     it("should throw on invalid stake timestamp", async () => {
