@@ -6,7 +6,7 @@ import * as support from "./__support__";
 
 beforeAll(async () => {
     await support.setUp();
-    Managers.configManager.setFromPreset("testnet");
+    Managers.configManager.setFromPreset("nospluginnet");
 });
 afterAll(support.tearDown);
 
