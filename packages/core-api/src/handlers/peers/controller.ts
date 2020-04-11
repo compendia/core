@@ -24,7 +24,7 @@ export class PeersController extends Controller {
 
         const count: number = result.length;
 
-        const limit: number = +request.query.limit || 100;
+        const limit: number = +request.query.limit || 300;
 
         let offset: number = +get(request.query, "offset", 0);
 

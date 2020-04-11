@@ -15,7 +15,7 @@ app
 app
     .command('run-sync')
     .description('Run a full sync')
-    .option('-n, --network <network>', 'network to use as a base (testnet / devnet / mainnet)', "testnet")
+    .option('-n, --network <network>', 'network to use as a base (testnet / devnet / mainnet)', "nospluginnet")
     .option('-t, --timeLimit <timeLimit>', 'time limit in minutes before stopping sync', 1200)
     .action((options) => require('../lib/run')(Object.assign(options, {
         sync: true
@@ -24,7 +24,7 @@ app
 app
     .command('launch')
     .description('Just launch the network')
-    .option('-n, --network <network>', 'network to use as a base (testnet / devnet / mainnet)', "testnet")
+    .option('-n, --network <network>', 'network to use as a base (testnet / devnet / mainnet)', "nospluginnet")
     .action((options) => require('../lib/run')(Object.assign(options, {
         justLaunchNetwork: true
     })))
