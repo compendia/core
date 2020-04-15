@@ -24,6 +24,7 @@ import {
     StakeTimestampError,
 } from "../src/errors";
 import { StakeCreateTransactionHandler, StakeRedeemTransactionHandler } from "../src/handlers";
+import { PowerUpHelper } from "../src/helpers";
 
 // import { ExpireHelper } from '../src/helpers';
 
@@ -64,7 +65,7 @@ beforeEach(() => {
     stakeRedeemHandler = new StakeRedeemTransactionHandler();
 });
 
-describe("Staking Transactions", () => {
+describe("Stake Redeem Transactions", () => {
     it("should throw if redeeming stake too soon", async () => {
         const store = app.resolvePlugin<State.IStateService>("state").getStore();
 
@@ -87,12 +88,12 @@ describe("Staking Transactions", () => {
         jest.spyOn(store, "getLastBlock").mockReturnValue({
             // @ts-ignore
             data: {
-                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].redeemableTimestamp - 10,
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable - 10,
             },
         });
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(
-            voter.getAttribute("stakes")[stakeTransaction.id].redeemableTimestamp - 10,
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable - 10,
         );
 
         const redeemBuilder = new StakeBuilders.StakeRedeemBuilder();
@@ -117,7 +118,9 @@ describe("Staking Transactions", () => {
             stakeRedeemHandler.throwIfCannotBeApplied(stakeRedeemTransaction.build(), voter, walletManager),
         ).rejects.toThrowError(StakeNotFoundError);
     });
+});
 
+describe("Stake Create Transactions", () => {
     it("should throw if user stakes more than balance", async () => {
         voter.balance = stakeAmount.minus(1_000 * ARKTOSHI);
 
@@ -192,7 +195,7 @@ describe("Staking Transactions", () => {
         ).rejects.toThrowError(StakeNotIntegerError);
     });
 
-    it("should vote then update vote balance after 6m stake", async () => {
+    it("should vote then update vote balance after 6m stake after power-up", async () => {
         const delegateKeys = Identities.Keys.fromPassphrase("delegate");
         const delegateWallet = walletManager.findByPublicKey(delegateKeys.publicKey);
         delegateWallet.setAttribute("delegate.username", "unittest");
@@ -224,13 +227,25 @@ describe("Staking Transactions", () => {
             fail(error);
         });
 
+        const store = app.resolvePlugin<State.IStateService>("state").getStore();
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.powerUp,
+            },
+        });
+
+        expect(voter.getAttribute("stakePower")).toBeFalsy();
+
+        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+
         expect(voter.getAttribute("stakePower")).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
         );
 
         walletManager.reindex(delegateWallet);
 
-        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
             delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
         );
     });
@@ -245,6 +260,12 @@ describe("Staking Transactions", () => {
         walletManager.reindex(delegateWallet);
 
         jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1234567890);
+        const store = app.resolvePlugin<State.IStateService>("state").getStore();
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: { timestamp: 1234567890 },
+        });
 
         expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(delegateWallet.balance);
 
@@ -270,6 +291,17 @@ describe("Staking Transactions", () => {
 
         await walletManager.applyTransaction(stakeTransaction);
 
+        expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(Utils.BigNumber.ZERO);
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.powerUp,
+            },
+        });
+
+        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+
         expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["7889400"]).dividedBy(10),
         );
@@ -292,6 +324,10 @@ describe("Staking Transactions", () => {
         expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(
             delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
         );
+
+        const graceEnd = Managers.configManager.getMilestone().graceEnd;
+        const powerUp = Managers.configManager.getMilestone().powerUp;
+
         expect(voter.getAttribute("stakes")[stakeTransaction.id]).toEqual({
             id: stakeTransaction.id,
             amount: stakeAmount.toString(),
@@ -300,10 +336,16 @@ describe("Staking Transactions", () => {
                 .times(configManager.getMilestone().stakeLevels["7889400"])
                 .dividedBy(10)
                 .toString(),
-            redeemableTimestamp: stakeTransaction.data.asset.stakeCreate.timestamp + 7889400,
+            timestamps: {
+                created: 1234567890,
+                graceEnd: 1234567890 + graceEnd,
+                powerUp: 1234567890 + graceEnd + powerUp,
+                redeemable: 1234567890 + graceEnd + powerUp + 7889400,
+            },
+            active: true,
             redeemed: false,
             halved: false,
-            timestamp: 1234567890,
+            canceled: false,
         });
 
         const unvoteTransaction = Transactions.BuilderFactory.vote()
@@ -334,8 +376,10 @@ describe("Staking Transactions", () => {
         ]);
 
         await walletManager.revertTransaction(stakeTransaction);
+
         expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(Utils.BigNumber.ZERO);
         expect(voter.balance).toEqual(initialBalance.minus(voteTransaction.data.fee));
+
         expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(
             delegateWallet.balance.plus(voter.balance),
         );

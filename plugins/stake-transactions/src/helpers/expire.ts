@@ -18,7 +18,7 @@ export class ExpireHelper {
     ): Promise<void> {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
-        if (!stake.halved && !stake.redeemed && block.timestamp > stake.redeemableTimestamp) {
+        if (!stake.halved && !stake.redeemed && block.timestamp > stake.timestamps.redeemable) {
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
             const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                 "transaction-pool",
@@ -95,7 +95,7 @@ export class ExpireHelper {
         }
 
         // If the stake is somehow still unreleased, don't remove it from db
-        if (!(block.timestamp <= stake.redeemableTimestamp)) {
+        if (!(block.timestamp <= stake.timestamps.redeemable)) {
             this.removeExpiry(stakeKey);
         }
     }
@@ -112,10 +112,12 @@ export class ExpireHelper {
             await redis.hmset(
                 key,
                 ["publicKey", wallet.publicKey],
-                ["redeemableTimestamp", stake.redeemableTimestamp.toString()],
+                ["powerUpTimestamp", stake.timestamps.powerUp.toString()],
+                ["redeemableTimestamp", stake.timestamps.redeemable.toString()],
                 ["stakeKey", stakeKey],
             );
-            await redis.zadd("stake_expirations", [stake.redeemableTimestamp, key]);
+            await redis.zadd("stake_expirations", [stake.timestamps.redeemable, key]);
+            await redis.zadd("stake_powerups", [stake.timestamps.powerUp, key]);
         }
     }
 
@@ -124,6 +126,7 @@ export class ExpireHelper {
         const key = `stake:${stakeKey}`;
         await redis.del(key);
         await redis.zrem("stake_expirations", `stake:${stakeKey}`);
+        await redis.zrem("stake_powerups", `stake:${stakeKey}`);
     }
 
     public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {
@@ -148,7 +151,8 @@ export class ExpireHelper {
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[expiration.stakeKey] !== undefined &&
-                        wallet.getAttribute("stakes")[expiration.stakeKey].halved === false
+                        wallet.getAttribute("stakes")[expiration.stakeKey].halved === false &&
+                        wallet.getAttribute("stakes")[expiration.stakeKey].canceled === false
                     ) {
                         await this.expireStake(wallet, expiration.stakeKey, block);
                     } else {
@@ -159,8 +163,6 @@ export class ExpireHelper {
                         );
                         await this.removeExpiry(expiration.stakeKey);
                     }
-                } else if (expiration && expiration.stakeKey) {
-                    await this.removeExpiry(expiration.stakeKey);
                 }
             }
         }

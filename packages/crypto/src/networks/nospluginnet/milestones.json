@@ -33,12 +33,14 @@
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "balancePower": 1,
+        "graceEnd": 300,
+        "powerUp": 300,
         "stakeLevels": {
             "20": 20,
             "120": 30,
-            "7889400": 60,
-            "15778800": 85,
-            "31557600": 110
+            "7889400": 50,
+            "15778800": 75,
+            "31557600": 100
         },
         "minimumStake": 1000000000000,
         "vestedWalletPublicKey": "none"

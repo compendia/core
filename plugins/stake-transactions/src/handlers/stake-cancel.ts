@@ -7,19 +7,13 @@ import {
     Transactions as StakeTransactions,
 } from "@nosplatform/stake-transactions-crypto";
 
-import {
-    StakeAlreadyCanceledError,
-    StakeAlreadyRedeemedError,
-    StakeNotFoundError,
-    StakeNotYetRedeemableError,
-    WalletHasNoStakeError,
-} from "../errors";
+import { StakeAlreadyCanceledError, StakeGraceEndedError, StakeNotFoundError, WalletHasNoStakeError } from "../errors";
 import { ExpireHelper } from "../helpers";
 import { StakeCreateTransactionHandler } from "./stake-create";
 
-export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
+export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
-        return StakeTransactions.StakeRedeemTransaction;
+        return StakeTransactions.StakeCancelTransaction;
     }
 
     public dependencies(): ReadonlyArray<Handlers.TransactionHandlerConstructor> {
@@ -46,19 +40,17 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             const transactions = await reader.read();
             for (const transaction of transactions) {
                 const wallet: State.IWallet = walletManager.findByPublicKey(transaction.senderPublicKey);
-                const s: StakeInterfaces.IStakeRedeemAsset = transaction.asset.stakeRedeem;
+                const s: StakeInterfaces.IStakeCancelAsset = transaction.asset.stakeCancel;
                 const txId = s.id;
-                // Refund stake
+                // Cancel stake
                 const stakes = wallet.getAttribute("stakes", {});
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
                 const newBalance = wallet.balance.plus(stake.amount);
-                const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power);
-                stake.redeemed = true;
-                stakes[txId] = stake;
                 await ExpireHelper.removeExpiry(transaction.id);
                 wallet.balance = newBalance;
+                stake.canceled = true;
+                stakes[txId] = stake;
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
-                wallet.setAttribute<Utils.BigNumber>("stakePower", newPower);
                 walletManager.reindex(wallet);
             }
         }
@@ -70,6 +62,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         databaseWalletManager: State.IWalletManager,
     ): Promise<void> {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
+        const stake: StakeInterfaces.IStakeObject = stakes[transaction.id];
 
         // Get wallet stake if it exists
         if (stakes === {}) {
@@ -77,26 +70,18 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         }
 
         const { data }: Interfaces.ITransaction = transaction;
-        const txId = data.asset.stakeRedeem.id;
+        const txId = data.asset.stakeCancel.id;
 
         if (!(txId in stakes)) {
             throw new StakeNotFoundError();
         }
 
-        if (stakes[txId].canceled) {
+        if (stake.canceled) {
             throw new StakeAlreadyCanceledError();
         }
 
-        if (stakes[txId].redeemed) {
-            throw new StakeAlreadyRedeemedError();
-        }
-
-        // TODO: Get transaction's block round timestamp instead of transaction timestamp.
-        if (
-            (!transaction.timestamp && !stakes[txId].halved) ||
-            (transaction.timestamp && transaction.timestamp < stakes[txId].timestamps.redeemable)
-        ) {
-            throw new StakeNotYetRedeemableError();
+        if (transaction.timestamp && transaction.timestamp > stake.timestamps.graceEnd) {
+            throw new StakeGraceEndedError();
         }
 
         return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);
@@ -115,7 +100,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             )) ||
             (await pool.senderHasTransactionsOfType(
                 data.senderPublicKey,
-                Enums.StakeTransactionType.StakeRedeem,
+                Enums.StakeTransactionType.StakeCancel,
                 Enums.StakeTransactionGroup,
             ))
         ) {
@@ -138,19 +123,19 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         await super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
-        const txId = t.asset.stakeRedeem.id;
+        const txId = t.asset.stakeCancel.id;
         const stakes = sender.getAttribute("stakes", {});
         const stake = stakes[txId];
 
         // Refund stake
         const newBalance = sender.balance.plus(stake.amount);
-        const newPower = sender.getAttribute("stakePower").minus(stake.power);
-        stake.redeemed = true;
+        stake.canceled = true;
         stakes[txId] = stake;
-
         sender.balance = newBalance;
-        sender.setAttribute("stakePower", newPower);
+
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
+
+        await ExpireHelper.removeExpiry(transaction.id);
 
         walletManager.reindex(sender);
     }
@@ -162,19 +147,19 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         await super.revertForSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const t = transaction.data;
-        const txId = t.asset.stakeRedeem.id;
+        const txId = t.asset.stakeCancel.id;
         const stakes = sender.getAttribute("stakes", {});
         const stake = stakes[txId];
+
         // Revert refund stake
         const newBalance = sender.balance.minus(stake.amount);
-        const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power);
-        stake.redeemed = false;
+        stake.canceled = false;
         stakes[txId] = stake;
-
         sender.balance = newBalance;
-        sender.setAttribute("stakePower", newPower);
-        sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
+        await ExpireHelper.storeExpiry(stake, sender, txId);
+
+        sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         walletManager.reindex(sender);
     }
 

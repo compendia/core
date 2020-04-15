@@ -59,21 +59,31 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const stakeObject: StakeInterfaces.IStakeObject = VotePower.stakeObject(
                     transaction.asset.stakeCreate,
                     transaction.id,
+                    transaction.blockHeight,
                 );
                 const newBalance = wallet.balance.minus(stakeObject.amount);
                 const stakes = wallet.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
-                if (roundBlock.timestamp > stakeObject.redeemableTimestamp) {
+
+                // TODO: Check if stake is expired, active, powered up, or graced and assign to correct helper.
+                if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
+                    // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.halved = true;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
+                    if (roundBlock.timestamp > stakeObject.timestamps.powerUp) {
+                        // Powered up
+                        const newPower = wallet
+                            .getAttribute("stakePower", Utils.BigNumber.ZERO)
+                            .plus(stakeObject.power);
+                        wallet.setAttribute("stakePower", newPower);
+                    }
+                    // Stake is not yet expired, so store it in redis.
                     await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id);
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
-                const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stakeObject.power);
-                wallet.setAttribute("stakePower", newPower);
                 walletManager.reindex(wallet);
             }
         }
@@ -170,16 +180,11 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             transaction.id,
         );
         const newBalance = sender.balance.minus(o.amount);
-        const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
         stakes[transaction.id] = o;
-
-        sender.setAttribute("stakePower", newPower);
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
-
         await ExpireHelper.storeExpiry(o, sender, transaction.id);
-
         walletManager.reindex(sender);
     }
 
@@ -194,17 +199,29 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             transaction.id,
         );
         const newBalance = sender.balance.plus(o.amount);
-        const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(o.power);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-        delete stakes[transaction.id];
+        // If the stake is active we need to deduct the stakePower
+        if (stakes[transaction.id].active) {
+            const stake = stakes[transaction.id];
+            const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
+            sender.setAttribute("stakePower", stakePower.minus(stake.power));
+            // If sender has voted we update the delegate voteBalance too
+            if (sender.hasVoted()) {
+                const delegate: State.IWallet = walletManager.findByPublicKey(sender.getAttribute("vote"));
+                let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+                voteBalance = voteBalance
+                    .minus(stake.power)
+                    .plus(transaction.data.fee)
+                    .plus(stake.amount);
+                delegate.setAttribute("delegate.voteBalance", voteBalance);
+            }
+        }
 
-        sender.setAttribute("stakePower", newPower);
+        delete stakes[transaction.id];
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
-
         await ExpireHelper.removeExpiry(transaction.id);
-
         walletManager.reindex(sender);
     }
 

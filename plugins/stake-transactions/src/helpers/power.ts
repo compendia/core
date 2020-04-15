@@ -2,24 +2,27 @@ import { Managers, Utils } from "@arkecosystem/crypto";
 import { Interfaces } from "@nosplatform/stake-transactions-crypto";
 
 class VotePower {
-    public static stakeObject(s: Interfaces.IStakeCreateAsset, id: string): any {
+    public static stakeObject(s: Interfaces.IStakeCreateAsset, id: string, blockHeight?: number): any {
         const configManager = Managers.configManager;
-        const milestone = configManager.getMilestone();
+        const milestone = configManager.getMilestone(blockHeight || null);
         const multiplier: number = milestone.stakeLevels[s.duration];
         const amount = Utils.BigNumber.make(s.amount);
         const sPower: Utils.BigNumber = amount.times(multiplier).dividedBy(10);
-        const redeemableTimestamp = s.timestamp + s.duration;
-        const timestamp = s.timestamp;
-
+        const created = s.timestamp;
+        const graceEnd = Number(created) + Number(milestone.graceEnd);
+        const powerUp = Number(graceEnd) + Number(milestone.powerUp);
+        const redeemable = powerUp + s.duration;
+        const timestamps: Interfaces.IStakeTimestamps = { created, graceEnd, powerUp, redeemable };
         const o: Interfaces.IStakeObject = {
             id,
-            timestamp,
-            amount,
+            timestamps,
             duration: s.duration,
+            amount,
             power: sPower,
-            redeemableTimestamp,
+            active: false,
             redeemed: false,
             halved: false,
+            canceled: false,
         };
 
         return o;

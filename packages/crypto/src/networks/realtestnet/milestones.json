@@ -32,6 +32,8 @@
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "balancePower": 1,
+        "graceEnd": 300,
+        "powerUp": 300,
         "stakeLevels": {
             "20": 20,
             "120": 30,
