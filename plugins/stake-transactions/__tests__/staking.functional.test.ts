@@ -25,9 +25,13 @@ describe("Transaction Forging - Stake create", () => {
             await expect(stakeCreate).toBeAccepted();
 
             await support.snoozeForBlock(1);
-
-            // Block 4
             await expect(stakeCreate.id).toBeForged();
+            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            expect(JSON.parse(wallet.body).data.stakePower).toBe("0");
+
+            await support.snoozeForBlock(1);
+
+            // Round 2
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("2000000000000");
 
