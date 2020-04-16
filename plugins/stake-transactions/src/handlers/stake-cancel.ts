@@ -7,6 +7,7 @@ import {
     Transactions as StakeTransactions,
 } from "@nosplatform/stake-transactions-crypto";
 
+import { app } from "@arkecosystem/core-container";
 import { StakeAlreadyCanceledError, StakeGraceEndedError, StakeNotFoundError, WalletHasNoStakeError } from "../errors";
 import { ExpireHelper } from "../helpers";
 import { StakeCreateTransactionHandler } from "./stake-create";
@@ -46,10 +47,10 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 const stakes = wallet.getAttribute("stakes", {});
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
                 const newBalance = wallet.balance.plus(stake.amount);
-                await ExpireHelper.removeExpiry(transaction.id);
                 wallet.balance = newBalance;
                 stake.canceled = true;
                 stakes[txId] = stake;
+                await ExpireHelper.removeExpiry(transaction.id);
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
             }
@@ -62,15 +63,18 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         databaseWalletManager: State.IWalletManager,
     ): Promise<void> {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
-        const stake: StakeInterfaces.IStakeObject = stakes[transaction.id];
+        const { data }: Interfaces.ITransaction = transaction;
+        const txId = data.asset.stakeCancel.id;
+        const stake: StakeInterfaces.IStakeObject = stakes[txId];
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
 
         // Get wallet stake if it exists
         if (stakes === {}) {
             throw new WalletHasNoStakeError();
         }
-
-        const { data }: Interfaces.ITransaction = transaction;
-        const txId = data.asset.stakeCancel.id;
 
         if (!(txId in stakes)) {
             throw new StakeNotFoundError();
@@ -80,7 +84,10 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyCanceledError();
         }
 
-        if (transaction.timestamp && transaction.timestamp > stake.timestamps.graceEnd) {
+        if (
+            (transaction.timestamp && transaction.timestamp > stake.timestamps.graceEnd) ||
+            lastBlock.data.timestamp > stake.timestamps.graceEnd
+        ) {
             throw new StakeGraceEndedError();
         }
 

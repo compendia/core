@@ -26,6 +26,7 @@
                 "htlcClaim": 0,
                 "htlcRefund": 0,
                 "stakeCreate": 0,
+                "stakeCancel": 10000000,
                 "stakeRedeem": 0
             }
         },

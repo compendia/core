@@ -4,6 +4,7 @@ import { Handlers, Interfaces as TransactionInterfaces } from "@arkecosystem/cor
 import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
 import pluralize from "pluralize";
 
+import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { WalletIndexAlreadyRegisteredError, WalletIndexNotFoundError } from "./errors";
 import { TempWalletManager } from "./temp-wallet-manager";
 import { Wallet } from "./wallet";
@@ -249,9 +250,14 @@ export class WalletManager implements State.IWalletManager {
                 const delegate: State.IWallet = this.findByPublicKey(voter.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance");
                 const lockedBalance = voter.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
+                const gracedBalance = StakeHelpers.VotePower.getGraced(voter);
+
                 delegate.setAttribute(
                     "delegate.voteBalance",
-                    voteBalance.plus(voter.balance.plus(lockedBalance)).plus(voter.getAttribute("stakePower", 0)),
+                    voteBalance
+                        .plus(voter.balance.plus(lockedBalance))
+                        .plus(voter.getAttribute("stakePower", 0))
+                        .plus(gracedBalance),
                 );
             }
         }
@@ -508,14 +514,29 @@ export class WalletManager implements State.IWalletManager {
             const delegate: State.IWallet = this.findByPublicKey(vote.substr(1));
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
 
+            // Get the total staked that's still in grace (that amount counts same as balance)
+            const senderGraced = StakeHelpers.VotePower.getGraced(sender);
+
             if (vote.startsWith("+")) {
                 voteBalance = revert
-                    ? voteBalance.minus(sender.balance.minus(transaction.fee)).minus(senderStakePower)
-                    : voteBalance.plus(sender.balance).plus(senderStakePower);
+                    ? voteBalance
+                          .minus(sender.balance.minus(transaction.fee))
+                          .minus(senderStakePower)
+                          .minus(senderGraced)
+                    : voteBalance
+                          .plus(sender.balance)
+                          .plus(senderStakePower)
+                          .plus(senderGraced);
             } else {
                 voteBalance = revert
-                    ? voteBalance.plus(sender.balance).plus(senderStakePower)
-                    : voteBalance.minus(sender.balance.plus(transaction.fee)).minus(senderStakePower);
+                    ? voteBalance
+                          .plus(sender.balance)
+                          .plus(senderStakePower)
+                          .plus(senderGraced)
+                    : voteBalance
+                          .minus(sender.balance.plus(transaction.fee))
+                          .minus(senderStakePower)
+                          .minus(senderGraced);
             }
 
             delegate.setAttribute("delegate.voteBalance", voteBalance);

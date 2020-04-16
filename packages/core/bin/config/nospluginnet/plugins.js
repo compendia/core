@@ -45,7 +45,8 @@ module.exports = {
                 htlcClaim: 0,
                 htlcRefund: 0,
                 stakeCreate: 0,
-                stakeRedeem: 0
+                stakeRedeem: 0,
+                stakeCancel: 100
             },
         },
     },

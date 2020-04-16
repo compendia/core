@@ -2,6 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { StakeHelpers } from "@nosplatform/stake-transactions";
 
 export const transformWallet = (wallet: State.IWallet) => {
     const username: string = wallet.getAttribute("delegate.username");
@@ -33,6 +34,7 @@ export const transformWallet = (wallet: State.IWallet) => {
     }
 
     const unixStakes = {};
+    let gracedBalance = Utils.BigNumber.ZERO;
     if (app.has("stake-transactions")) {
         for (const key of Object.keys(wallet.getAttribute("stakes", {}))) {
             const stake = wallet.getAttribute("stakes", {})[key];
@@ -47,7 +49,14 @@ export const transformWallet = (wallet: State.IWallet) => {
                 halved: stake.halved,
             };
         }
+
+        // Get graced balance
+        gracedBalance = StakeHelpers.VotePower.getGraced(wallet);
     }
+
+    const lockedBalance = wallet.hasAttribute("htlc.lockedBalance")
+        ? wallet.getAttribute("htlc.lockedBalance").toFixed()
+        : undefined;
 
     return {
         address: wallet.address,
@@ -55,16 +64,17 @@ export const transformWallet = (wallet: State.IWallet) => {
         nonce: wallet.nonce.toFixed(),
         balance: Utils.BigNumber.make(wallet.balance).toFixed(),
         // TODO: remove with v3
-        lockedBalance: wallet.hasAttribute("htlc.lockedBalance")
-            ? wallet.getAttribute("htlc.lockedBalance").toFixed()
-            : undefined,
+        lockedBalance,
+        gracedBalance,
         isDelegate: !!username,
         isResigned: !!wallet.getAttribute("delegate.resigned"),
         vote: wallet.getAttribute("vote"),
         multiSignature,
         stakePower: wallet.getAttribute("stakePower", "0"),
         power: Utils.BigNumber.make(wallet.getAttribute("stakePower", "0"))
+            .plus(gracedBalance)
             .plus(Utils.BigNumber.make(wallet.balance))
+            .plus(lockedBalance || 0)
             .toFixed(),
         stakes: unixStakes,
         attributes,

@@ -77,6 +77,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                             .getAttribute("stakePower", Utils.BigNumber.ZERO)
                             .plus(stakeObject.power);
                         wallet.setAttribute("stakePower", newPower);
+                        stakeObject.active = true;
                     }
                     // Stake is not yet expired, so store it in redis.
                     await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id);
