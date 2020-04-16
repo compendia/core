@@ -1,0 +1,51 @@
+{
+    "name": "@nosplatform/core-helpers",
+    "description": "Provides core helpers for the nOS blockchain",
+    "version": "0.0.1",
+    "author": "Dean van Dugteren <dean@nos.io>",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "prepublishOnly": "yarn test && yarn build",
+        "pretest": "yarn lint && yarn build",
+        "compile": "../../node_modules/typescript/bin/tsc",
+        "build": "yarn clean && yarn compile",
+        "build:watch": "yarn clean && yarn compile -w",
+        "clean": "del dist",
+        "docs": "../../node_modules/typedoc/bin/typedoc src --out docs",
+        "lint": "../../node_modules/tslint/bin/tslint -c ./tslint.json 'src/**/*.ts' '__tests__/**/*.ts' --fix",
+        "test": "cross-env CORE_ENV=test jest --runInBand --forceExit --passWithNoTests",
+        "test:coverage": "cross-env CORE_ENV=test jest --coverage --coveragePathIgnorePatterns='/(defaults.ts|index.ts)$' --runInBand --forceExit",
+        "test:debug": "cross-env CORE_ENV=test node --inspect-brk ../../node_modules/.bin/jest --runInBand",
+        "test:watch": "cross-env CORE_ENV=test jest --runInBand --watch",
+        "test:watch:all": "cross-env CORE_ENV=test jest --runInBand --watchAll",
+        "updates": "../../node_modules/npm-check-updates/bin/npm-check-updates -a"
+    },
+    "dependencies": {
+        "@arkecosystem/core-interfaces": "^2.6.31",
+        "@arkecosystem/crypto": "^2.6.31",
+        "@nosplatform/stake-transactions-crypto": "^0.1.0-alpha.8"
+    },
+    "devDependencies": {
+        "@sindresorhus/tsconfig": "^0.5.0",
+        "@types/jest": "^24.0.15",
+        "@types/node": "^12.6.2",
+        "cross-env": "^6.0.0",
+        "del-cli": "^3.0.0",
+        "jest": "^24.8.0",
+        "jest-extended": "^0.11.2",
+        "npm-check-updates": "^3.1.0",
+        "regenerator-runtime": "^0.13.0",
+        "ts-jest": "^24.0.2",
+        "tslint": "^5.12.0",
+        "tslint-config-prettier": "^1.17.0",
+        "typedoc": "^0.15.0",
+        "typescript": "^3.2.4"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

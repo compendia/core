@@ -10,12 +10,12 @@ afterAll(support.tearDown);
 
 describe("Transaction Forging - Stake create", () => {
     describe("Signed with 1 Passphrase", () => {
-        it("should create, halve, and redeem a stake", async () => {
+        it("should create, power-up, halve, and redeem a stake", async () => {
             let wallet;
 
             Managers.configManager.setFromPreset("nospluginnet");
 
-            const stakeCreate = StakeTransactionFactory.stakeCreate(20, Utils.BigNumber.make(10_000).times(1e8))
+            const stakeCreate = StakeTransactionFactory.stakeCreate(40, Utils.BigNumber.make(10_000).times(1e8))
                 .withPassphrase(secrets[0])
                 .createOne();
 
@@ -40,9 +40,10 @@ describe("Transaction Forging - Stake create", () => {
                 .createOne();
             await expect(stakeRedeem).toBeRejected();
 
-            await support.snoozeForBlock(2);
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
 
-            // Block 6
+            // Round 3
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
             expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].halved).toBeTrue();
             expect(JSON.parse(wallet.body).data.stakePower).toBe("1000000000000");

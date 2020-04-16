@@ -4,7 +4,7 @@ import { Handlers, Interfaces as TransactionInterfaces } from "@arkecosystem/cor
 import { Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
 import pluralize from "pluralize";
 
-import { StakeHelpers } from "@nosplatform/stake-transactions";
+import { Staking } from "@nosplatform/core-helpers";
 import { WalletIndexAlreadyRegisteredError, WalletIndexNotFoundError } from "./errors";
 import { TempWalletManager } from "./temp-wallet-manager";
 import { Wallet } from "./wallet";
@@ -250,7 +250,7 @@ export class WalletManager implements State.IWalletManager {
                 const delegate: State.IWallet = this.findByPublicKey(voter.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance");
                 const lockedBalance = voter.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
-                const gracedBalance = StakeHelpers.VotePower.getGraced(voter);
+                const gracedBalance = Staking.getGraced(voter);
 
                 delegate.setAttribute(
                     "delegate.voteBalance",
@@ -515,7 +515,7 @@ export class WalletManager implements State.IWalletManager {
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
 
             // Get the total staked that's still in grace (that amount counts same as balance)
-            const senderGraced = StakeHelpers.VotePower.getGraced(sender);
+            const senderGraced = Staking.getGraced(sender);
 
             if (vote.startsWith("+")) {
                 voteBalance = revert

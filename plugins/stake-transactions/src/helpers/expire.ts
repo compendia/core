@@ -152,7 +152,8 @@ export class ExpireHelper {
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[expiration.stakeKey] !== undefined &&
                         wallet.getAttribute("stakes")[expiration.stakeKey].halved === false &&
-                        wallet.getAttribute("stakes")[expiration.stakeKey].canceled === false
+                        wallet.getAttribute("stakes")[expiration.stakeKey].canceled === false &&
+                        wallet.getAttribute("stakes")[expiration.stakeKey].active === true
                     ) {
                         await this.expireStake(wallet, expiration.stakeKey, block);
                     } else {

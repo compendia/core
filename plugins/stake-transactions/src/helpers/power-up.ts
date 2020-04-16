@@ -55,7 +55,8 @@ export class PowerUpHelper {
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[stake.stakeKey] !== undefined &&
                         wallet.getAttribute("stakes")[stake.stakeKey].halved === false &&
-                        wallet.getAttribute("stakes")[stake.stakeKey].canceled === false
+                        wallet.getAttribute("stakes")[stake.stakeKey].canceled === false &&
+                        wallet.getAttribute("stakes")[stake.stakeKey].active === false
                     ) {
                         app.resolvePlugin("logger").info(
                             `Power-up Stake ${stake.stakeKey} of wallet ${wallet.address}.`,

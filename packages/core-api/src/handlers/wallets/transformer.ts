@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
-import { StakeHelpers } from "@nosplatform/stake-transactions";
+import { Staking } from "@nosplatform/core-helpers";
 
 export const transformWallet = (wallet: State.IWallet) => {
     const username: string = wallet.getAttribute("delegate.username");
@@ -44,9 +44,9 @@ export const transformWallet = (wallet: State.IWallet) => {
                 power: stake.power,
                 timestamps: {
                     created: formatTimestamp(stake.timestamps.created).unix,
-                    graceEnd: formatTimestamp(stake.timestamps.created).unix,
-                    powerUp: formatTimestamp(stake.timestamps.created).unix,
-                    redeemable: formatTimestamp(stake.timestamps.created).unix,
+                    graceEnd: formatTimestamp(stake.timestamps.graceEnd).unix,
+                    powerUp: formatTimestamp(stake.timestamps.powerUp).unix,
+                    redeemable: formatTimestamp(stake.timestamps.redeemable).unix,
                 },
                 canceled: stake.canceled,
                 halved: stake.halved,
@@ -56,7 +56,7 @@ export const transformWallet = (wallet: State.IWallet) => {
         }
 
         // Get graced balance
-        gracedBalance = StakeHelpers.VotePower.getGraced(wallet);
+        gracedBalance = Staking.getGraced(wallet);
     }
 
     const lockedBalance = wallet.hasAttribute("htlc.lockedBalance")
