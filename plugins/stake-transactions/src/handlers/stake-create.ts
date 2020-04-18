@@ -102,6 +102,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             .getLastBlock();
 
         const { data }: Interfaces.ITransaction = transaction;
+
+        const configManager = Managers.configManager;
+        const milestone = configManager.getMilestone();
+        if (!milestone.stakeLevels[stake.duration] || milestone.stakeLevels[stake.duration] === undefined) {
+            throw new StakeDurationError();
+        }
+
         const o: StakeInterfaces.IStakeObject = VotePower.stakeObject(data.asset.stakeCreate, transaction.id);
 
         const timestampDiff = stake.timestamp - lastBlock.data.timestamp;
@@ -125,13 +132,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         if (o.amount.isGreaterThan(wallet.balance.minus(Utils.BigNumber.make(data.fee)))) {
             throw new NotEnoughBalanceError();
-        }
-
-        const configManager = Managers.configManager;
-        const milestone = configManager.getMilestone();
-
-        if (!o.duration || milestone.stakeLevels[o.duration] === undefined) {
-            throw new StakeDurationError();
         }
 
         if (o.amount.isLessThan(milestone.minimumStake)) {

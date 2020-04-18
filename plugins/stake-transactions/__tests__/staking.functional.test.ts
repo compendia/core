@@ -15,7 +15,7 @@ describe("Transaction Forging - Stake create", () => {
 
             Managers.configManager.setFromPreset("nospluginnet");
 
-            const stakeCreate = StakeTransactionFactory.stakeCreate(40, Utils.BigNumber.make(10_000).times(1e8))
+            const stakeCreate = StakeTransactionFactory.stakeCreate(20, Utils.BigNumber.make(10_000).times(1e8))
                 .withPassphrase(secrets[0])
                 .createOne();
 
@@ -30,6 +30,7 @@ describe("Transaction Forging - Stake create", () => {
             expect(JSON.parse(wallet.body).data.stakePower).toBe("0");
 
             await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
 
             // Round 2
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
@@ -39,6 +40,8 @@ describe("Transaction Forging - Stake create", () => {
                 .withPassphrase(secrets[0])
                 .createOne();
             await expect(stakeRedeem).toBeRejected();
+
+            console.log(JSON.parse(wallet.body).data);
 
             await support.snoozeForBlock(1);
             await support.snoozeForBlock(1);
