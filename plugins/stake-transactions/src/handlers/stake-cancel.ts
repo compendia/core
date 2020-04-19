@@ -1,6 +1,6 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
+import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
 import {
     Enums,
     Interfaces as StakeInterfaces,
@@ -26,12 +26,11 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public async isActivated(): Promise<boolean> {
-        return true;
-    }
+        if (Managers.configManager.getMilestone().graceEnd) {
+            return true;
+        }
 
-    public dynamicFee(context: TransactionInterfaces.IDynamicFeeContext): Utils.BigNumber {
-        // override dynamicFee calculation as this is a zero-fee transaction
-        return Utils.BigNumber.ZERO;
+        return false;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {

@@ -64,14 +64,17 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const newBalance = wallet.balance.minus(stakeObject.amount);
                 const stakes = wallet.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-                // TODO: Check if stake is expired, active, powered up, or graced and assign to correct helper.
+                // TODO: Check if stake is expired, active, or graced and assign to correct helper.
                 if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
                     // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.halved = true;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
-                    if (roundBlock.timestamp > stakeObject.timestamps.powerUp) {
+                    if (
+                        roundBlock.timestamp > stakeObject.timestamps.powerUp ||
+                        !Managers.configManager.getMilestone(roundBlock.height).powerUp
+                    ) {
                         // Powered up
                         const newPower = wallet
                             .getAttribute("stakePower", Utils.BigNumber.ZERO)
@@ -80,7 +83,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         stakeObject.active = true;
                     }
                     // Stake is not yet expired, so store it in redis.
-                    await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id);
+                    await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id, roundBlock.height);
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
@@ -182,10 +185,18 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         );
         const newBalance = sender.balance.minus(o.amount);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
+
+        // Stake is immediately active if there's no powerUp or graceEnd period
+        if (!Managers.configManager.getMilestone().powerUp || !Managers.configManager.getMilestone().graceEnd) {
+            o.active = true;
+        }
+
         stakes[transaction.id] = o;
+
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
         await ExpireHelper.storeExpiry(o, sender, transaction.id);
+
         walletManager.reindex(sender);
     }
 
@@ -202,8 +213,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const newBalance = sender.balance.plus(o.amount);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-        // If the stake is active we need to deduct the stakePower
-        if (stakes[transaction.id].active) {
+        // If there's a powerUp period and the stake is active we need to deduct the stakePower
+        if (Managers.configManager.getMilestone().powerUp && stakes[transaction.id].active) {
             const stake = stakes[transaction.id];
             const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
             sender.setAttribute("stakePower", stakePower.minus(stake.power));
@@ -216,6 +227,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     .plus(transaction.data.fee)
                     .plus(stake.amount);
                 delegate.setAttribute("delegate.voteBalance", voteBalance);
+                walletManager.reindex(delegate);
             }
         }
 

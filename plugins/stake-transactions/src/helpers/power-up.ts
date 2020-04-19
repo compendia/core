@@ -22,7 +22,9 @@ export class PowerUpHelper {
             const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
             const newVoteBalance: Utils.BigNumber = voteBalance.minus(stake.amount).plus(stake.power);
             delegate.setAttribute("delegate.voteBalance", newVoteBalance);
+            walletManager.reindex(delegate);
         }
+        walletManager.reindex(wallet);
     }
 
     public static async removePowerUp(stakeKey: string): Promise<void> {
@@ -68,7 +70,12 @@ export class PowerUpHelper {
                         const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                             "transaction-pool",
                         );
-                        await this.powerUp(wallet, stake.stakeKey, poolService.walletManager);
+                        const poolWalletManager: State.IWalletManager = poolService.walletManager;
+                        await this.powerUp(
+                            poolWalletManager.findByPublicKey(wallet.publicKey),
+                            stake.stakeKey,
+                            poolService.walletManager,
+                        );
 
                         // Remove queued power-up from redis
                         await this.removePowerUp(stake.stakeKey);

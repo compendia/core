@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { createHandyClient } from "handy-redis";
 
@@ -104,6 +104,7 @@ export class ExpireHelper {
         stake: StakeInterfaces.IStakeObject,
         wallet: State.IWallet,
         stakeKey: string,
+        blockHeight?: number,
     ): Promise<void> {
         const redis = createHandyClient();
         const key = `stake:${stakeKey}`;
@@ -117,7 +118,12 @@ export class ExpireHelper {
                 ["stakeKey", stakeKey],
             );
             await redis.zadd("stake_expirations", [stake.timestamps.redeemable, key]);
-            await redis.zadd("stake_powerups", [stake.timestamps.powerUp, key]);
+            if (
+                Managers.configManager.getMilestone(blockHeight).powerUp &&
+                Managers.configManager.getMilestone(blockHeight).powerUp > 0
+            ) {
+                await redis.zadd("stake_powerups", [stake.timestamps.powerUp, key]);
+            }
         }
     }
 

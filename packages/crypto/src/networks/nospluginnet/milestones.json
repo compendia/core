@@ -35,7 +35,7 @@
         "multiPaymentLimit": 256,
         "balancePower": 1,
         "graceEnd": 4,
-        "powerUp": 8,
+        "powerUp": 4,
         "stakeLevels": {
             "20": 20,
             "120": 30,

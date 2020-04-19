@@ -1,4 +1,4 @@
-import { Transactions, Utils } from "@arkecosystem/crypto";
+import { Transactions } from "@arkecosystem/crypto";
 import ByteBuffer from "bytebuffer";
 
 import { StakeTransactionGroup, StakeTransactionType } from "../enums";
@@ -40,8 +40,6 @@ export class StakeCancelTransaction extends Transactions.Transaction {
             },
         });
     }
-
-    protected static defaultStaticFee: Utils.BigNumber = Utils.BigNumber.ZERO;
 
     public serialize(): ByteBuffer {
         const { data } = this;
