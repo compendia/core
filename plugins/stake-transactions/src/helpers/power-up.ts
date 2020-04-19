@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { State } from "@arkecosystem/core-interfaces";
+import { State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { createHandyClient } from "handy-redis";
@@ -23,7 +23,6 @@ export class PowerUpHelper {
             const newVoteBalance: Utils.BigNumber = voteBalance.minus(stake.amount).plus(stake.power);
             delegate.setAttribute("delegate.voteBalance", newVoteBalance);
         }
-        await this.removePowerUp(stakeKey);
     }
 
     public static async removePowerUp(stakeKey: string): Promise<void> {
@@ -61,7 +60,18 @@ export class PowerUpHelper {
                         app.resolvePlugin("logger").info(
                             `Power-up Stake ${stake.stakeKey} of wallet ${wallet.address}.`,
                         );
+
+                        // Power up in db wallet
                         await this.powerUp(wallet, stake.stakeKey, walletManager);
+
+                        // Power up in pool wallet
+                        const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
+                            "transaction-pool",
+                        );
+                        await this.powerUp(wallet, stake.stakeKey, poolService.walletManager);
+
+                        // Remove queued power-up from redis
+                        await this.removePowerUp(stake.stakeKey);
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete stake from db in this case
