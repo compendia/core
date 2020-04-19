@@ -79,11 +79,7 @@ export class DatabaseService implements Database.IDatabaseService {
         await this.walletManager.applyBlock(block);
 
         if (roundCalculator.isNewRound(block.data.height)) {
-            // Only process powerUps if the milestone is active
-            if (Managers.configManager.getMilestone(block.data.height).powerUp) {
-                await StakeHelpers.PowerUpHelper.processPowerUps(block.data, this.walletManager);
-            }
-
+            await StakeHelpers.PowerUpHelper.processPowerUps(block.data, this.walletManager);
             await StakeHelpers.ExpireHelper.processExpirations(block.data);
         }
 
