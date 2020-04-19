@@ -188,6 +188,9 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         // Stake is immediately active if there's no powerUp or graceEnd period
         if (!Managers.configManager.getMilestone().powerUp || !Managers.configManager.getMilestone().graceEnd) {
+            const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power);
+            sender.setAttribute("stakePower", newPower);
+            sender.balance = newBalance;
             o.active = true;
         }
 
@@ -213,13 +216,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const newBalance = sender.balance.plus(o.amount);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-        // If there's a powerUp period and the stake is active we need to deduct the stakePower
-        if (Managers.configManager.getMilestone().powerUp && stakes[transaction.id].active) {
+        // If the stake is active we need to deduct the stakePower
+        if (stakes[transaction.id].active) {
             const stake = stakes[transaction.id];
             const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
             sender.setAttribute("stakePower", stakePower.minus(stake.power));
-            // If sender has voted we update the delegate voteBalance too
-            if (sender.hasVoted()) {
+            // If there's a powerUp period and the sender has voted we update the delegate voteBalance too
+            if (Managers.configManager.getMilestone().powerUp && sender.hasVoted()) {
                 const delegate: State.IWallet = walletManager.findByPublicKey(sender.getAttribute("vote"));
                 let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
                 voteBalance = voteBalance
