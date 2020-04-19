@@ -66,11 +66,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
                 // TODO: Check if stake is expired, active, or graced and assign to correct helper.
                 const prevPower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
-                let newPower: Utils.BigNumber;
+                let newPower: Utils.BigNumber = Utils.BigNumber.ZERO;
                 if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
                     // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.halved = true;
+                    newPower = prevPower.plus(stakeObject.power);
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     if (
@@ -79,13 +80,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     ) {
                         // Powered up
                         stakeObject.active = true;
+                        newPower = prevPower.plus(stakeObject.power);
                     }
                     // Stake is not yet expired, so store it in redis.
                     await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id, roundBlock.height);
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
-                newPower = prevPower.plus(stakeObject.power);
                 wallet.setAttribute("stakePower", newPower);
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
