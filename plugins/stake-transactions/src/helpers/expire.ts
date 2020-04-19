@@ -118,10 +118,7 @@ export class ExpireHelper {
                 ["stakeKey", stakeKey],
             );
             await redis.zadd("stake_expirations", [stake.timestamps.redeemable, key]);
-            if (
-                Managers.configManager.getMilestone(blockHeight).powerUp &&
-                Managers.configManager.getMilestone(blockHeight).powerUp > 0
-            ) {
+            if (Managers.configManager.getMilestone(blockHeight).powerUp) {
                 await redis.zadd("stake_powerups", [stake.timestamps.powerUp, key]);
             }
         }

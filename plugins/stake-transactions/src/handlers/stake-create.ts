@@ -65,6 +65,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const stakes = wallet.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
                 // TODO: Check if stake is expired, active, or graced and assign to correct helper.
+                const prevPower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
+                let newPower: Utils.BigNumber;
                 if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
                     // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
@@ -72,14 +74,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     if (
-                        roundBlock.timestamp > stakeObject.timestamps.powerUp ||
-                        !Managers.configManager.getMilestone(roundBlock.height).powerUp
+                        !Managers.configManager.getMilestone(transaction.blockHeight).powerUp ||
+                        roundBlock.timestamp > stakeObject.timestamps.powerUp
                     ) {
                         // Powered up
-                        const newPower = wallet
-                            .getAttribute("stakePower", Utils.BigNumber.ZERO)
-                            .plus(stakeObject.power);
-                        wallet.setAttribute("stakePower", newPower);
                         stakeObject.active = true;
                     }
                     // Stake is not yet expired, so store it in redis.
@@ -87,6 +85,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
+                newPower = prevPower.plus(stakeObject.power);
+                wallet.setAttribute("stakePower", newPower);
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
             }
@@ -190,7 +190,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         if (!Managers.configManager.getMilestone().powerUp || !Managers.configManager.getMilestone().graceEnd) {
             const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power);
             sender.setAttribute("stakePower", newPower);
-            sender.balance = newBalance;
             o.active = true;
         }
 
