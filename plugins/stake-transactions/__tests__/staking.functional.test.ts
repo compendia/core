@@ -56,6 +56,7 @@ describe("Transaction Forging - Stake create", () => {
 
             await support.snoozeForBlock(1);
             await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
 
             // Round 3
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");

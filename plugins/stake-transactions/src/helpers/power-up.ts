@@ -5,6 +5,8 @@ import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-c
 import { createHandyClient } from "handy-redis";
 import { ExpireHelper } from "./expire";
 
+const redis = createHandyClient();
+
 export class PowerUpHelper {
     public static async powerUp(
         wallet: State.IWallet,
@@ -28,7 +30,6 @@ export class PowerUpHelper {
     }
 
     public static async removePowerUp(stakeKey: string): Promise<void> {
-        const redis = createHandyClient();
         await redis.zrem("stake_powerups", `stake:${stakeKey}`);
     }
 
@@ -36,7 +37,6 @@ export class PowerUpHelper {
         block: Interfaces.IBlockData,
         walletManager: State.IWalletManager,
     ): Promise<void> {
-        const redis = createHandyClient();
         const lastTime = block.timestamp;
         const keys = await redis.zrangebyscore("stake_powerups", 0, lastTime);
         const stakes = [];

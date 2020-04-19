@@ -10,6 +10,8 @@ export interface IExpirationObject {
     redeemableTimestamp: number;
 }
 
+const redis = createHandyClient();
+
 export class ExpireHelper {
     public static async expireStake(
         wallet: State.IWallet,
@@ -106,7 +108,6 @@ export class ExpireHelper {
         stakeKey: string,
         blockHeight?: number,
     ): Promise<void> {
-        const redis = createHandyClient();
         const key = `stake:${stakeKey}`;
         const exists = await redis.exists(key);
         if (!exists) {
@@ -125,7 +126,6 @@ export class ExpireHelper {
     }
 
     public static async removeExpiry(stakeKey: string): Promise<void> {
-        const redis = createHandyClient();
         const key = `stake:${stakeKey}`;
         await redis.del(key);
         await redis.zrem("stake_expirations", `stake:${stakeKey}`);
@@ -133,7 +133,6 @@ export class ExpireHelper {
     }
 
     public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {
-        const redis = createHandyClient();
         const lastTime = block.timestamp;
         const keys = await redis.zrangebyscore("stake_expirations", 0, lastTime);
         const expirations = [];
