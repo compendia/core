@@ -14,6 +14,17 @@ class Staking {
         }
         return senderGraced;
     }
+
+    public static getPower(sender: State.IWallet): Utils.BigNumber {
+        const graced: Utils.BigNumber = this.getGraced(sender) || Utils.BigNumber.ZERO;
+        const balance: Utils.BigNumber = sender.balance || Utils.BigNumber.ZERO;
+        const stakePower: Utils.BigNumber = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
+        const lockedBalance = sender.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
+        return graced
+            .plus(balance)
+            .plus(stakePower)
+            .plus(lockedBalance);
+    }
 }
 
 export { Staking };

@@ -249,16 +249,9 @@ export class WalletManager implements State.IWalletManager {
             if (voter.hasVoted()) {
                 const delegate: State.IWallet = this.findByPublicKey(voter.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance");
-                const lockedBalance = voter.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
-                const gracedBalance = Staking.getGraced(voter);
+                const power = Staking.getPower(voter);
 
-                delegate.setAttribute(
-                    "delegate.voteBalance",
-                    voteBalance
-                        .plus(voter.balance.plus(lockedBalance))
-                        .plus(voter.getAttribute("stakePower", 0))
-                        .plus(gracedBalance),
-                );
+                delegate.setAttribute("delegate.voteBalance", voteBalance.plus(power));
             }
         }
     }
@@ -487,7 +480,6 @@ export class WalletManager implements State.IWalletManager {
         lockTransaction: Interfaces.ITransactionData,
         revert: boolean = false,
     ): void {
-        const senderStakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
         const milestone = Managers.configManager.getMilestone();
 
         // If stake transaction group and not a stakeCancel transaction
@@ -497,24 +489,24 @@ export class WalletManager implements State.IWalletManager {
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
             // Only update voteBalance on stakeCreate if there is no powerUp milestone
             if (transaction.type === 0 && !milestone.powerUp) {
-                const s = transaction.asset.stakeCreate;
-                const multiplier: number = milestone.stakeLevels[s.duration];
-                const sPower: Utils.BigNumber = s.amount.times(multiplier).dividedBy(10);
-                const balanceWithFeeFixed = s.amount.plus(transaction.fee);
+                const stake = transaction.asset.stakeCreate;
+                const multiplier: number = milestone.stakeLevels[stake.duration];
+                const sPower: Utils.BigNumber = stake.amount.times(multiplier).dividedBy(10);
+                const balanceWithFeeFixed = stake.amount.plus(transaction.fee);
                 voteBalance = revert
                     ? voteBalance.minus(sPower).plus(balanceWithFeeFixed)
                     : voteBalance.minus(balanceWithFeeFixed).plus(sPower);
             } else if (transaction.type === 1) {
-                const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
+                const stake = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
                 voteBalance = revert
                     ? voteBalance
-                          .plus(s.power)
+                          .plus(stake.power)
                           .plus(transaction.fee)
-                          .minus(s.amount)
+                          .minus(stake.amount)
                     : voteBalance
-                          .minus(s.power)
+                          .minus(stake.power)
                           .minus(transaction.fee)
-                          .plus(s.amount);
+                          .plus(stake.amount);
             }
             delegate.setAttribute("delegate.voteBalance", voteBalance);
             // If Vote transaction
@@ -525,30 +517,12 @@ export class WalletManager implements State.IWalletManager {
             const vote: string = transaction.asset.votes[0];
             const delegate: State.IWallet = this.findByPublicKey(vote.substr(1));
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-
-            // Get the total staked that's still in grace (that amount counts same as balance)
-            const senderGraced = Staking.getGraced(sender);
+            const power = Staking.getPower(sender);
 
             if (vote.startsWith("+")) {
-                voteBalance = revert
-                    ? voteBalance
-                          .minus(sender.balance.minus(transaction.fee))
-                          .minus(senderStakePower)
-                          .minus(senderGraced)
-                    : voteBalance
-                          .plus(sender.balance)
-                          .plus(senderStakePower)
-                          .plus(senderGraced);
+                voteBalance = revert ? voteBalance.minus(power.minus(transaction.fee)) : voteBalance.plus(power);
             } else {
-                voteBalance = revert
-                    ? voteBalance
-                          .plus(sender.balance)
-                          .plus(senderStakePower)
-                          .plus(senderGraced)
-                    : voteBalance
-                          .minus(sender.balance.plus(transaction.fee))
-                          .minus(senderStakePower)
-                          .minus(senderGraced);
+                voteBalance = revert ? voteBalance.plus(power) : voteBalance.minus(power.plus(transaction.fee));
             }
 
             delegate.setAttribute("delegate.voteBalance", voteBalance);
