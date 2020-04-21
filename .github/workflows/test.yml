@@ -36,6 +36,32 @@ jobs:
             - name: Codecov
               run: ./node_modules/.bin/codecov --token=${{ secrets.CODECOV_TOKEN }}
 
+      staking:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [12.x]
+
+        steps:
+            - uses: actions/checkout@v2
+            - name: Cache node modules
+              uses: actions/cache@v1
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+                  restore-keys: ${{ runner.os }}-node-
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: Setup Redis
+              uses: zhulik/redis-action@1.1.0
+            - name: Install & Build
+              run: yarn setup
+            - name: Test
+              run: yarn test plugins/stake-transactions/__tests__/staking.unit.test.ts
+
     integration:
         runs-on: ubuntu-latest
 
