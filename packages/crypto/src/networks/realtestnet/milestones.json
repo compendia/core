@@ -33,8 +33,6 @@
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "balancePower": 1,
-        "graceEnd": 300,
-        "powerUp": 300,
         "stakeLevels": {
             "40": 20,
             "120": 30,
@@ -46,8 +44,13 @@
         "vestedWalletPublicKey": "none"
     },
     {
-        "height": 12,
+        "height": 4,
         "aip11": true
+    },
+    {
+        "height": 20,
+        "graceEnd": 20,
+        "powerUp": 20
     },
     {
         "height": 75600,
