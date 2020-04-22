@@ -3,7 +3,6 @@ import { State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { createHandyClient } from "handy-redis";
-import { ExpireHelper } from "./expire";
 
 const redis = createHandyClient();
 
@@ -83,9 +82,9 @@ export class PowerUpHelper {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete stake from db in this case
                         app.resolvePlugin("logger").info(
-                            `Unknown ${stake.stakeKey} of wallet ${wallet.address}. Deleted from storage.`,
+                            `Unknown powerup ${stake.stakeKey} of wallet ${wallet.address}. Deleted from powerups.`,
                         );
-                        await ExpireHelper.removeExpiry(stake.stakeKey);
+                        await this.removePowerUp(stake.stakeKey);
                     }
                 }
             }

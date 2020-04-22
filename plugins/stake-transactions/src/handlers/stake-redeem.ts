@@ -15,6 +15,7 @@ import {
     WalletHasNoStakeError,
 } from "../errors";
 import { ExpireHelper } from "../helpers";
+import { StakeCancelTransactionHandler } from "./stake-cancel";
 import { StakeCreateTransactionHandler } from "./stake-create";
 
 export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
@@ -23,7 +24,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public dependencies(): ReadonlyArray<Handlers.TransactionHandlerConstructor> {
-        return [StakeCreateTransactionHandler];
+        return [StakeCreateTransactionHandler, StakeCancelTransactionHandler];
     }
 
     public walletAttributes(): ReadonlyArray<string> {

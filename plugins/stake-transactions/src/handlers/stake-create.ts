@@ -65,13 +65,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const stakes = wallet.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
                 // TODO: Check if stake is expired, active, or graced and assign to correct helper.
-                const prevPower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
-                let newPower: Utils.BigNumber = Utils.BigNumber.ZERO;
+                let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
                 if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
                     // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.halved = true;
-                    newPower = prevPower.plus(stakeObject.power);
+                    addPower = stakeObject.power;
                     stakeObject.active = true;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
@@ -81,16 +80,23 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     ) {
                         // Powered up
                         stakeObject.active = true;
-                        newPower = prevPower.plus(stakeObject.power);
+                        addPower = stakeObject.power;
                     }
                     // Stake is not yet expired, so store it in redis.
                     await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id, roundBlock.height);
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
-                wallet.setAttribute("stakePower", newPower);
+                if (!addPower.isZero()) {
+                    wallet.setAttribute(
+                        "stakePower",
+                        wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(addPower),
+                    );
+                }
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
+                console.log("StakeCreate");
+                console.log(wallet.getAttribute("stakePower", Utils.BigNumber.ZERO));
             }
         }
     }
@@ -190,8 +196,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         // Stake is immediately active if there's no powerUp or graceEnd period
         if (!Managers.configManager.getMilestone().powerUp || !Managers.configManager.getMilestone().graceEnd) {
-            const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power);
-            sender.setAttribute("stakePower", newPower);
+            sender.setAttribute("stakePower", sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power));
             o.active = true;
         }
 
