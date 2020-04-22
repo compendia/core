@@ -95,8 +95,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 }
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
-                console.log("StakeCreate");
-                console.log(wallet.getAttribute("stakePower", Utils.BigNumber.ZERO));
             }
         }
     }
