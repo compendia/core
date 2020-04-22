@@ -17,7 +17,7 @@ import {
     StakeNotIntegerError,
     StakeTimestampError,
 } from "../errors";
-import { ExpireHelper, VotePower } from "../helpers";
+import { ExpireHelper, PowerUpHelper, VotePower } from "../helpers";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -72,6 +72,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.halved = true;
                     addPower = stakeObject.power;
                     stakeObject.active = true;
+                    await PowerUpHelper.removePowerUp(transaction.id);
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     if (
@@ -82,8 +83,14 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         stakeObject.active = true;
                         addPower = stakeObject.power;
                     }
-                    // Stake is not yet expired, so store it in redis.
-                    await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id, roundBlock.height);
+                    // Stake is not yet expired, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
+                    await ExpireHelper.storeExpiry(
+                        stakeObject,
+                        wallet,
+                        transaction.id,
+                        roundBlock.height,
+                        stakeObject.active,
+                    );
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;

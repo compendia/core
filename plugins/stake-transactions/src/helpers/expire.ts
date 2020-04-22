@@ -107,6 +107,7 @@ export class ExpireHelper {
         wallet: State.IWallet,
         stakeKey: string,
         blockHeight?: number,
+        skipPowerUp?: boolean,
     ): Promise<void> {
         const key = `stake:${stakeKey}`;
         const exists = await redis.exists(key);
@@ -119,7 +120,7 @@ export class ExpireHelper {
                 ["stakeKey", stakeKey],
             );
             await redis.zadd("stake_expirations", [stake.timestamps.redeemable, key]);
-            if (Managers.configManager.getMilestone(blockHeight).powerUp) {
+            if (Managers.configManager.getMilestone(blockHeight).powerUp && !skipPowerUp) {
                 await redis.zadd("stake_powerups", [stake.timestamps.powerUp, key]);
             }
         }
