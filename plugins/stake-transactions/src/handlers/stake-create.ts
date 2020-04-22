@@ -72,6 +72,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.halved = true;
                     newPower = prevPower.plus(stakeObject.power);
+                    stakeObject.active = true;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     if (
