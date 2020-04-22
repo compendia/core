@@ -72,7 +72,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.halved = true;
                     addPower = stakeObject.power;
                     stakeObject.active = true;
-                    await PowerUpHelper.removePowerUp(transaction.id);
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     if (
