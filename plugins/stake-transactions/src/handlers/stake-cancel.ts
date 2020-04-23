@@ -1,6 +1,6 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
 import {
     Enums,
     Interfaces as StakeInterfaces,
@@ -50,8 +50,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 stake.status = "canceled";
                 stakes[txId] = stake;
                 await ExpireHelper.removeExpiry(transaction.id);
-                const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power);
-                wallet.setAttribute("stakePower", newPower);
+
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
             }
