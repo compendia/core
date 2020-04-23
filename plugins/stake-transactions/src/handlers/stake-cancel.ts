@@ -53,7 +53,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 if (["active", "expired"].includes(stake.status)) {
                     wallet.setAttribute(
                         "stakePower",
-                        wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power),
+                        wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power),
                     );
                 }
 
