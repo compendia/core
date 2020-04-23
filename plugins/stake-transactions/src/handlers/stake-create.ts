@@ -210,7 +210,11 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
-        await ExpireHelper.storeExpiry(o, sender, transaction.id);
+
+        // Only store the expiry if it's not a tempWalletManager
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            await ExpireHelper.storeExpiry(o, sender, transaction.id);
+        }
 
         walletManager.reindex(sender);
     }
@@ -249,7 +253,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         delete stakes[transaction.id];
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
-        await ExpireHelper.removeExpiry(transaction.id);
+
+        // Only remove the expiry if it's not a tempWalletManager
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            await ExpireHelper.removeExpiry(transaction.id);
+        }
+
         walletManager.reindex(sender);
     }
 
