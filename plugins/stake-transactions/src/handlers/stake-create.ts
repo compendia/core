@@ -17,7 +17,7 @@ import {
     StakeNotIntegerError,
     StakeTimestampError,
 } from "../errors";
-import { ExpireHelper, PowerUpHelper, VotePower } from "../helpers";
+import { ExpireHelper, VotePower } from "../helpers";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -74,8 +74,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.active = true;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
+                    // Else if not expired, check if powerUp is configured in the most recent round
+                    const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
                     if (
-                        !Managers.configManager.getMilestone(transaction.blockHeight).powerUp ||
+                        !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
                         roundBlock.timestamp > stakeObject.timestamps.powerUp
                     ) {
                         // Powered up
