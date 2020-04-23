@@ -40,11 +40,12 @@ export const transformWallet = (wallet: State.IWallet) => {
         for (const key of Object.keys(wallet.getAttribute("stakes", {}))) {
             const stake = wallet.getAttribute("stakes", {})[key];
             const time = dayjs().valueOf() / 1000;
-            if (stake.status === "grace" && time > Number(formatTimestamp(stake.timestamps.graceEnd).unix)) {
-                stake.status = "powering";
+            let status = stake.status;
+            if (status === "grace" && time > Number(formatTimestamp(stake.timestamps.graceEnd).unix)) {
+                status = "powering";
             }
             unixStakes[key] = {
-                status: stake.status,
+                status,
                 amount: stake.amount,
                 duration: stake.duration,
                 power: stake.power,

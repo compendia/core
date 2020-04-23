@@ -16,8 +16,8 @@ class Staking {
     }
 
     public static getPower(sender: State.IWallet): Utils.BigNumber {
-        const graced: Utils.BigNumber = this.getGraced(sender) || Utils.BigNumber.ZERO;
-        const balance: Utils.BigNumber = sender.balance || Utils.BigNumber.ZERO;
+        const graced: Utils.BigNumber = this.getGraced(sender);
+        const balance: Utils.BigNumber = sender.balance;
         const stakePower: Utils.BigNumber = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
         const lockedBalance = sender.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
         return graced
