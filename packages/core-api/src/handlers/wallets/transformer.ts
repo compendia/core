@@ -1,8 +1,9 @@
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
-import { Crypto, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Staking } from "@nosplatform/core-helpers";
+import dayjs from "dayjs";
 
 export const transformWallet = (wallet: State.IWallet) => {
     const username: string = wallet.getAttribute("delegate.username");
@@ -38,7 +39,8 @@ export const transformWallet = (wallet: State.IWallet) => {
     if (app.has("stake-transactions")) {
         for (const key of Object.keys(wallet.getAttribute("stakes", {}))) {
             const stake = wallet.getAttribute("stakes", {})[key];
-            if (stake.status === "grace" && Crypto.Slots.getTime() > stake.timestamps.graceEnd) {
+            const time = dayjs().valueOf() / 1000;
+            if (stake.status === "grace" && time > Number(formatTimestamp(stake.timestamps.graceEnd).unix)) {
                 stake.status = "powering";
             }
             unixStakes[key] = {
