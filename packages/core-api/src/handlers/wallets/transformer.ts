@@ -1,7 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { formatTimestamp } from "@arkecosystem/core-utils";
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Crypto, Interfaces, Utils } from "@arkecosystem/crypto";
 import { Staking } from "@nosplatform/core-helpers";
 
 export const transformWallet = (wallet: State.IWallet) => {
@@ -38,6 +38,9 @@ export const transformWallet = (wallet: State.IWallet) => {
     if (app.has("stake-transactions")) {
         for (const key of Object.keys(wallet.getAttribute("stakes", {}))) {
             const stake = wallet.getAttribute("stakes", {})[key];
+            if (stake.status === "grace" && Crypto.Slots.getTime() > stake.timestamps.graceEnd) {
+                stake.status = "powering";
+            }
             unixStakes[key] = {
                 status: stake.status,
                 amount: stake.amount,
