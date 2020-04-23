@@ -13,13 +13,14 @@ class VotePower {
         const powerUp = Number(graceEnd) + Number(milestone.powerUp || 0);
         const redeemable = powerUp + s.duration;
         const timestamps: Interfaces.IStakeTimestamps = { created, graceEnd, powerUp, redeemable };
+        const status = milestone.graceEnd ? "grace" : "active";
         const o: Interfaces.IStakeObject = {
             id,
             timestamps,
             duration: s.duration,
             amount,
             power: sPower,
-            status: "grace",
+            status,
         };
 
         return o;

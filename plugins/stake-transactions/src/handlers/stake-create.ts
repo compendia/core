@@ -77,7 +77,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
                     if (
                         !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
-                        roundBlock.timestamp > stakeObject.timestamps.powerUp
+                        roundBlock.timestamp >= stakeObject.timestamps.powerUp
                     ) {
                         // Powered up
                         stakeObject.status = "active";

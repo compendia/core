@@ -157,7 +157,13 @@ export class ExpireHelper {
                         wallet.getAttribute("stakes")[expiration.stakeKey].status === "active"
                     ) {
                         await this.expireStake(wallet, expiration.stakeKey, block);
-                    } else {
+
+                        // If stake doesn't exist or is already redeemed or canceled
+                    } else if (
+                        !wallet.hasAttribute("stakes") ||
+                        !wallet.getAttribute("stakes")[expiration.stakeKey] ||
+                        ["redeemed", "canceled"].includes(wallet.getAttribute("stakes")[expiration.stakeKey].status)
+                    ) {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete expiration from db in this case
                         app.resolvePlugin("logger").info(
