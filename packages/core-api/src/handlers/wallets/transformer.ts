@@ -39,6 +39,7 @@ export const transformWallet = (wallet: State.IWallet) => {
         for (const key of Object.keys(wallet.getAttribute("stakes", {}))) {
             const stake = wallet.getAttribute("stakes", {})[key];
             unixStakes[key] = {
+                status: stake.status,
                 amount: stake.amount,
                 duration: stake.duration,
                 power: stake.power,
@@ -48,10 +49,6 @@ export const transformWallet = (wallet: State.IWallet) => {
                     powerUp: formatTimestamp(stake.timestamps.powerUp).unix,
                     redeemable: formatTimestamp(stake.timestamps.redeemable).unix,
                 },
-                canceled: stake.canceled,
-                halved: stake.halved,
-                redeemed: stake.redeemed,
-                active: stake.active,
             };
         }
 

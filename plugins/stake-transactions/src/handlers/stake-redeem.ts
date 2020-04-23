@@ -54,7 +54,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
                 const newBalance = wallet.balance.plus(stake.amount);
                 const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power);
-                stake.redeemed = true;
+                stake.status = "redeemed";
                 stakes[txId] = stake;
                 await ExpireHelper.removeExpiry(transaction.id);
                 wallet.balance = newBalance;
@@ -84,17 +84,17 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeNotFoundError();
         }
 
-        if (stakes[txId].canceled) {
+        if (stakes[txId].status === "canceled") {
             throw new StakeAlreadyCanceledError();
         }
 
-        if (stakes[txId].redeemed) {
+        if (stakes[txId].status === "redeemed") {
             throw new StakeAlreadyRedeemedError();
         }
 
         // TODO: Get transaction's block round timestamp instead of transaction timestamp.
         if (
-            (!transaction.timestamp && !stakes[txId].halved) ||
+            (!transaction.timestamp && stakes[txId].status !== "expired") ||
             (transaction.timestamp && transaction.timestamp < stakes[txId].timestamps.redeemable)
         ) {
             throw new StakeNotYetRedeemableError();
@@ -146,7 +146,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         // Refund stake
         const newBalance = sender.balance.plus(stake.amount);
         const newPower = sender.getAttribute("stakePower").minus(stake.power);
-        stake.redeemed = true;
+        stake.status = "redeemed";
         stakes[txId] = stake;
 
         sender.balance = newBalance;
@@ -169,7 +169,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         // Revert refund stake
         const newBalance = sender.balance.minus(stake.amount);
         const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power);
-        stake.redeemed = false;
+        stake.status = "redeemed";
         stakes[txId] = stake;
 
         sender.balance = newBalance;

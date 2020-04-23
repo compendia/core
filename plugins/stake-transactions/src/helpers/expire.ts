@@ -20,7 +20,7 @@ export class ExpireHelper {
     ): Promise<void> {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
-        if (!stake.halved && !stake.redeemed && block.timestamp > stake.timestamps.redeemable) {
+        if (stake.status === "active" && block.timestamp > stake.timestamps.redeemable) {
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
             const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                 "transaction-pool",
@@ -60,7 +60,7 @@ export class ExpireHelper {
             // Update voter total stakePower
             const newWalletStakePower = walletStakePower.plus(newStakePower);
 
-            stake.halved = true;
+            stake.status = "expired";
             stake.power = newStakePower;
             stakes[stakeKey] = stake;
 
@@ -154,9 +154,7 @@ export class ExpireHelper {
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[expiration.stakeKey] !== undefined &&
-                        wallet.getAttribute("stakes")[expiration.stakeKey].halved === false &&
-                        wallet.getAttribute("stakes")[expiration.stakeKey].canceled === false &&
-                        wallet.getAttribute("stakes")[expiration.stakeKey].active === true
+                        wallet.getAttribute("stakes")[expiration.stakeKey].status === "active"
                     ) {
                         await this.expireStake(wallet, expiration.stakeKey, block);
                     } else {

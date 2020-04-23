@@ -352,10 +352,7 @@ describe("Stake Power-up", () => {
                 powerUp: 1234567890 + graceEnd + powerUp,
                 redeemable: 1234567890 + graceEnd + powerUp + 7889400,
             },
-            active: true,
-            redeemed: false,
-            halved: false,
-            canceled: false,
+            status: "active",
         });
 
         const unvoteTransaction = Transactions.BuilderFactory.vote()

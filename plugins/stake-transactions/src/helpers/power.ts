@@ -19,10 +19,7 @@ class VotePower {
             duration: s.duration,
             amount,
             power: sPower,
-            active: false,
-            redeemed: false,
-            halved: false,
-            canceled: false,
+            status: "grace",
         };
 
         return o;

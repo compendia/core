@@ -47,7 +47,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
                 const newBalance = wallet.balance.plus(stake.amount);
                 wallet.balance = newBalance;
-                stake.canceled = true;
+                stake.status = "canceled";
                 stakes[txId] = stake;
                 await ExpireHelper.removeExpiry(transaction.id);
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
@@ -79,7 +79,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeNotFoundError();
         }
 
-        if (stake.canceled) {
+        if (stake.status === "canceled") {
             throw new StakeAlreadyCanceledError();
         }
 
@@ -135,7 +135,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
 
         // Refund stake
         const newBalance = sender.balance.plus(stake.amount);
-        stake.canceled = true;
+        stake.status = "canceled";
         stakes[txId] = stake;
         sender.balance = newBalance;
 
@@ -157,11 +157,11 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const txId = t.asset.stakeCancel.id;
         const stakes = sender.getAttribute("stakes", {});
-        const stake = stakes[txId];
+        const stake: StakeInterfaces.IStakeObject = stakes[txId];
 
         // Revert refund stake
         const newBalance = sender.balance.minus(stake.amount);
-        stake.canceled = false;
+        stake.status = "grace";
         stakes[txId] = stake;
         sender.balance = newBalance;
 

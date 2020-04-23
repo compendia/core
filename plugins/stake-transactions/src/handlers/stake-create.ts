@@ -69,9 +69,8 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
                     // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
-                    stakeObject.halved = true;
+                    stakeObject.status = "expired";
                     addPower = stakeObject.power;
-                    stakeObject.active = true;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     // Else if not expired, check if powerUp is configured in the most recent round
@@ -81,7 +80,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         roundBlock.timestamp > stakeObject.timestamps.powerUp
                     ) {
                         // Powered up
-                        stakeObject.active = true;
+                        stakeObject.status = "active";
                         addPower = stakeObject.power;
                     }
                     // Stake is not yet expired, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
@@ -90,7 +89,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         wallet,
                         transaction.id,
                         roundBlock.height,
-                        stakeObject.active,
+                        stakeObject.status === "active",
                     );
                 }
                 wallet.balance = newBalance;
@@ -203,7 +202,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         // Stake is immediately active if there's no powerUp or graceEnd period
         if (!Managers.configManager.getMilestone().powerUp || !Managers.configManager.getMilestone().graceEnd) {
             sender.setAttribute("stakePower", sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power));
-            o.active = true;
+            o.status = "active";
         }
 
         stakes[transaction.id] = o;
@@ -233,7 +232,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
         // If the stake is active we need to deduct the stakePower
-        if (stakes[transaction.id].active) {
+        if (stakes[transaction.id].status === "active") {
             const stake = stakes[transaction.id];
             const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
             sender.setAttribute("stakePower", stakePower.minus(stake.power));

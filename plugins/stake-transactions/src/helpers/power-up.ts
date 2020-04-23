@@ -15,7 +15,7 @@ export class PowerUpHelper {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
         const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
-        stakes[stakeKey].active = true;
+        stakes[stakeKey].status = "active";
         wallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         wallet.setAttribute("stakePower", stakePower.plus(stake.power));
         if (wallet.hasVoted()) {
@@ -54,9 +54,7 @@ export class PowerUpHelper {
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[stake.stakeKey] !== undefined &&
-                        wallet.getAttribute("stakes")[stake.stakeKey].halved === false &&
-                        wallet.getAttribute("stakes")[stake.stakeKey].canceled === false &&
-                        wallet.getAttribute("stakes")[stake.stakeKey].active === false
+                        wallet.getAttribute("stakes")[stake.stakeKey].status === "grace"
                     ) {
                         app.resolvePlugin("logger").info(
                             `Power-up Stake ${stake.stakeKey} of wallet ${wallet.address}.`,

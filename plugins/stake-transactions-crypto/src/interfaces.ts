@@ -25,14 +25,11 @@ export interface IStakeTimestamps {
 
 export interface IStakeObject {
     id: string;
+    status: "grace" | "canceled" | "active" | "expired" | "redeemed";
     timestamps: IStakeTimestamps;
     duration: number;
     amount: Utils.BigNumber;
     power: Utils.BigNumber;
-    active: boolean;
-    halved: boolean;
-    redeemed: boolean;
-    canceled: boolean;
 }
 
 export interface IStakeArray {
