@@ -1,6 +1,6 @@
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Managers, Transactions } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
     Enums,
     Interfaces as StakeInterfaces,
@@ -47,8 +47,19 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
                 const newBalance = wallet.balance.plus(stake.amount);
                 wallet.balance = newBalance;
+
+                // If stakeCreate bootstrap created stakes that are now considered active or expired
+                // we need to deduct the stake's power from wallet stakePower that stakeCreate bootstrap added.
+                if (["active", "expired"].includes(stake.status)) {
+                    wallet.setAttribute(
+                        "stakePower",
+                        wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power),
+                    );
+                }
+
                 stake.status = "canceled";
                 stakes[txId] = stake;
+
                 await ExpireHelper.removeExpiry(transaction.id);
 
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));

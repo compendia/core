@@ -66,7 +66,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
                 // TODO: Check if stake is expired, active, or graced and assign to correct helper.
                 let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
-                if (roundBlock.timestamp > stakeObject.timestamps.redeemable) {
+                if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
                     // Expired
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.status = "expired";
