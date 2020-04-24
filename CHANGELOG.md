@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.7.31] - 2020-04-24
+
+### Changed
+
+Staking now no longer immediately grants power.
+
+You can cancel your stake within the first hour of creating it
+
+After the first hour, your stake will go into a 23-hour "power-up" stage. So twenty-four hours after creation (grace period + power-up period), your stake will grant the bonus power.
+
+The following attributes of the wallet stake object have been removed: `active, halved, redeemed`.
+
+The following attribute has been added: to the wallet stake object: `status`.
+The `status` attribute can return: `grace, canceled, powering, active, released, redeemed`
+
+-   Grace: The stake it can be canceled.
+-   Canceled: The stake has been canceled during the grace period.
+-   Powering: The stake can no longer be canceled and is powering up.
+-   Active: The stake is active and granting power to the wallet.
+-   Released: The stake has halved and can be redeemed.
+-   Redeemed: The stake has been redeemed.
+
+The wallet api now returns a `power` attribute, displaying the total power of the wallet.
+
+The wallet api now returns `gracedBalance` attribute, displaying the balance that is currently in a grace stake (which can still be canceled). Graced balance is worth just as much power as the regular balance.
+
 ## [2.6.31] - 2020-03-25
 
 ### Fixed
