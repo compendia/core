@@ -18118,22 +18118,6 @@ truncate-utf8-bytes@^1.0.0:
   dependencies:
     utf8-byte-length "^1.0.1"
 
-ts-jest@^24.0.2, ts-jest@^24.3.0:
-  version "24.3.0"
-  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-24.3.0.tgz#b97814e3eab359ea840a1ac112deae68aa440869"
-  integrity sha512-Hb94C/+QRIgjVZlJyiWwouYUF+siNJHJHknyspaOcZ+OQAIdFG/UrdQVXw/0B8Z3No34xkUXZJpOTy9alOWdVQ==
-  dependencies:
-    bs-logger "0.x"
-    buffer-from "1.x"
-    fast-json-stable-stringify "2.x"
-    json5 "2.x"
-    lodash.memoize "4.x"
-    make-error "1.x"
-    mkdirp "0.x"
-    resolve "1.x"
-    semver "^5.5"
-    yargs-parser "10.x"
-
 ts-jest@^25.0.0:
   version "25.0.0"
   resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-25.0.0.tgz#d83b266e6ffda0c458a129951b3fe3567f8ce8df"
