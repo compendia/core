@@ -1,17 +1,15 @@
 {
-    "name": "@nosplatform/stake-transactions",
-    "description": "Provides stake transactions for Ark Core",
+    "name": "@nosplatform/core-helpers",
+    "description": "Provides core helpers for the nOS blockchain",
     "version": "0.0.3",
-    "contributors": [
-        "Dean van Dugteren <dean@nos.io>"
-    ],
+    "author": "Dean van Dugteren <dean@nos.io>",
     "license": "MIT",
     "main": "dist/index.js",
     "files": [
         "dist"
     ],
     "scripts": {
-        "prepublishOnly": "yarn build",
+        "prepublishOnly": "yarn test && yarn build",
         "pretest": "yarn lint && yarn build",
         "compile": "../../node_modules/typescript/bin/tsc",
         "build": "yarn clean && yarn compile",
@@ -28,11 +26,8 @@
     },
     "dependencies": {
         "@arkecosystem/core-interfaces": "^2.6.31",
-        "@arkecosystem/core-transactions": "^2.6.31",
         "@arkecosystem/crypto": "^2.6.31",
-        "@nosplatform/stake-transactions-crypto": "^0.2.1-beta.1",
-        "handy-redis": "^1.7.0",
-        "redis": "^2.8.0"
+        "@nosplatform/stake-transactions-crypto": "^0.2.1-beta.1"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",
@@ -44,7 +39,7 @@
         "jest-extended": "^0.11.2",
         "npm-check-updates": "^3.1.0",
         "regenerator-runtime": "^0.13.0",
-        "ts-jest": "^24.3.0",
+        "ts-jest": "^24.0.2",
         "tslint": "^5.12.0",
         "tslint-config-prettier": "^1.17.0",
         "typedoc": "^0.15.0",
@@ -52,10 +47,5 @@
     },
     "publishConfig": {
         "access": "public"
-    },
-    "jest": {
-        "transform": {
-            "^.+\\.tsx?$": "ts-jest"
-        }
     }
 }

@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.6.24"]
+            "minimumVersions": ["^2.7.31"]
         },
         "reward": 0,
         "topDelegates": 0,
@@ -25,11 +25,9 @@
                 "multiSignature": 10000000,
                 "multiPayment": 10000000,
                 "delegateResignation": 2500000000,
-                "htlcLock": 10000000,
-                "htlcClaim": 0,
-                "htlcRefund": 0,
                 "stakeCreate": 0,
                 "stakeRedeem": 0,
+                "stakeCancel": 10000000,
                 "setFile": 10000000
             }
         },
@@ -62,5 +60,10 @@
         "reward": 390000000,
         "topReward": 484000000,
         "topDelegates": 5
+    },
+    {
+        "height": 811925,
+        "graceEnd": 3600,
+        "powerUp": 82800
     }
 ]

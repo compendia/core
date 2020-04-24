@@ -61,6 +61,18 @@ export class StakeDurationError extends Errors.TransactionError {
     }
 }
 
+export class StakeGraceEndedError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake grace period has ended.`);
+    }
+}
+
+export class StakeAlreadyCanceledError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake already canceled.`);
+    }
+}
+
 export class LessThanMinimumStakeError extends Errors.TransactionError {
     constructor() {
         super(`Stake should be greater than allowed minimum.`);

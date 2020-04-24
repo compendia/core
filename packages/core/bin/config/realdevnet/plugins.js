@@ -8,6 +8,12 @@ module.exports = {
         minimumNetworkReach: 3,
     },
     "@arkecosystem/core-state": {},
+    "@nosplatform/stake-transactions": {},
+    "@nosplatform/file-transactions": {
+        fileKeys: ["description", "icon"],
+        port: 6003,
+        wsPort: 6004
+    },
     "@arkecosystem/core-database-postgres": {
         connection: {
             host: process.env.CORE_DB_HOST || "localhost",
@@ -33,20 +39,12 @@ module.exports = {
                 multiSignature: 500,
                 multiPayment: 500,
                 delegateResignation: 100,
-                htlcLock: 100,
-                htlcClaim: 0,
-                htlcRefund: 0,
                 stakeCreate: 0,
                 stakeRedeem: 0,
+                stakeCancel: 100,
                 setFile: 100
             },
         },
-    },
-    "@nosplatform/stake-transactions": {},
-    "@nosplatform/file-transactions": {
-        fileKeys: ["description", "icon"],
-        port: 6003,
-        wsPort: 6004
     },
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {

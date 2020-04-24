@@ -27,6 +27,7 @@ export const setUp = async (): Promise<void> => {
 
         app = await setUpContainer({
             include: [
+                "@arkecosystem/core-container",
                 "@arkecosystem/core-event-emitter",
                 "@arkecosystem/core-logger-pino",
                 "@arkecosystem/core-state",

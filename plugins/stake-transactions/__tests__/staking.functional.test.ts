@@ -10,7 +10,7 @@ afterAll(support.tearDown);
 
 describe("Transaction Forging - Stake create", () => {
     describe("Signed with 1 Passphrase", () => {
-        it("should create, halve, and redeem a stake", async () => {
+        it("should create, power-up, halve, and redeem a stake", async () => {
             let wallet;
 
             Managers.configManager.setFromPreset("nospluginnet");
@@ -19,29 +19,54 @@ describe("Transaction Forging - Stake create", () => {
                 .withPassphrase(secrets[0])
                 .createOne();
 
+            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            let jWallet;
+            jWallet = JSON.parse(wallet.body).data;
+            expect(jWallet.attributes.delegate.voteBalance).toBe(jWallet.balance);
+
             await support.snoozeForBlock(1);
 
             // Block 3
             await expect(stakeCreate).toBeAccepted();
 
             await support.snoozeForBlock(1);
-
-            // Block 4
             await expect(stakeCreate.id).toBeForged();
+
+            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            jWallet = JSON.parse(wallet.body).data;
+            expect(jWallet.stakePower).toBe("0");
+            expect(jWallet.attributes.delegate.voteBalance).toBe(jWallet.power);
+
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
+
+            // Round 2
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("2000000000000");
+            expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
+                Utils.BigNumber.make("2000000000000")
+                    .plus(JSON.parse(wallet.body).data.balance)
+                    .toFixed(),
+            );
 
             const stakeRedeem = StakeTransactionFactory.stakeRedeem(stakeCreate.id)
                 .withPassphrase(secrets[0])
                 .createOne();
             await expect(stakeRedeem).toBeRejected();
 
-            await support.snoozeForBlock(2);
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
 
-            // Block 6
+            // Round 3
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
-            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].halved).toBeTrue();
+            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("released");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("1000000000000");
+            expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
+                Utils.BigNumber.make("1000000000000")
+                    .plus(JSON.parse(wallet.body).data.balance)
+                    .toFixed(),
+            );
 
             const stakeRedeem2 = StakeTransactionFactory.stakeRedeem(stakeCreate.id)
                 .withPassphrase(secrets[0])
@@ -53,11 +78,14 @@ describe("Transaction Forging - Stake create", () => {
             // Block 7
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
 
-            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].redeemed).toBeTrue();
+            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("redeemed");
 
             await expect(stakeRedeem2.id).toBeForged();
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("0");
+            expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
+                Utils.BigNumber.make(JSON.parse(wallet.body).data.balance).toFixed(),
+            );
 
             const stakeRedeem3 = StakeTransactionFactory.stakeRedeem(stakeCreate.id)
                 .withPassphrase(secrets[0])

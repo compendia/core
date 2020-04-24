@@ -59,21 +59,48 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const stakeObject: StakeInterfaces.IStakeObject = VotePower.stakeObject(
                     transaction.asset.stakeCreate,
                     transaction.id,
+                    transaction.blockHeight,
                 );
                 const newBalance = wallet.balance.minus(stakeObject.amount);
                 const stakes = wallet.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
-                if (roundBlock.timestamp > stakeObject.redeemableTimestamp) {
+
+                // TODO: Check if stake is released, active, or graced and assign to correct helper.
+                let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
+                if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
+                    // released
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
-                    stakeObject.halved = true;
+                    stakeObject.status = "released";
+                    addPower = stakeObject.power;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
-                    await ExpireHelper.storeExpiry(stakeObject, wallet, transaction.id);
+                    // Else if not released, check if powerUp is configured in the most recent round
+                    const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
+                    if (
+                        !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
+                        roundBlock.timestamp >= stakeObject.timestamps.powerUp
+                    ) {
+                        // Powered up
+                        stakeObject.status = "active";
+                        addPower = stakeObject.power;
+                    }
+                    // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
+                    await ExpireHelper.storeExpiry(
+                        stakeObject,
+                        wallet,
+                        transaction.id,
+                        roundBlock.height,
+                        stakeObject.status === "active",
+                    );
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
+                if (!addPower.isZero()) {
+                    wallet.setAttribute(
+                        "stakePower",
+                        wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(addPower),
+                    );
+                }
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
-                const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stakeObject.power);
-                wallet.setAttribute("stakePower", newPower);
                 walletManager.reindex(wallet);
             }
         }
@@ -91,6 +118,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             .getLastBlock();
 
         const { data }: Interfaces.ITransaction = transaction;
+
+        const configManager = Managers.configManager;
+        const milestone = configManager.getMilestone();
+        if (!milestone.stakeLevels[stake.duration] || milestone.stakeLevels[stake.duration] === undefined) {
+            throw new StakeDurationError();
+        }
+
         const o: StakeInterfaces.IStakeObject = VotePower.stakeObject(data.asset.stakeCreate, transaction.id);
 
         const timestampDiff = stake.timestamp - lastBlock.data.timestamp;
@@ -114,13 +148,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         if (o.amount.isGreaterThan(wallet.balance.minus(Utils.BigNumber.make(data.fee)))) {
             throw new NotEnoughBalanceError();
-        }
-
-        const configManager = Managers.configManager;
-        const milestone = configManager.getMilestone();
-
-        if (!o.duration || milestone.stakeLevels[o.duration] === undefined) {
-            throw new StakeDurationError();
         }
 
         if (o.amount.isLessThan(milestone.minimumStake)) {
@@ -170,15 +197,23 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             transaction.id,
         );
         const newBalance = sender.balance.minus(o.amount);
-        const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
+
+        // Stake is immediately active if there's no powerUp or graceEnd period
+        if (!Managers.configManager.getMilestone().powerUp || !Managers.configManager.getMilestone().graceEnd) {
+            sender.setAttribute("stakePower", sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(o.power));
+            o.status = "active";
+        }
+
         stakes[transaction.id] = o;
 
-        sender.setAttribute("stakePower", newPower);
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
 
-        await ExpireHelper.storeExpiry(o, sender, transaction.id);
+        // Only store the expiry if it's not a tempWalletManager
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            await ExpireHelper.storeExpiry(o, sender, transaction.id);
+        }
 
         walletManager.reindex(sender);
     }
@@ -194,16 +229,34 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             transaction.id,
         );
         const newBalance = sender.balance.plus(o.amount);
-        const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(o.power);
         const stakes = sender.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-        delete stakes[transaction.id];
+        // If the stake is active we need to deduct the stakePower
+        if (stakes[transaction.id].status === "active") {
+            const stake = stakes[transaction.id];
+            const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
+            sender.setAttribute("stakePower", stakePower.minus(stake.power));
+            // If there's a powerUp period and the sender has voted we update the delegate voteBalance too
+            if (Managers.configManager.getMilestone().powerUp && sender.hasVoted()) {
+                const delegate: State.IWallet = walletManager.findByPublicKey(sender.getAttribute("vote"));
+                let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+                voteBalance = voteBalance
+                    .minus(stake.power)
+                    .plus(transaction.data.fee)
+                    .plus(stake.amount);
+                delegate.setAttribute("delegate.voteBalance", voteBalance);
+                walletManager.reindex(delegate);
+            }
+        }
 
-        sender.setAttribute("stakePower", newPower);
+        delete stakes[transaction.id];
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
         sender.balance = newBalance;
 
-        await ExpireHelper.removeExpiry(transaction.id);
+        // Only remove the expiry if it's not a tempWalletManager
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            await ExpireHelper.removeExpiry(transaction.id);
+        }
 
         walletManager.reindex(sender);
     }

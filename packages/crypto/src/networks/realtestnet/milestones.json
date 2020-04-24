@@ -26,6 +26,7 @@
                 "htlcRefund": 0,
                 "setFile": 0,
                 "stakeCreate": 0,
+                "stakeCancel": 10000000,
                 "stakeRedeem": 0
             }
         },
@@ -33,7 +34,7 @@
         "multiPaymentLimit": 256,
         "balancePower": 1,
         "stakeLevels": {
-            "20": 20,
+            "40": 20,
             "120": 30,
             "7889400": 60,
             "15778800": 85,
@@ -43,8 +44,13 @@
         "vestedWalletPublicKey": "none"
     },
     {
-        "height": 12,
+        "height": 4,
         "aip11": true
+    },
+    {
+        "height": 20,
+        "graceEnd": 20,
+        "powerUp": 20
     },
     {
         "height": 75600,

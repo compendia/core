@@ -25,6 +25,12 @@ export class TransactionFactory {
         return new TransactionFactory(builder);
     }
 
+    public static stakeCancel(stakeId: string): TransactionFactory {
+        const stakeBuilder = new StakeBuilders.StakeCancelBuilder();
+        const builder = stakeBuilder.stakeAsset(stakeId);
+        return new TransactionFactory(builder);
+    }
+
     public static getNonce(publicKey: string): Utils.BigNumber {
         try {
             return app.resolvePlugin<Database.IDatabaseService>("database").walletManager.getNonce(publicKey);
@@ -34,7 +40,7 @@ export class TransactionFactory {
     }
 
     private builder: any;
-    private network: Types.NetworkName = "testnet";
+    private network: Types.NetworkName = "nospluginnet";
     private nonce: Utils.BigNumber;
     private fee: Utils.BigNumber;
     private timestamp: number;
@@ -214,7 +220,9 @@ export class TransactionFactory {
                 }
             }
 
-            const testnet: boolean = ["unitnet", "testnet"].includes(Managers.configManager.get("network.name"));
+            const testnet: boolean = ["unitnet", "testnet", "nospluginnet"].includes(
+                Managers.configManager.get("network.name"),
+            );
 
             if (sign) {
                 const aip11: boolean = Managers.configManager.getMilestone().aip11;

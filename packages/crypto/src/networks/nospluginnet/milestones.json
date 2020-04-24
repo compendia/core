@@ -27,18 +27,21 @@
                 "htlcRefund": 0,
                 "setFile": 0,
                 "stakeCreate": 0,
-                "stakeRedeem": 0
+                "stakeRedeem": 0,
+                "stakeCancel": 10000000
             }
         },
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "balancePower": 1,
+        "graceEnd": 4,
+        "powerUp": 4,
         "stakeLevels": {
             "20": 20,
             "120": 30,
-            "7889400": 60,
-            "15778800": 85,
-            "31557600": 110
+            "7889400": 50,
+            "15778800": 75,
+            "31557600": 100
         },
         "minimumStake": 1000000000000,
         "vestedWalletPublicKey": "none"

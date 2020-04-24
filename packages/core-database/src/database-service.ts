@@ -79,6 +79,7 @@ export class DatabaseService implements Database.IDatabaseService {
         await this.walletManager.applyBlock(block);
 
         if (roundCalculator.isNewRound(block.data.height)) {
+            await StakeHelpers.PowerUpHelper.processPowerUps(block.data, this.walletManager);
             await StakeHelpers.ExpireHelper.processExpirations(block.data);
         }
 

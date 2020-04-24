@@ -4,6 +4,7 @@ import { Handlers, Interfaces as TransactionInterfaces } from "@arkecosystem/cor
 import { Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import pluralize from "pluralize";
 
+import { Staking } from "@nosplatform/core-helpers";
 import { WalletIndexAlreadyRegisteredError, WalletIndexNotFoundError } from "./errors";
 import { TempWalletManager } from "./temp-wallet-manager";
 import { Wallet } from "./wallet";
@@ -248,11 +249,9 @@ export class WalletManager implements State.IWalletManager {
             if (voter.hasVoted()) {
                 const delegate: State.IWallet = this.findByPublicKey(voter.getAttribute<string>("vote"));
                 const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance");
-                const lockedBalance = voter.getAttribute("htlc.lockedBalance", Utils.BigNumber.ZERO);
-                delegate.setAttribute(
-                    "delegate.voteBalance",
-                    voteBalance.plus(voter.balance.plus(lockedBalance)).plus(voter.getAttribute("stakePower", 0)),
-                );
+                const power = Staking.getPower(voter);
+
+                delegate.setAttribute("delegate.voteBalance", voteBalance.plus(power));
             }
         }
     }
@@ -481,36 +480,36 @@ export class WalletManager implements State.IWalletManager {
         lockTransaction: Interfaces.ITransactionData,
         revert: boolean = false,
     ): void {
-        const senderStakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
         const milestone = Managers.configManager.getMilestone();
 
-        // If stake transaction group
-        if (transaction.typeGroup === 100 && sender.hasVoted()) {
+        // If stake transaction group and not a stakeCancel transaction
+        if (transaction.typeGroup === 100 && [0, 1].includes(transaction.type) && sender.hasVoted()) {
             // Check if transaction is of type stakeCreate
             const delegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-            if (transaction.type === 0) {
-                const s = transaction.asset.stakeCreate;
-                const multiplier: number = milestone.stakeLevels[s.duration];
-                const sPower: Utils.BigNumber = s.amount.times(multiplier).dividedBy(10);
-                const balanceWithFeeFixed = s.amount.plus(transaction.fee);
-
+            // Only update voteBalance on stakeCreate if there is no powerUp milestone
+            if (transaction.type === 0 && !milestone.powerUp) {
+                const stake = transaction.asset.stakeCreate;
+                const multiplier: number = milestone.stakeLevels[stake.duration];
+                const sPower: Utils.BigNumber = stake.amount.times(multiplier).dividedBy(10);
+                const balanceWithFeeFixed = stake.amount.plus(transaction.fee);
                 voteBalance = revert
                     ? voteBalance.minus(sPower).plus(balanceWithFeeFixed)
                     : voteBalance.minus(balanceWithFeeFixed).plus(sPower);
             } else if (transaction.type === 1) {
-                const s = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
+                const stake = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
                 voteBalance = revert
                     ? voteBalance
-                          .plus(s.power)
+                          .plus(stake.power)
                           .plus(transaction.fee)
-                          .minus(s.amount)
+                          .minus(stake.amount)
                     : voteBalance
-                          .minus(s.power)
+                          .minus(stake.power)
                           .minus(transaction.fee)
-                          .plus(s.amount);
+                          .plus(stake.amount);
             }
             delegate.setAttribute("delegate.voteBalance", voteBalance);
+            // If Vote transaction
         } else if (
             transaction.type === Enums.TransactionType.Vote &&
             transaction.typeGroup === Enums.TransactionTypeGroup.Core
@@ -518,15 +517,12 @@ export class WalletManager implements State.IWalletManager {
             const vote: string = transaction.asset.votes[0];
             const delegate: State.IWallet = this.findByPublicKey(vote.substr(1));
             let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+            const power = Staking.getPower(sender);
 
             if (vote.startsWith("+")) {
-                voteBalance = revert
-                    ? voteBalance.minus(sender.balance.minus(transaction.fee)).minus(senderStakePower)
-                    : voteBalance.plus(sender.balance).plus(senderStakePower);
+                voteBalance = revert ? voteBalance.minus(power.minus(transaction.fee)) : voteBalance.plus(power);
             } else {
-                voteBalance = revert
-                    ? voteBalance.plus(sender.balance).plus(senderStakePower)
-                    : voteBalance.minus(sender.balance.plus(transaction.fee)).minus(senderStakePower);
+                voteBalance = revert ? voteBalance.plus(power) : voteBalance.minus(power.plus(transaction.fee));
             }
 
             delegate.setAttribute("delegate.voteBalance", voteBalance);
