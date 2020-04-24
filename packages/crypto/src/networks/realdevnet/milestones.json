@@ -64,7 +64,7 @@
     {
         "height": 811925,
         "p2p": {
-            "minimumVersions": ["^2.6.31", "^2.7.31"]
+            "minimumVersions": ["^2.7.31"]
         },
         "graceEnd": 3600,
         "powerUp": 82800
