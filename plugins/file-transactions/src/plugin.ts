@@ -11,7 +11,6 @@ import { defaults } from "./defaults";
 import { SetFileTransactionHandler } from "./handlers";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
-const db = app.resolvePlugin<Database.IDatabaseService>("database");
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -74,6 +73,7 @@ export const plugin: Container.IPluginDescriptor = {
 
         // Setup IPFS node ApplicationEvents.ForgerStarted
         emitter.on(ApplicationEvents.ForgerStarted, async forger => {
+            const db = app.resolvePlugin<Database.IDatabaseService>("database");
             const delegateKeys = forger.activeDelegates;
             const delegates = [];
             for (const key of delegateKeys) {
@@ -102,6 +102,7 @@ export const plugin: Container.IPluginDescriptor = {
         });
 
         emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
+            const db = app.resolvePlugin<Database.IDatabaseService>("database");
             const isNewRound = roundCalculator.isNewRound(blockData.height);
             // Only load new hashes if new round, or each block when running testnet.
             if (ipfs && (isNewRound || Managers.configManager.get("network.name") === "testnet")) {
