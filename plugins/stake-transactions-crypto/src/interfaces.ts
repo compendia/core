@@ -25,7 +25,7 @@ export interface IStakeTimestamps {
 
 export interface IStakeObject {
     id: string;
-    status: "grace" | "canceled" | "active" | "expired" | "redeemed";
+    status: "grace" | "canceled" | "active" | "released" | "redeemed";
     timestamps: IStakeTimestamps;
     duration: number;
     amount: Utils.BigNumber;

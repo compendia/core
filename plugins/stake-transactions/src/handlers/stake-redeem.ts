@@ -94,7 +94,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
 
         // TODO: Get transaction's block round timestamp instead of transaction timestamp.
         if (
-            (!transaction.timestamp && stakes[txId].status !== "expired") ||
+            (!transaction.timestamp && stakes[txId].status !== "released") ||
             (transaction.timestamp && transaction.timestamp < stakes[txId].timestamps.redeemable)
         ) {
             throw new StakeNotYetRedeemableError();

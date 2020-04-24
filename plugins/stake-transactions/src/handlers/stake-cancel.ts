@@ -48,9 +48,9 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 const newBalance = wallet.balance.plus(stake.amount);
                 wallet.balance = newBalance;
 
-                // If stakeCreate bootstrap created stakes that are now considered active or expired
+                // If stakeCreate bootstrap created stakes that are now considered active or released
                 // we need to deduct the stake's power from wallet stakePower that stakeCreate bootstrap added.
-                if (["active", "expired"].includes(stake.status)) {
+                if (["active", "released"].includes(stake.status)) {
                     wallet.setAttribute(
                         "stakePower",
                         wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power),

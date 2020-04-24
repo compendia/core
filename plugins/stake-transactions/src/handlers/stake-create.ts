@@ -64,16 +64,16 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const newBalance = wallet.balance.minus(stakeObject.amount);
                 const stakes = wallet.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-                // TODO: Check if stake is expired, active, or graced and assign to correct helper.
+                // TODO: Check if stake is released, active, or graced and assign to correct helper.
                 let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
                 if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
-                    // Expired
+                    // released
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
-                    stakeObject.status = "expired";
+                    stakeObject.status = "released";
                     addPower = stakeObject.power;
                     await ExpireHelper.removeExpiry(transaction.id);
                 } else {
-                    // Else if not expired, check if powerUp is configured in the most recent round
+                    // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
                     if (
                         !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
@@ -83,7 +83,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         stakeObject.status = "active";
                         addPower = stakeObject.power;
                     }
-                    // Stake is not yet expired, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
+                    // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
                     await ExpireHelper.storeExpiry(
                         stakeObject,
                         wallet,

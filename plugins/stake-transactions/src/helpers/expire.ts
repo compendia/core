@@ -60,7 +60,7 @@ export class ExpireHelper {
             // Update voter total stakePower
             const newWalletStakePower = walletStakePower.plus(newStakePower);
 
-            stake.status = "expired";
+            stake.status = "released";
             stake.power = newStakePower;
             stakes[stakeKey] = stake;
 
