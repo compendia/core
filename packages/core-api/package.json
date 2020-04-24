@@ -1,6 +1,6 @@
 {
     "name": "@arkecosystem/core-api",
-    "version": "2.6.31",
+    "version": "2.7.31",
     "description": "Public API for ARK Core",
     "license": "MIT",
     "contributors": [
@@ -22,12 +22,12 @@
     },
     "dependencies": {
         "@arkecosystem/core-container": "^2.7.31",
-        "@arkecosystem/core-http-utils": "^2.6.31",
-        "@arkecosystem/core-interfaces": "^2.6.31",
-        "@arkecosystem/core-transaction-pool": "^2.6.31",
-        "@arkecosystem/core-transactions": "^2.6.31",
-        "@arkecosystem/core-utils": "^2.6.31",
-        "@arkecosystem/crypto": "^2.6.31",
+        "@arkecosystem/core-http-utils": "^2.7.31",
+        "@arkecosystem/core-interfaces": "^2.7.31",
+        "@arkecosystem/core-transaction-pool": "^2.7.31",
+        "@arkecosystem/core-transactions": "^2.7.31",
+        "@arkecosystem/core-utils": "^2.7.31",
+        "@arkecosystem/crypto": "^2.7.31",
         "@arkecosystem/utils": "^0.3.0",
         "@nosplatform/core-helpers": "^0.0.1",
         "@hapi/boom": "^8.0.0",

@@ -1,6 +1,6 @@
 {
     "name": "@arkecosystem/core-error-tracker-airbrake",
-    "version": "2.6.31",
+    "version": "2.7.31",
     "description": "Airbrake error tracker integration for ARK Core.",
     "license": "MIT",
     "contributors": [

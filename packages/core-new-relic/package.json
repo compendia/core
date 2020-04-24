@@ -1,6 +1,6 @@
 {
     "name": "@arkecosystem/core-new-relic",
-    "version": "2.6.31",
+    "version": "2.7.31",
     "description": "New Relic integration for ARK Core.",
     "license": "MIT",
     "contributors": [
