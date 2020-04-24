@@ -79,11 +79,7 @@ export const transformWallet = (wallet: State.IWallet) => {
         vote: wallet.getAttribute("vote"),
         multiSignature,
         stakePower: wallet.getAttribute("stakePower", "0"),
-        power: Utils.BigNumber.make(wallet.getAttribute("stakePower", "0"))
-            .plus(gracedBalance)
-            .plus(Utils.BigNumber.make(wallet.balance))
-            .plus(lockedBalance || 0)
-            .toFixed(),
+        power: Staking.getPower(wallet).toFixed(),
         stakes: unixStakes,
         attributes,
         ...(username && { username }), // only adds username if it is defined
