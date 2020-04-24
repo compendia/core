@@ -19,7 +19,7 @@
     },
     "dependencies": {
         "@arkecosystem/core-interfaces": "^2.6.31",
-        "@arkecosystem/core-container": "^2.6.31",
+        "@arkecosystem/core-container": "^2.7.31",
         "@arkecosystem/core-transactions": "^2.6.31",
         "@arkecosystem/crypto": "^2.6.31",
         "@nosplatform/stake-transactions": "^0.0.2",

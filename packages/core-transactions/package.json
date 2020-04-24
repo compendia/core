@@ -19,7 +19,7 @@
         "prepublishOnly": "yarn build"
     },
     "dependencies": {
-        "@arkecosystem/core-container": "^2.6.31",
+        "@arkecosystem/core-container": "^2.7.31",
         "@arkecosystem/core-event-emitter": "^2.6.31",
         "@arkecosystem/core-interfaces": "^2.6.31",
         "@arkecosystem/core-utils": "^2.6.31",

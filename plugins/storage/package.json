@@ -28,7 +28,7 @@
     },
     "dependencies": {
         "sqlite3": "^4.1.1",
-        "@arkecosystem/core-container": "^2.6.31",
+        "@arkecosystem/core-container": "^2.7.31",
         "@arkecosystem/core-http-utils": "^2.6.31",
         "@arkecosystem/core-interfaces": "^2.6.31",
         "@arkecosystem/crypto": "^2.6.31",

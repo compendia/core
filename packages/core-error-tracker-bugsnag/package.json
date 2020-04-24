@@ -18,7 +18,7 @@
         "prepublishOnly": "yarn build"
     },
     "dependencies": {
-        "@arkecosystem/core-container": "^2.6.31",
+        "@arkecosystem/core-container": "^2.7.31",
         "@bugsnag/js": "^6.3.2"
     },
     "engines": {

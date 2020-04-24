@@ -18,7 +18,7 @@
         "prepublishOnly": "yarn build"
     },
     "dependencies": {
-        "@arkecosystem/core-container": "^2.6.31",
+        "@arkecosystem/core-container": "^2.7.31",
         "@sentry/node": "^5.5.0"
     },
     "engines": {

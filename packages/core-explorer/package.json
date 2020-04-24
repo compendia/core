@@ -19,7 +19,7 @@
         "pretest": "bash ../../scripts/pre-test.sh"
     },
     "dependencies": {
-        "@arkecosystem/core-container": "^2.6.31",
+        "@arkecosystem/core-container": "^2.7.31",
         "@arkecosystem/core-interfaces": "^2.6.31",
         "connect-history-api-fallback": "^1.6.0",
         "express": "^4.17.1"
