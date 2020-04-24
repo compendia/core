@@ -22,7 +22,7 @@ The following attributes of the wallet stake object have been removed: `active, 
 The following attribute has been added: to the wallet stake object: `status`.
 The `status` attribute can return: `grace, canceled, powering, active, released, redeemed`
 
--   Grace: The stake it can be canceled.
+-   Grace: The stake can be canceled.
 -   Canceled: The stake has been canceled during the grace period.
 -   Powering: The stake can no longer be canceled and is powering up.
 -   Active: The stake is active and granting power to the wallet.
