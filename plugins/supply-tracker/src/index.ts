@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Constants, Enums, Identities, Interfaces, Utils } from "@arkecosystem/crypto";
+import { Constants, Enums, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { StakeHelpers } from "@nosplatform/stake-transactions";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { q, Round, Statistic } from "@nosplatform/storage";
@@ -308,13 +308,11 @@ export const plugin: Container.IPluginDescriptor = {
             });
         });
 
-        // On stake create
-        emitter.on("stake.created", async txData => {
+        // On stake powerup
+        emitter.on("stake.powerup", async ({ stake, block }) => {
             q(async () => {
-                const tx: Interfaces.ITransactionData = txData;
-                const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(tx.asset.stakeCreate, tx.id);
+                const o: StakeInterfaces.IStakeObject = stake;
                 const lastSupply = Utils.BigNumber.make(supply.value);
-
                 supply.value = lastSupply.minus(o.amount).toString();
                 staked.value = Utils.BigNumber.make(staked.value)
                     .plus(o.amount)
@@ -323,7 +321,7 @@ export const plugin: Container.IPluginDescriptor = {
                 await supply.save();
                 await staked.save();
                 // Save round data
-                let lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+                let lastBlock: Interfaces.IBlockData = block;
                 if (!lastBlock) {
                     lastBlock = app
                         .resolvePlugin<State.IStateService>("state")
@@ -361,6 +359,66 @@ export const plugin: Container.IPluginDescriptor = {
                     )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
                 );
             });
+        });
+
+        // On stake create (only if powerUp is not set in milestone)
+        emitter.on("stake.created", async txData => {
+            if (!Managers.configManager.getMilestone().powerUp) {
+                q(async () => {
+                    const tx: Interfaces.ITransactionData = txData;
+                    const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(
+                        tx.asset.stakeCreate,
+                        tx.id,
+                    );
+                    const lastSupply = Utils.BigNumber.make(supply.value);
+
+                    supply.value = lastSupply.minus(o.amount).toString();
+                    staked.value = Utils.BigNumber.make(staked.value)
+                        .plus(o.amount)
+                        .toString();
+
+                    await supply.save();
+                    await staked.save();
+                    // Save round data
+                    let lastBlock: Interfaces.IBlockData = await blocksRepository.findById(tx.blockId);
+                    if (!lastBlock) {
+                        lastBlock = app
+                            .resolvePlugin<State.IStateService>("state")
+                            .getStore()
+                            .getLastBlock().data;
+                    }
+                    const roundData = roundCalculator.calculateRound(lastBlock.height);
+
+                    const round = await findOrCreate("Round", roundData.round);
+                    round.staked = Utils.BigNumber.make(round.staked)
+                        .plus(o.amount)
+                        .toString();
+                    await round.save();
+
+                    // Save duration-specific stake stat
+                    let stat = await Statistic.findOne({ name: `stakes.${o.duration}` });
+                    if (!stat) {
+                        stat = new Statistic();
+                        stat.name = `stakes.${o.duration}`;
+                        stat.value = "0";
+                    }
+                    stat.value = Utils.BigNumber.make(stat.value)
+                        .plus(o.amount)
+                        .toFixed();
+                    await stat.save();
+
+                    totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
+                        .plus(o.power)
+                        .toString();
+                    await totalStakePower.save();
+
+                    logger.info(
+                        `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
+                            Constants.ARKTOSHI,
+                        )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                    );
+                });
+            }
         });
 
         // On stake release

@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { createHandyClient } from "handy-redis";
@@ -25,6 +25,7 @@ export class PowerUpHelper {
             delegate.setAttribute("delegate.voteBalance", newVoteBalance);
             walletManager.reindex(delegate);
         }
+
         walletManager.reindex(wallet);
     }
 
@@ -74,6 +75,9 @@ export class PowerUpHelper {
                             poolService.walletManager,
                         );
 
+                        const stakeObj = wallet.getAttribute("stakes")[stake.stakeKey];
+                        this.emitter.emit("stake.powerup", { stake: stakeObj, block });
+
                         // Remove queued power-up from redis
                         await this.removePowerUp(stake.stakeKey);
                     } else {
@@ -88,4 +92,8 @@ export class PowerUpHelper {
             }
         }
     }
+
+    private static readonly emitter: EventEmitter.EventEmitter = app.resolvePlugin<EventEmitter.EventEmitter>(
+        "event-emitter",
+    );
 }
