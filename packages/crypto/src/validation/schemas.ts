@@ -46,7 +46,7 @@ export const schemas = {
         $id: "delegateUsername",
         allOf: [
             { type: "string", pattern: "^(?!.*__.*)[a-z][a-z0-9_]*[a-z0-9]*$" },
-            { minLength: 2, maxLength: 16 },
+            { minLength: 2, maxLength: 18 },
             { transform: ["toLowerCase"] },
         ],
     },
