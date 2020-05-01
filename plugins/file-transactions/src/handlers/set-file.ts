@@ -3,9 +3,15 @@ import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces"
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as FileTransactions } from "@nosplatform/file-transactions-crypto";
-
-import { FileKeyInvalid, IpfsHashAlreadyExists, SenderNotActiveDelegate, SenderNotDelegate } from "../errors";
-
+import * as multibase from "multibase";
+import * as multihash from "multihashes";
+import {
+    FileKeyInvalid,
+    InvalidMultiHash,
+    IpfsHashAlreadyExists,
+    SenderNotActiveDelegate,
+    SenderNotDelegate,
+} from "../errors";
 // const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
 export class SetFileTransactionHandler extends Handlers.TransactionHandler {
@@ -79,6 +85,10 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
 
         if (!Enums.FileKeys.includes(fileKey)) {
             throw new FileKeyInvalid();
+        }
+
+        if (!this.isMultihash(ipfsHash)) {
+            throw new InvalidMultiHash();
         }
 
         if (wallet.getAttribute(`files.${fileKey}`, "") === ipfsHash) {
@@ -160,4 +170,33 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
     ): Promise<void> {}
+
+    private isString = input => {
+        return typeof input === "string";
+    };
+
+    private convertToString = input => {
+        if (Buffer.isBuffer(input)) {
+            return multibase
+                .encode("base58btc", input)
+                .toString()
+                .slice(1);
+        }
+
+        if (this.isString(input)) {
+            return input;
+        }
+
+        return false;
+    };
+
+    private isMultihash(hash) {
+        const formatted = this.convertToString(hash);
+        try {
+            multihash.decode(multibase.decode("z" + formatted));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
 }

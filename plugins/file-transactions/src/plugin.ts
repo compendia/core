@@ -54,6 +54,18 @@ export const plugin: Container.IPluginDescriptor = {
                             await ipfs.pin.add(hash);
                             ipfsHashes.push(hash);
                             container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
+                        } else {
+                            let error = "Unknown error.";
+                            if (!stat) {
+                                error = "Can't resolve hash.";
+                            } else if (stat.cumulativeSize <= maxFileSize) {
+                                error = "Filesize too big.";
+                            } else if (files && files.length === 1) {
+                                error = "IPFS Hash contains more than one file.";
+                            }
+                            container
+                                .resolvePlugin<Logger.ILogger>("logger")
+                                .warn(`IPFS File ${hash} not added: ${error}`);
                         }
                     } catch (error) {
                         container.resolvePlugin<Logger.ILogger>("logger").error(error);
@@ -71,7 +83,7 @@ export const plugin: Container.IPluginDescriptor = {
             }
         };
 
-        // Setup IPFS node ApplicationEvents.ForgerStarted
+        // Setup IPFS node after forger start
         emitter.on(ApplicationEvents.ForgerStarted, async forger => {
             const db = app.resolvePlugin<Database.IDatabaseService>("database");
             const delegateKeys = forger.activeDelegates;
@@ -101,11 +113,15 @@ export const plugin: Container.IPluginDescriptor = {
             await loadIpfsHashes(delegates);
         });
 
+        // On a new round, update the hashes that should be pinned on the node by querying activeDelegates and checking their files.
         emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
             const db = app.resolvePlugin<Database.IDatabaseService>("database");
             const isNewRound = roundCalculator.isNewRound(blockData.height);
             // Only load new hashes if new round, or each block when running testnet.
-            if (ipfs && (isNewRound || Managers.configManager.get("network.name") === "testnet")) {
+            if (
+                ipfs &&
+                (isNewRound || ["testnet", "nospluginnet"].includes(Managers.configManager.get("network.name")))
+            ) {
                 const delegates = await db.getActiveDelegates();
                 const delegateWallets = [];
                 for (const delegate of delegates) {

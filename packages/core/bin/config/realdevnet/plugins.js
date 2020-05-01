@@ -10,7 +10,7 @@ module.exports = {
     "@arkecosystem/core-state": {},
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {
-        fileKeys: ["description", "icon"],
+        fileKeys: ["description", "logo"],
         port: 6003,
         wsPort: 6004
     },

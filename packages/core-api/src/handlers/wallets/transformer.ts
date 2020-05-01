@@ -20,6 +20,11 @@ export const transformWallet = (wallet: State.IWallet) => {
         attributes = { delegate };
     }
 
+    let files = {};
+    if (wallet.hasAttribute("files")) {
+        files = wallet.getAttribute("files");
+    }
+
     // TODO: cleanup V3
     let business: any;
     if (app.has("core-magistrate-transactions")) {
@@ -81,6 +86,7 @@ export const transformWallet = (wallet: State.IWallet) => {
         stakePower: wallet.getAttribute("stakePower", "0"),
         power: Staking.getPower(wallet).toFixed(),
         stakes: unixStakes,
+        files,
         attributes,
         ...(username && { username }), // only adds username if it is defined
         ...(secondPublicKey && { secondPublicKey }), // same with secondPublicKey
