@@ -18,7 +18,8 @@ module.exports = {
     "@nosplatform/file-transactions": {
         fileKeys: ["db.apps", "description"],
         port: 6003,
-        wsPort: 6004
+        wsPort: 6004,
+        gateway: "https://gateway.ipfs.io" 
     },
     "@arkecosystem/core-database-postgres": {
         connection: {
