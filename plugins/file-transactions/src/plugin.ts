@@ -4,6 +4,7 @@ import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/
 import { Handlers } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers } from "@arkecosystem/crypto";
+import got from "got";
 import IPFS from "ipfs";
 import path from "path";
 
@@ -41,27 +42,25 @@ export const plugin: Container.IPluginDescriptor = {
 
             // Pin all new hashes that didn't exist previously
             for (const hash of newIpfsHashes) {
-                if (hash && ipfsHashes.indexOf(hash) < 0) {
+                if (hash && !ipfsHashes.includes(hash)) {
                     try {
-                        const files = await ipfs.files.ls(`/ipfs/${hash}`);
-                        const stat = await ipfs.files.stat(`/ipfs/${hash}`);
+                        console.log("get stats");
+                        const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
+                        const stat = JSON.parse(res.body);
                         let fileSizeKey = ipfsIndex[hash];
                         if (String(fileSizeKey).startsWith("db.")) {
                             fileSizeKey = "db";
                         }
                         const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileSizeKey];
-                        if (stat && stat.cumulativeSize <= maxFileSize && files && files.length === 1) {
+                        if (stat && stat.CumulativeSize <= maxFileSize && newIpfsHashes.includes(hash)) {
                             await ipfs.pin.add(hash);
-                            ipfsHashes.push(hash);
                             container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
                         } else {
                             let error = "Unknown error.";
                             if (!stat) {
                                 error = "Can't resolve hash.";
-                            } else if (stat.cumulativeSize <= maxFileSize) {
+                            } else if (stat.CumulativeSize > maxFileSize) {
                                 error = "Filesize too big.";
-                            } else if (files && files.length === 1) {
-                                error = "IPFS Hash contains more than one file.";
                             }
                             container
                                 .resolvePlugin<Logger.ILogger>("logger")
@@ -70,13 +69,18 @@ export const plugin: Container.IPluginDescriptor = {
                     } catch (error) {
                         container.resolvePlugin<Logger.ILogger>("logger").error(error);
                     }
+                    ipfsHashes.push(hash);
                 }
             }
 
             // Unpin all ipfs hashes that no longer exist in new ipfs hashes
             for (const hash of ipfsHashes) {
-                if (hash && newIpfsHashes.indexOf(hash) < 0) {
-                    await ipfs.pin.rm(hash);
+                if (hash && !newIpfsHashes.includes(hash)) {
+                    try {
+                        await ipfs.pin.rm(hash);
+                    } catch (e) {
+                        // Throws error if file isn't pinned, probably because the file size was too big previously.
+                    }
                     delete ipfsHashes[ipfsHashes.indexOf(hash)];
                     container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File removed ${hash}`);
                 }
@@ -120,7 +124,8 @@ export const plugin: Container.IPluginDescriptor = {
             // Only load new hashes if new round, or each block when running testnet.
             if (
                 ipfs &&
-                (isNewRound || ["testnet", "nospluginnet"].includes(Managers.configManager.get("network.name")))
+                (isNewRound ||
+                    ["realtestnet", "testnet", "nospluginnet"].includes(Managers.configManager.get("network.name")))
             ) {
                 const delegates = await db.getActiveDelegates();
                 const delegateWallets = [];

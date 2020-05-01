@@ -41,6 +41,12 @@
             "31557600": 110
         },
         "minimumStake": 1000000000000,
+        "ipfs": {
+            "maxFileSize": {
+                "description": 30000,
+                "logo": 300000
+            }
+        },
         "vestedWalletPublicKey": "none"
     },
     {
