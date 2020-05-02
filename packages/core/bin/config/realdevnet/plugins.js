@@ -11,9 +11,9 @@ module.exports = {
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {
         fileKeys: ["description", "logo"],
-        port: 6003,
-        wsPort: 6004,
-        gateway: "https://gateway.ipfs.io" 
+        port: process.env.CORE_IPFS_PORT || 6003,
+        wsPort: process.env.CORE_IPFS_WS_PORT || 6004,
+        gateway: process.env.CORE_IPFS_GATEWAY || "https://gateway.ipfs.io" 
     },
     "@arkecosystem/core-database-postgres": {
         connection: {

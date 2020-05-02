@@ -1,3 +1,4 @@
+import { Managers } from "../../..";
 import { IHtlcLockAsset, ITransactionData } from "../../../interfaces";
 import { BigNumber } from "../../../utils";
 import { HtlcLockTransaction } from "../../types";
@@ -28,7 +29,9 @@ export class HtlcLockBuilder extends TransactionBuilder<HtlcLockBuilder> {
         const struct: ITransactionData = super.getStruct();
         struct.recipientId = this.data.recipientId;
         struct.amount = this.data.amount;
-        struct.vendorField = this.data.vendorField;
+        struct.vendorField = Managers.configManager.getMilestone().vendorFieldLength
+            ? this.data.vendorField
+            : undefined;
         struct.asset = this.data.asset;
         return struct;
     }

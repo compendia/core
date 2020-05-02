@@ -65,5 +65,9 @@
         "height": 811925,
         "graceEnd": 3600,
         "powerUp": 82800
+    },
+    {
+        "height": 852627,
+        "vendorFieldLength": 0
     }
 ]

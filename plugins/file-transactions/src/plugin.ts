@@ -44,7 +44,6 @@ export const plugin: Container.IPluginDescriptor = {
             for (const hash of newIpfsHashes) {
                 if (hash && !ipfsHashes.includes(hash)) {
                     try {
-                        console.log("get stats");
                         const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
                         const stat = JSON.parse(res.body);
                         let fileSizeKey = ipfsIndex[hash];

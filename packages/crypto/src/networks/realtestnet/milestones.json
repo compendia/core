@@ -59,12 +59,12 @@
         "powerUp": 20
     },
     {
-        "height": 75600,
-        "reward": 200000000
+        "height": 14800,
+        "vendorFieldLength": 0
     },
     {
-        "height": 100000,
-        "vendorFieldLength": 255
+        "height": 75600,
+        "reward": 200000000
     },
     {
         "height": 1000000000,
