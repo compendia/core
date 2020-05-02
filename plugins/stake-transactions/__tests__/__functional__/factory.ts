@@ -252,8 +252,12 @@ export class TransactionFactory {
     }
 
     private getRandomUsername(): string {
-        return Math.random()
-            .toString(36)
-            .toLowerCase();
+        let result = "";
+        const characters = "abcdefghijklmnopqrstuvwxyz";
+        const charactersLength = characters.length;
+        for (let i = 0; i < 16; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
     }
 }

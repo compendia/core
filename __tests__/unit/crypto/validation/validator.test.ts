@@ -236,7 +236,8 @@ describe("validator", () => {
         describe("delegateUsername", () => {
             it("should be ok", () => {
                 expect(validator.validate("delegateUsername", "asdf").error).toBeUndefined();
-                expect(validator.validate("delegateUsername", "_").error).toBeUndefined();
+                expect(validator.validate("delegateUsername", "asdf_asdf").error).toBeUndefined();
+                expect(validator.validate("delegateUsername", "asdf_123").error).toBeUndefined();
             });
 
             it("should not be ok", () => {
@@ -246,6 +247,9 @@ describe("validator", () => {
                 ).not.toBeUndefined();
                 expect(validator.validate("delegateUsername", 1234).error).not.toBeUndefined();
                 expect(validator.validate("delegateUsername", "").error).not.toBeUndefined();
+                expect(validator.validate("delegateUsername", "dbl__undrscore").error).not.toBeUndefined();
+                expect(validator.validate("delegateUsername", "double__underscore").error).not.toBeUndefined();
+                expect(validator.validate("delegateUsername", "1_startnumber").error).not.toBeUndefined();
                 // tslint:disable-next-line: no-null-keyword
                 expect(validator.validate("delegateUsername", null).error).not.toBeUndefined();
                 expect(validator.validate("delegateUsername", undefined).error).not.toBeUndefined();

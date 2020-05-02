@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.6.31", "^2.7.31"]
+            "minimumVersions": ["^2.7.31"]
         },
         "reward": 0,
         "topDelegates": 0,
@@ -41,8 +41,8 @@
         "minimumStake": 10000000000,
         "ipfs": {
             "maxFileSize": {
-                "description": 25000,
-                "icon": 256000
+                "description": 30000,
+                "logo": 300000
             }
         },
         "vendorFieldLength": 255,
@@ -63,10 +63,11 @@
     },
     {
         "height": 811925,
-        "p2p": {
-            "minimumVersions": ["^2.7.31"]
-        },
         "graceEnd": 3600,
         "powerUp": 82800
+    },
+    {
+        "height": 852815,
+        "vendorFieldLength": 0
     }
 ]

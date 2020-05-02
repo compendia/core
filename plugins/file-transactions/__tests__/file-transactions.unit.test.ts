@@ -4,10 +4,10 @@ import "./mocks/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Identities, Managers, Utils } from "@arkecosystem/crypto";
-import { TransactionSchemaError } from "@arkecosystem/crypto/dist/errors";
 
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Builders as FileTransactionBuilders } from "../../file-transactions-crypto/src";
+import { FileKeyInvalid, InvalidMultiHash } from "../src/errors";
 import { SetFileTransactionHandler } from "../src/handlers";
 
 // import {
@@ -18,8 +18,8 @@ import { SetFileTransactionHandler } from "../src/handlers";
 const secret = "clay harbor enemy utility margin pretty hub comic piece aerobic umbrella acquire";
 
 beforeAll(async () => {
-    Managers.configManager.setFromPreset("testnet");
-    Managers.configManager.setHeight(1);
+    Managers.configManager.setFromPreset("nospluginnet");
+    Managers.configManager.setHeight(48);
     Handlers.Registry.registerTransactionHandler(SetFileTransactionHandler);
 });
 
@@ -45,17 +45,49 @@ describe("File Transactions", () => {
     it("should throw if posting unrecognized ipfs key", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
-            .ipfsAsset("xxx", "Qmb7yMk2w5BUyFB3PjMcFqkLQg45Be7M8ohWB1UbAoeuDo")
+            .ipfsAsset("xxx", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
             .sign(secret);
 
-        expect(() => ipfsTransaction.build()).toThrowError(TransactionSchemaError);
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have thrown");
+        } catch (error) {
+            expect(error).toBeInstanceOf(FileKeyInvalid);
+        }
+    });
+
+    it("should throw if posting invalid multihash", async () => {
+        const txBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const ipfsTransaction = txBuilder
+            .ipfsAsset("description", "XmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .sign(secret);
+
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have thrown");
+        } catch (error) {
+            expect(error).toBeInstanceOf(InvalidMultiHash);
+        }
     });
 
     it("should pass if posting recognized ipfs key", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
-            .ipfsAsset("description", "Qmb7yMk2w5BUyFB3PjMcFqkLQg45Be7M8ohWB1UbAoeuDo")
+            .ipfsAsset("description", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
             .fee("0")
             .sign(secret);
@@ -79,10 +111,10 @@ describe("File Transactions", () => {
         }
     });
 
-    it("should pass if posting db.apps", async () => {
+    it("should fail if posting db.apps", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
-            .ipfsAsset("db.apps", "Qmb7yMk2w5BUyFB3PjMcFqkLQg45Be7M8ohWB1UbAoeuDo")
+            .ipfsAsset("db.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
             .fee("0")
             .sign(secret);
@@ -95,14 +127,9 @@ describe("File Transactions", () => {
 
         try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have failed");
         } catch (error) {
-            fail(error);
-        }
-
-        try {
-            await walletManager.applyTransaction(ipfsTransaction.build());
-        } catch (error) {
-            fail(error);
+            expect(error).toBeTruthy();
         }
     });
 });

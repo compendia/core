@@ -4,6 +4,7 @@ import { Container, Database, EventEmitter, Logger, State } from "@arkecosystem/
 import { Handlers } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers } from "@arkecosystem/crypto";
+import got from "got";
 import IPFS from "ipfs";
 import path from "path";
 
@@ -41,37 +42,51 @@ export const plugin: Container.IPluginDescriptor = {
 
             // Pin all new hashes that didn't exist previously
             for (const hash of newIpfsHashes) {
-                if (hash && ipfsHashes.indexOf(hash) < 0) {
+                if (hash && !ipfsHashes.includes(hash)) {
                     try {
-                        const files = await ipfs.files.ls(`/ipfs/${hash}`);
-                        const stat = await ipfs.files.stat(`/ipfs/${hash}`);
+                        const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
+                        const stat = JSON.parse(res.body);
                         let fileSizeKey = ipfsIndex[hash];
                         if (String(fileSizeKey).startsWith("db.")) {
                             fileSizeKey = "db";
                         }
                         const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileSizeKey];
-                        if (stat && stat.cumulativeSize <= maxFileSize && files && files.length === 1) {
+                        if (stat && stat.CumulativeSize <= maxFileSize && newIpfsHashes.includes(hash)) {
                             await ipfs.pin.add(hash);
-                            ipfsHashes.push(hash);
                             container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
+                        } else {
+                            let error = "Unknown error.";
+                            if (!stat) {
+                                error = "Can't resolve hash.";
+                            } else if (stat.CumulativeSize > maxFileSize) {
+                                error = "Filesize too big.";
+                            }
+                            container
+                                .resolvePlugin<Logger.ILogger>("logger")
+                                .warn(`IPFS File ${hash} not added: ${error}`);
                         }
                     } catch (error) {
                         container.resolvePlugin<Logger.ILogger>("logger").error(error);
                     }
+                    ipfsHashes.push(hash);
                 }
             }
 
             // Unpin all ipfs hashes that no longer exist in new ipfs hashes
             for (const hash of ipfsHashes) {
-                if (hash && newIpfsHashes.indexOf(hash) < 0) {
-                    await ipfs.pin.rm(hash);
+                if (hash && !newIpfsHashes.includes(hash)) {
+                    try {
+                        await ipfs.pin.rm(hash);
+                    } catch (e) {
+                        // Throws error if file isn't pinned, probably because the file size was too big previously.
+                    }
                     delete ipfsHashes[ipfsHashes.indexOf(hash)];
                     container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File removed ${hash}`);
                 }
             }
         };
 
-        // Setup IPFS node ApplicationEvents.ForgerStarted
+        // Setup IPFS node after forger start
         emitter.on(ApplicationEvents.ForgerStarted, async forger => {
             const db = app.resolvePlugin<Database.IDatabaseService>("database");
             const delegateKeys = forger.activeDelegates;
@@ -101,11 +116,16 @@ export const plugin: Container.IPluginDescriptor = {
             await loadIpfsHashes(delegates);
         });
 
+        // On a new round, update the hashes that should be pinned on the node by querying activeDelegates and checking their files.
         emitter.on("block.applied", async (blockData: Interfaces.IBlockData) => {
             const db = app.resolvePlugin<Database.IDatabaseService>("database");
             const isNewRound = roundCalculator.isNewRound(blockData.height);
             // Only load new hashes if new round, or each block when running testnet.
-            if (ipfs && (isNewRound || Managers.configManager.get("network.name") === "testnet")) {
+            if (
+                ipfs &&
+                (isNewRound ||
+                    ["realtestnet", "testnet", "nospluginnet"].includes(Managers.configManager.get("network.name")))
+            ) {
                 const delegates = await db.getActiveDelegates();
                 const delegateWallets = [];
                 for (const delegate of delegates) {

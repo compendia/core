@@ -1,3 +1,4 @@
+import { Managers } from "../../..";
 import { ITransactionData } from "../../../interfaces";
 import { BigNumber } from "../../../utils";
 import { TransferTransaction } from "../../types";
@@ -27,7 +28,9 @@ export class TransferBuilder extends TransactionBuilder<TransferBuilder> {
         struct.amount = this.data.amount;
         struct.recipientId = this.data.recipientId;
         struct.asset = this.data.asset;
-        struct.vendorField = this.data.vendorField;
+        struct.vendorField = Managers.configManager.getMilestone().vendorFieldLength
+            ? this.data.vendorField
+            : undefined;
         struct.expiration = this.data.expiration;
 
         return struct;

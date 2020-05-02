@@ -20,6 +20,12 @@ export class SenderNotDelegate extends Errors.TransactionError {
     }
 }
 
+export class InvalidMultiHash extends Errors.TransactionError {
+    constructor() {
+        super(`Failed to apply transaction: Invalid Multihash.`);
+    }
+}
+
 export class SenderNotActiveDelegate extends Errors.TransactionError {
     constructor() {
         super(

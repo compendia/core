@@ -1,3 +1,4 @@
+import { Managers } from "../../..";
 import { MaximumPaymentCountExceededError, MinimumPaymentCountSubceededError } from "../../../errors";
 import { ITransactionData } from "../../../interfaces";
 import { configManager } from "../../../managers";
@@ -45,7 +46,9 @@ export class MultiPaymentBuilder extends TransactionBuilder<MultiPaymentBuilder>
 
         const struct: ITransactionData = super.getStruct();
         struct.senderPublicKey = this.data.senderPublicKey;
-        struct.vendorField = this.data.vendorField;
+        struct.vendorField = Managers.configManager.getMilestone().vendorFieldLength
+            ? this.data.vendorField
+            : undefined;
         struct.amount = this.data.amount;
         struct.asset = this.data.asset;
 

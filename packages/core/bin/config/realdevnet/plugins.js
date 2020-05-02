@@ -10,9 +10,10 @@ module.exports = {
     "@arkecosystem/core-state": {},
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {
-        fileKeys: ["description", "icon"],
-        port: 6003,
-        wsPort: 6004
+        fileKeys: ["description", "logo"],
+        port: process.env.CORE_IPFS_PORT || 6003,
+        wsPort: process.env.CORE_IPFS_WS_PORT || 6004,
+        gateway: process.env.CORE_IPFS_GATEWAY || "https://gateway.ipfs.io" 
     },
     "@arkecosystem/core-database-postgres": {
         connection: {

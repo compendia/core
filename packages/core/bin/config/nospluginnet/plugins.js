@@ -20,7 +20,7 @@ module.exports = {
         },
     },
     "@nosplatform/file-transactions": {
-        fileKeys: ["db.apps", "description"],
+        fileKeys: ["description", "logo"],
         port: 6003,
         wsPort: 6004
     },
