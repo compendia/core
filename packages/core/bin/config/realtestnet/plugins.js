@@ -7,8 +7,8 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
-    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-state": {},
+    "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-magistrate-transactions": {},
     "@nosplatform/storage": {
         port: 6002,
@@ -35,7 +35,7 @@ module.exports = {
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
         allowedSenders: [],
         dynamicFees: {
-            enabled: true,
+            enabled: false,
             minFeePool: 1000,
             minFeeBroadcast: 1000,
             addonBytes: {
@@ -51,6 +51,7 @@ module.exports = {
                 htlcRefund: 0,
                 stakeCreate: 0,
                 stakeRedeem: 0,
+                setFile: 0,
                 stakeCancel: 100
             },
         },

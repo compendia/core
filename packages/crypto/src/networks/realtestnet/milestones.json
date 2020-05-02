@@ -28,6 +28,9 @@
                 "stakeCreate": 0,
                 "stakeCancel": 10000000,
                 "stakeRedeem": 0
+            },
+            "specialFees": {
+                "setFile": 10000000
             }
         },
         "vendorFieldLength": 64,

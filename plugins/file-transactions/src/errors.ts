@@ -29,9 +29,8 @@ export class InvalidMultiHash extends Errors.TransactionError {
 export class SenderNotActiveDelegate extends Errors.TransactionError {
     constructor() {
         super(
-            `Failed to apply transaction: Sender must be active delegate or pay minimum transaction fee of ${
-                Managers.configManager.getMilestone().fees.staticFees.setFile
-            }.`,
+            `Failed to apply transaction: Sender must be active validator or pay minimum transaction fee of ${Managers.configManager.getMilestone()
+                .fees.specialFees.setFile / 1e8}.`,
         );
     }
 }

@@ -32,6 +32,7 @@
         "@arkecosystem/core-transactions": "^2.6.31",
         "@arkecosystem/core-utils": "^2.6.31",
         "@arkecosystem/crypto": "^2.6.31",
+        "@nosplatform/file-transactions-crypto": "0.0.2-alpha.1",
         "@types/better-sqlite3": "^5.4.0",
         "@types/fs-extra": "^8.0.0",
         "@types/pluralize": "^0.0.29",

@@ -1,7 +1,8 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Enums } from "@nosplatform/file-transactions-crypto";
 import { IDynamicFeeMatch } from "./interfaces";
 
 // @TODO: better name
@@ -75,7 +76,16 @@ export const dynamicFeeMatcher = async (transaction: Interfaces.ITransaction): P
         }
     } else {
         const staticFee: Utils.BigNumber = transaction.staticFee;
-        if (fee.isEqualTo(staticFee)) {
+
+        // setFile should allow specialFee as well (depending if sender is active validator, checked in setFile handler)
+        const validSetFileTransaction: boolean =
+            transaction.typeGroup === Enums.FileTransactionGroup &&
+            transaction.type === Enums.FileTransactionType.SetFile &&
+            Managers.configManager.getMilestone().fees.specialFees &&
+            Managers.configManager.getMilestone().fees.specialFees.setFile &&
+            fee.isEqualTo(Managers.configManager.getMilestone().fees.specialFees.setFile);
+
+        if (fee.isEqualTo(staticFee) || validSetFileTransaction) {
             broadcast = true;
             enterPool = true;
 
