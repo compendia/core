@@ -47,7 +47,9 @@
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
-                "logo": 300000
+                "logo": 300000,
+                "db.*": 512000000,
+                "schema.*": 500000
             }
         },
         "vestedWalletPublicKey": "none"

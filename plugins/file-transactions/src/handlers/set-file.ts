@@ -3,6 +3,8 @@ import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces"
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as FileTransactions } from "@nosplatform/file-transactions-crypto";
+// const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+import got from "got";
 import * as multibase from "multibase";
 import * as multihash from "multihashes";
 import {
@@ -12,7 +14,6 @@ import {
     SenderNotActiveDelegate,
     SenderNotDelegate,
 } from "../errors";
-// const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
 export class SetFileTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -80,10 +81,16 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             throw new SenderNotActiveDelegate();
         }
 
-        const fileKey = transaction.data.asset.fileKey;
         const ipfsHash = transaction.data.asset.ipfsHash;
 
-        if (!Enums.FileKeys.includes(fileKey)) {
+        const fileKeys = Object.keys(Managers.configManager.getMilestone().ipfs.maxFileSize);
+        const realFileKey = transaction.data.asset.fileKey;
+
+        // Can return wildcard filekey from milestones
+        const fileKey = this.getFileKey(realFileKey);
+
+        if (!fileKeys.includes(fileKey)) {
+            // Incorrect File Key
             throw new FileKeyInvalid();
         }
 
@@ -91,7 +98,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             throw new InvalidMultiHash();
         }
 
-        if (wallet.getAttribute(`files.${fileKey}`, "") === ipfsHash) {
+        if (wallet.getAttribute(`files.${realFileKey}`, "") === ipfsHash) {
             throw new IpfsHashAlreadyExists();
         }
 
@@ -115,6 +122,64 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                 message: `File transaction for wallet already in the pool`,
             };
         }
+
+        const ipfsHash = data.asset.ipfsHash;
+
+        const ipfsRegistrationSameHashInPool = processor
+            .getTransactions()
+            .filter(
+                transaction =>
+                    transaction.type === FileTransactions.SetFileTransaction.type &&
+                    transaction.typeGroup === FileTransactions.SetFileTransaction.typeGroup &&
+                    transaction.asset.ipfsHash === ipfsHash,
+            );
+        if (ipfsRegistrationSameHashInPool.length > 1) {
+            return {
+                type: "ERR_CONFLICT",
+                message: `Multiple File transactions for "${ipfsHash}" in transaction payload`,
+            };
+        }
+
+        const fileKeys = Object.keys(Managers.configManager.getMilestone().ipfs.maxFileSize);
+        const fileKey = this.getFileKey(data.asset.fileKey);
+
+        if (!fileKeys.includes(fileKey)) {
+            // Incorrect File Key
+            return {
+                type: "ERR_INVALID_FILE_KEY",
+                message: `"${fileKey}" is not a correct key`,
+            };
+        }
+
+        const options = app.resolveOptions("file-transactions");
+        const statUrl = `${options.gateway}/api/v0/object/stat/${data.asset.ipfsHash}`;
+        const res = await got.get(statUrl);
+        if (!res.body) {
+            // Couldn't resolve body
+            return {
+                type: "ERR_RESOLVE_STAT",
+                message: `"${statUrl}" could not be resolved`,
+            };
+        }
+
+        const stat = JSON.parse(res.body);
+        if (!stat || !stat.CumulativeSize) {
+            // Couldn't json body data
+            return {
+                type: "ERR_RESOLVE_STAT",
+                message: `"${statUrl}" data could not be resolved`,
+            };
+        }
+
+        const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileKey];
+        if (stat.CumulativeSize > maxFileSize) {
+            // File too big
+            return {
+                type: "ERR_FILE_SIZE",
+                message: `${stat.CumulativeSize} bytes is greater than allowed max file size of ${maxFileSize}.`,
+            };
+        }
+
         return null;
     }
 
@@ -198,5 +263,16 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         } catch (e) {
             return false;
         }
+    }
+
+    private getFileKey(fileKey: string): string {
+        const fileKeys = Object.keys(Managers.configManager.getMilestone().ipfs.maxFileSize);
+        for (const key of fileKeys) {
+            // If key ends with wildcard and tx fileKey starts with the wildcard value
+            if (String(key).endsWith("*") && String(fileKey).startsWith(key.replace("*", ""))) {
+                fileKey = key;
+            }
+        }
+        return fileKey;
     }
 }
