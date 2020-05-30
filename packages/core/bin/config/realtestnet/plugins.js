@@ -16,7 +16,7 @@ module.exports = {
         cors: true
     },
     "@nosplatform/file-transactions": {
-        fileKeys: ["db.apps", "description"],
+        fileKeys: ["logo", "description"],
         port: 6003,
         wsPort: 6004,
         gateway: "https://gateway.ipfs.io" 

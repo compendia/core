@@ -44,6 +44,14 @@
             "31557600": 100
         },
         "minimumStake": 1000000000000,
+        "ipfs": {
+            "maxFileSize": {
+                "description": 30000,
+                "logo": 300000,
+                "db.[avion].*": 500000,
+                "schema.[avion].*": 500000
+            }
+        },
         "vestedWalletPublicKey": "none"
     },
     {

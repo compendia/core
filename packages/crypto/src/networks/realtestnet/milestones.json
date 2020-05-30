@@ -24,13 +24,10 @@
                 "htlcLock": 10000000,
                 "htlcClaim": 0,
                 "htlcRefund": 0,
-                "setFile": 0,
+                "setFile": 10000000,
                 "stakeCreate": 0,
                 "stakeCancel": 10000000,
                 "stakeRedeem": 0
-            },
-            "specialFees": {
-                "setFile": 10000000
             }
         },
         "vendorFieldLength": 64,
@@ -48,8 +45,8 @@
             "maxFileSize": {
                 "description": 30000,
                 "logo": 300000,
-                "db.*": 512000000,
-                "schema.*": 500000
+                "db.[avion].*": 500000,
+                "schema.[avion].*": 500000
             }
         },
         "vestedWalletPublicKey": "none"

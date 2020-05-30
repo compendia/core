@@ -7,13 +7,7 @@ import { Enums, Transactions as FileTransactions } from "@nosplatform/file-trans
 import got from "got";
 import * as multibase from "multibase";
 import * as multihash from "multihashes";
-import {
-    FileKeyInvalid,
-    InvalidMultiHash,
-    IpfsHashAlreadyExists,
-    SenderNotActiveDelegate,
-    SenderNotDelegate,
-} from "../errors";
+import { FileKeyInvalid, InvalidMultiHash, IpfsHashAlreadyExists, SenderNotDelegate } from "../errors";
 
 export class SetFileTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -65,20 +59,9 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             return;
         }
 
-        // Error if sender is not active delegate
-        const database: Database.IDatabaseService = app.resolvePlugin("database");
-        const delegates: State.IWallet[] = await database.getActiveDelegates();
-
-        // If wallet is not a delegate, or is a delegate but not in forging position and fee is too low: throw error.
+        // If wallet is not a delegate: throw error.
         if (!wallet.isDelegate()) {
             throw new SenderNotDelegate();
-        }
-
-        if (
-            !delegates.find(delegate => delegate.publicKey === transaction.data.senderPublicKey) &&
-            transaction.data.fee.isLessThan(Managers.configManager.getMilestone().fees.staticFees.setFile)
-        ) {
-            throw new SenderNotActiveDelegate();
         }
 
         const ipfsHash = transaction.data.asset.ipfsHash;
