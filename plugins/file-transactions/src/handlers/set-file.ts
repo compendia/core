@@ -70,7 +70,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         const realFileKey = transaction.data.asset.fileKey;
 
         // Can return wildcard filekey from milestones
-        const fileKey = this.getFileKey(realFileKey);
+        const fileKey = this.getMilestoneFileKey(realFileKey);
 
         if (!fileKeys.includes(fileKey)) {
             // Incorrect File Key
@@ -124,7 +124,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         }
 
         const fileKeys = Object.keys(Managers.configManager.getMilestone().ipfs.maxFileSize);
-        const fileKey = this.getFileKey(data.asset.fileKey);
+        const fileKey = this.getMilestoneFileKey(data.asset.fileKey);
 
         if (!fileKeys.includes(fileKey)) {
             // Incorrect File Key
@@ -248,7 +248,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         }
     }
 
-    private getFileKey(fileKey: string): string {
+    private getMilestoneFileKey(fileKey: string): string {
         const fileKeys = Object.keys(Managers.configManager.getMilestone().ipfs.maxFileSize);
         for (const key of fileKeys) {
             // If key ends with wildcard and tx fileKey starts with the wildcard value

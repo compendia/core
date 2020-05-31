@@ -132,4 +132,90 @@ describe("File Transactions", () => {
             expect(error).toBeTruthy();
         }
     });
+
+    it("should pass if posting db.docs.apps", async () => {
+        const txBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const ipfsTransaction = txBuilder
+            .ipfsAsset("db.docs.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("0")
+            .sign(secret);
+
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+        } catch (error) {
+            fail("Should have passed, instead got " + error);
+        }
+    });
+
+    it("should fail if posting db.hello.apps", async () => {
+        const txBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const ipfsTransaction = txBuilder
+            .ipfsAsset("db.hello.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("0")
+            .sign(secret);
+
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have failed");
+        } catch (error) {
+            expect(error).toBeTruthy();
+        }
+    });
+
+    it("should pass if posting schema.json.apps", async () => {
+        const txBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const ipfsTransaction = txBuilder
+            .ipfsAsset("schema.json.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("0")
+            .sign(secret);
+
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+        } catch (error) {
+            fail("Should have passed, instead got " + error);
+        }
+    });
+
+    it("should fail if posting schema.hello.apps", async () => {
+        const txBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const ipfsTransaction = txBuilder
+            .ipfsAsset("schema.hello.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("0")
+            .sign(secret);
+
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have failed");
+        } catch (error) {
+            expect(error).toBeTruthy();
+        }
+    });
 });
