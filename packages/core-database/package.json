@@ -29,7 +29,7 @@
         "@arkecosystem/core-transactions": "^2.6.38",
         "@arkecosystem/core-utils": "^2.6.38",
         "@arkecosystem/crypto": "^2.6.38",
-        "@arkecosystem/utils": "^0.3.0",
+        "@arkecosystem/utils": "^1.1",
         "@nosplatform/stake-transactions": "0.0.3",
         "dottie": "^2.0.1",
         "lodash.clonedeep": "^4.5.0",

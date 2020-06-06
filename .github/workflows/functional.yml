@@ -56,7 +56,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     delegate-resignation:
         runs-on: ubuntu-latest
@@ -106,7 +106,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     htlc-claim:
         runs-on: ubuntu-latest
@@ -156,7 +156,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     htlc-lock:
         runs-on: ubuntu-latest
@@ -206,7 +206,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     htlc-refund:
         runs-on: ubuntu-latest
@@ -256,7 +256,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     ipfs:
         runs-on: ubuntu-latest
@@ -306,7 +306,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     multi-payment:
         runs-on: ubuntu-latest
@@ -356,7 +356,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     multi-signature-registration:
         runs-on: ubuntu-latest
@@ -406,7 +406,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     second-signature-registration:
         runs-on: ubuntu-latest
@@ -456,7 +456,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     transfer:
         runs-on: ubuntu-latest
@@ -506,7 +506,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     vote:
         runs-on: ubuntu-latest
@@ -556,7 +556,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     pool:
         runs-on: ubuntu-latest
@@ -577,7 +577,7 @@ jobs:
                 node-version: [12.x]
 
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v2
             - name: Cache node modules
               uses: actions/cache@v1
               with:
@@ -606,7 +606,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     stake:
         runs-on: ubuntu-latest
@@ -656,4 +656,4 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
-                  POSTGRES_DB: nos_unitnet
+                  CORE_API_RATE_LIMIT_USER_LIMIT: 300
