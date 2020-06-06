@@ -9,7 +9,7 @@ import { requestSchemas } from "../schemas";
 import { codec } from "../utils/sc-codec";
 import { validateTransactionLight } from "./utils/validate";
 
-const SOCKET_TIMEOUT = 2000;
+const SOCKET_TIMEOUT = 4000;
 const MINUTE_IN_MILLISECONDS = 1000 * 60;
 const HOUR_IN_MILLISECONDS = MINUTE_IN_MILLISECONDS * 60;
 
