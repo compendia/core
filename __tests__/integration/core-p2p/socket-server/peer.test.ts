@@ -39,7 +39,7 @@ beforeAll(async () => {
 
     const { service, processor } = createPeerService();
 
-    jest.setTimeout(10000);
+    jest.setTimeout(20000);
 
     server = await startSocketServer(service, { server: { port: 4007, workers: 1 } });
     await delay(1000);
@@ -254,7 +254,7 @@ describe("Peer socket endpoint", () => {
                 expect(socket.state).toBe("open");
 
                 ping();
-                await delay(500);
+                await delay(1000);
                 expect(socket.state).toBe("closed");
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
@@ -269,7 +269,7 @@ describe("Peer socket endpoint", () => {
                 expect(socket.state).toBe("open");
 
                 pong();
-                await delay(500);
+                await delay(1000);
                 expect(socket.state).toBe("closed");
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
@@ -284,11 +284,11 @@ describe("Peer socket endpoint", () => {
                 expect(socket.state).toBe("open");
 
                 invalidOpcode();
-                await delay(500);
+                await delay(1000);
                 expect(socket.state).toBe("closed");
-                await delay(500);
+                await delay(1000);
                 connect();
-                await delay(500);
+                await delay(1000);
                 expect(socket.state).toBe("closed");
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
@@ -334,7 +334,7 @@ describe("Peer socket endpoint", () => {
 
             // this is the second handshake
             send('{"event": "#handshake", "data": {}, "cid": 1}');
-            await delay(500);
+            await delay(1000);
 
             expect(socket.state).toBe("closed");
 
@@ -547,7 +547,7 @@ describe("Peer socket endpoint", () => {
             const stringifiedPayload = JSON.stringify(payload).replace(/ /g, "");
             expect(socket.state).toBe("open");
             send(stringifiedPayload);
-            await delay(500);
+            await delay(1000);
             expect(socket.state).not.toBe("open");
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
@@ -559,11 +559,11 @@ describe("Peer socket endpoint", () => {
             const socket = new net.Socket();
             socket.connect(4007, "127.0.0.1", async () => {
                 socket.write("GET /invalid/ HTTP/1.0\r\n\r\n");
-                await delay(500);
+                await delay(1000);
                 expect(socket.destroyed).toBe(true);
 
                 socket.connect(4007, "127.0.0.1");
-                await delay(500);
+                await delay(1000);
                 expect(socket.destroyed).toBe(true);
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
@@ -575,21 +575,21 @@ describe("Peer socket endpoint", () => {
 
         it("should close the connection if the initial HTTP request is not processed within 2 seconds", async done => {
             const socket = new net.Socket();
-            await delay(4000);
+            await delay(2000);
             socket.connect(4007, "127.0.0.1", async () => {
                 await delay(500);
                 expect(socket.destroyed).toBe(false);
                 await delay(4000);
                 expect(socket.destroyed).toBe(true);
                 server.killWorkers({ immediate: true });
-                await delay(4000); // give time to workers to respawn
+                await delay(2000); // give time to workers to respawn
                 done();
             });
         });
 
         it("should close the connection if is is not fully established from start to finish within 4 seconds", async done => {
             const socket = new net.Socket();
-            await delay(4000);
+            await delay(2000);
             socket.connect(4007, "127.0.0.1", async () => {
                 expect(socket.destroyed).toBe(false);
                 // @ts-ignore
@@ -601,7 +601,7 @@ describe("Peer socket endpoint", () => {
                 await delay(1500);
                 expect(socket.destroyed).toBe(false);
                 socket.write("Host: 127.0.0.1");
-                await delay(1500);
+                await delay(5000);
                 expect(socket.destroyed).toBe(true);
                 done();
             });
