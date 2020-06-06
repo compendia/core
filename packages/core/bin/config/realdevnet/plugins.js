@@ -7,6 +7,9 @@ module.exports = {
         },
         minimumNetworkReach: 3,
     },
+    "@alessiodf/core-chameleon": {
+        enabled: "ifDelegate",
+    },
     "@arkecosystem/core-state": {},
     "@nosplatform/stake-transactions": {},
     "@nosplatform/file-transactions": {

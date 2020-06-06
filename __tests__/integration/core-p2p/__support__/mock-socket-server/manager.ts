@@ -10,7 +10,7 @@ export class MockSocketManager {
         // launching a "mock socket server" so that we can mock a peer
         this.serverProcess = fork(__dirname + "/index.js");
 
-        await delay(2000);
+        await delay(4000);
 
         // client socket so we can send mocking instructions to our mock server
         this.clientSocket = socketCluster.create({

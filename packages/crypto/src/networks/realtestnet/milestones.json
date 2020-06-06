@@ -45,8 +45,8 @@
             "maxFileSize": {
                 "description": 30000,
                 "logo": 300000,
-                "db.[avion].*": 500000,
-                "schema.[avion].*": 500000
+                "db.docs.*": 500000,
+                "schema.json.*": 500000
             }
         },
         "vestedWalletPublicKey": "none"
