@@ -128,7 +128,7 @@ describe("Peer socket endpoint", () => {
                 ).rejects.toHaveProperty("name", "BadConnectionError");
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should throw error when sending wrong buffer", async () => {
@@ -143,11 +143,11 @@ describe("Peer socket endpoint", () => {
                 ).rejects.toHaveProperty("name", "Error");
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should throw error if too many transactions are in the block", async () => {
-                await delay(2000);
+                await delay(4000);
                 const dummyBlock = BlockFactory.createDummy();
                 const transaction = TransactionFactory.transfer(wallets[0].address, 111)
                     .withNetwork("unitnet")
@@ -206,7 +206,7 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends an invalid message payload", async () => {
@@ -222,7 +222,7 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends too many pongs too quickly", async () => {
@@ -244,7 +244,7 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends a ping frame", async () => {
@@ -259,7 +259,7 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should disconnect the client if it sends a pong frame", async () => {
@@ -274,7 +274,7 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
 
             it("should block the client if it sends an invalid opcode", async () => {
@@ -293,7 +293,7 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
             });
         });
     });
@@ -323,7 +323,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should disconnect the client if it sends multiple handshakes", async () => {
@@ -340,7 +340,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should accept the request when below rate limit", async () => {
@@ -428,7 +428,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection when the event does not start with p2p", async () => {
@@ -444,7 +444,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection when the version is invalid", async () => {
@@ -459,7 +459,7 @@ describe("Peer socket endpoint", () => {
             ).rejects.toHaveProperty("name", "BadConnectionError");
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection and prevent reconnection if blocked", async () => {
@@ -490,7 +490,7 @@ describe("Peer socket endpoint", () => {
             expect(socket.state).not.toBe("open");
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection when using unsupported event messages", async () => {
@@ -506,7 +506,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection if it sends data after a disconnect packet", async () => {
@@ -522,7 +522,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection when the JSON includes additional properties", async () => {
@@ -552,7 +552,7 @@ describe("Peer socket endpoint", () => {
 
             // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
             server.killWorkers({ immediate: true });
-            await delay(2000); // give time to workers to respawn
+            await delay(4000); // give time to workers to respawn
         });
 
         it("should close the connection when the HTTP url is not valid", async done => {
@@ -568,28 +568,28 @@ describe("Peer socket endpoint", () => {
 
                 // kill workers to reset ipLastError (or we won't pass handshake for 1 minute)
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
                 done();
             });
         });
 
         it("should close the connection if the initial HTTP request is not processed within 2 seconds", async done => {
             const socket = new net.Socket();
-            await delay(2000);
+            await delay(4000);
             socket.connect(4007, "127.0.0.1", async () => {
                 await delay(500);
                 expect(socket.destroyed).toBe(false);
-                await delay(2000);
+                await delay(4000);
                 expect(socket.destroyed).toBe(true);
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
                 done();
             });
         });
 
         it("should close the connection if is is not fully established from start to finish within 4 seconds", async done => {
             const socket = new net.Socket();
-            await delay(2000);
+            await delay(4000);
             socket.connect(4007, "127.0.0.1", async () => {
                 expect(socket.destroyed).toBe(false);
                 // @ts-ignore
