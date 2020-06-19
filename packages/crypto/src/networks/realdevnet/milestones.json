@@ -28,7 +28,7 @@
                 "stakeCreate": 0,
                 "stakeRedeem": 0,
                 "stakeCancel": 10000000,
-                "setFile": 10000000
+                "setFile": 0
             }
         },
         "balancePower": 1,
