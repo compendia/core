@@ -1,5 +1,6 @@
 [
     {
+        "aip11": true,
         "height": 1,
         "reward": 300000000,
         "topReward": 400000000,
@@ -49,11 +50,7 @@
                 "schema.json.*": 500000
             }
         },
-        "vestedWalletPublicKey": "none"
-    },
-    {
-        "height": 4,
-        "aip11": true
+        "vestedWalletPublicKey": ""
     },
     {
         "height": 20,

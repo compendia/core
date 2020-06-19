@@ -25,9 +25,9 @@
         "updates": "../../node_modules/npm-check-updates/bin/npm-check-updates -a"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.6.38",
-        "@arkecosystem/core-transactions": "^2.6.38",
-        "@arkecosystem/crypto": "^2.6.38"
+        "@arkecosystem/core-interfaces": "^2.6.39",
+        "@arkecosystem/core-transactions": "^2.6.39",
+        "@arkecosystem/crypto": "^2.6.39"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",
