@@ -1,0 +1,80 @@
+[
+    {
+        "height": 1,
+        "reward": 300000000,
+        "topReward": 400000000,
+        "topDelegates": 2,
+        "activeDelegates": 5,
+        "blocktime": 4,
+        "block": {
+            "version": 0,
+            "maxTransactions": 150,
+            "maxPayload": 2097152
+        },
+        "epoch": "2020-06-22T17:00:00.000Z",
+        "fees": {
+            "staticFees": {
+                "transfer": 10000000,
+                "secondSignature": 500000000,
+                "delegateRegistration": 2500000000,
+                "vote": 100000000,
+                "multiSignature": 500000000,
+                "multiPayment": 10000000,
+                "delegateResignation": 2500000000,
+                "htlcLock": 10000000,
+                "htlcClaim": 0,
+                "htlcRefund": 0,
+                "setFile": 10000000,
+                "stakeCreate": 0,
+                "stakeCancel": 10000000,
+                "stakeRedeem": 0
+            }
+        },
+        "vendorFieldLength": 64,
+        "multiPaymentLimit": 256,
+        "balancePower": 1,
+        "stakeLevels": {
+            "40": 15,
+            "120": 25,
+            "7889400": 50,
+            "15778800": 75,
+            "31557600": 120
+        },
+        "graceEnd": 60,
+        "powerUp": 60,
+        "minimumStake": 1000000000000,
+        "ipfs": {
+            "maxFileSize": {
+                "description": 30000,
+                "logo": 300000,
+                "db.docs.*": 500000,
+                "schema.*": 500000
+            }
+        },
+        "vestedWalletPublicKey": ""
+    },
+    {
+        "height": 3,
+        "aip11": true
+    },
+    {
+        "height": 32,
+        "stakeLevels": {
+            "31557600": 100
+        }
+    },
+    {
+        "height": 14800,
+        "vendorFieldLength": 0
+    },
+    {
+        "height": 75600,
+        "reward": 200000000
+    },
+    {
+        "height": 1000000000,
+        "block": {
+            "idFullSha256": true
+        }
+    }
+]

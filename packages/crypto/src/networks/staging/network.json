@@ -1,0 +1,18 @@
+{
+    "name": "staging",
+    "messagePrefix": "staging message:\n",
+    "bip32": {
+        "public": 70617039,
+        "private": 70615956
+    },
+    "pubKeyHash": 125,
+    "nethash": "b1afa0171f3f8bd4485df40deeef6e8cb2754992be9d6c1fada974bfeb28a4de",
+    "wif": 170,
+    "slip44": 1,
+    "aip20": 0,
+    "client": {
+        "token": "NOS",
+        "symbol": "NOS",
+        "explorer": "https://explorer.nos.dev"
+    }
+}
