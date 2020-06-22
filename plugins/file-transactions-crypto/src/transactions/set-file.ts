@@ -25,7 +25,17 @@ export class SetFileTransaction extends Transactions.Transaction {
                     required: ["fileKey", "ipfsHash"],
                     properties: {
                         fileKey: {
-                            allOf: [{ type: "string", minimum: 6, maximum: 24, transform: ["toLowerCase"] }],
+                            allOf: [
+                                {
+                                    type: "string",
+                                    minimum: 6,
+                                    maximum: 24,
+                                    pattern:
+                                        "(^(schema)(.)([a-z0-9]+(([_]?[a-z0-9])*))$)|(^(db)(.)([a-z]+)(.)([a-z0-9]+(([_]?[a-z0-9])*))$)|^[a-z]+([_][a-z]+)*[a-z]*$",
+                                    transform: ["toLowerCase"],
+                                },
+                            ],
+                            // Regex tests: https://regexr.com/57319
                         },
                         ipfsHash: {
                             allOf: [{ minLength: 2, maxLength: 90 }, { $ref: "base58" }],

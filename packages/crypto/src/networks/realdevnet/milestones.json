@@ -42,7 +42,9 @@
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
-                "logo": 300000
+                "logo": 300000,
+                "db.docs.*": 500000,
+                "schema.*": 500000
             }
         },
         "vendorFieldLength": 255,

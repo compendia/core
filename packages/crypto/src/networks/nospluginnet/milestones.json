@@ -49,7 +49,7 @@
                 "description": 30000,
                 "logo": 300000,
                 "db.docs.*": 500000,
-                "schema.json.*": 500000
+                "schema.*": 500000
             }
         },
         "vestedWalletPublicKey": "none"

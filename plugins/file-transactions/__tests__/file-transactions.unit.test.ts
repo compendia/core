@@ -4,7 +4,6 @@ import "./mocks/core-container";
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Identities, Managers, Utils } from "@arkecosystem/crypto";
-
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Builders as FileTransactionBuilders } from "../../file-transactions-crypto/src";
 import { FileKeyInvalid, InvalidMultiHash } from "../src/errors";
@@ -163,12 +162,6 @@ describe("File Transactions", () => {
             .sign(secret);
 
         try {
-            ipfsTransaction.build();
-        } catch (error) {
-            fail(error);
-        }
-
-        try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
             fail("Should have failed");
         } catch (error) {
@@ -176,7 +169,7 @@ describe("File Transactions", () => {
         }
     });
 
-    it("should pass if posting schema.json.apps", async () => {
+    it("should fail if posting schema.json.apps", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
             .ipfsAsset("schema.json.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
@@ -185,22 +178,17 @@ describe("File Transactions", () => {
             .sign(secret);
 
         try {
-            ipfsTransaction.build();
-        } catch (error) {
-            fail(error);
-        }
-
-        try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have failed");
         } catch (error) {
-            fail("Should have passed, instead got " + error);
+            expect(error).toBeTruthy();
         }
     });
 
-    it("should fail if posting schema.hello.apps", async () => {
+    it("should pass if posting schema.apps", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
-            .ipfsAsset("schema.hello.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
             .fee("0")
             .sign(secret);
@@ -213,9 +201,8 @@ describe("File Transactions", () => {
 
         try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
-            fail("Should have failed");
         } catch (error) {
-            expect(error).toBeTruthy();
+            fail(error);
         }
     });
 });

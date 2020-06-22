@@ -8,7 +8,7 @@ module.exports = {
         minimumNetworkReach: 5,
     },
     "@alessiodf/core-chameleon": {
-        enabled: "ifDelegate",
+        enabled: false,
     },
     "@arkecosystem/core-state": {},
     "@nosplatform/stake-transactions": {},
