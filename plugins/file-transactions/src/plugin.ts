@@ -80,7 +80,7 @@ export const plugin: Container.IPluginDescriptor = {
                     } catch (e) {
                         // Throws error if file isn't pinned, probably because the file size was too big previously.
                     }
-                    delete ipfsHashes[ipfsHashes.indexOf(hash)];
+                    ipfsHashes.splice(ipfsHashes.indexOf(hash), 1);
                     container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File removed ${hash}`);
                 }
             }
