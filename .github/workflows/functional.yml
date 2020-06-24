@@ -56,6 +56,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     delegate-resignation:
@@ -106,6 +107,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     htlc-claim:
@@ -156,6 +158,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     htlc-lock:
@@ -206,6 +209,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     htlc-refund:
@@ -256,6 +260,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     ipfs:
@@ -306,6 +311,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     multi-payment:
@@ -356,6 +362,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     multi-signature-registration:
@@ -406,6 +413,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     second-signature-registration:
@@ -456,6 +464,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     transfer:
@@ -506,6 +515,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     vote:
@@ -556,6 +566,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     pool:
@@ -606,6 +617,7 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
 
     stake:
@@ -656,4 +668,5 @@ jobs:
                   CORE_DB_USERNAME: ark
                   POSTGRES_USER: ark
                   POSTGRES_PASSWORD: password
+                  POSTGRES_DB: nos_unitnet
                   CORE_API_RATE_LIMIT_USER_LIMIT: 300
