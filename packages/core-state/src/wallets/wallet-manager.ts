@@ -494,9 +494,14 @@ export class WalletManager implements State.IWalletManager {
                 stake = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
                 sPower = stake.power;
             }
-            // Only update voteBalance on stakeCreate if there is no powerUp milestone
+
             let delegate: State.IWallet;
             let voteBalance: Utils.BigNumber;
+
+            if (!recipient) {
+                recipient = sender;
+            }
+
             if (recipient.hasVoted()) {
                 delegate = this.findByPublicKey(recipient.getAttribute("vote"));
                 voteBalance = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
@@ -521,7 +526,7 @@ export class WalletManager implements State.IWalletManager {
                 delegate.setAttribute("delegate.voteBalance", voteBalance);
             }
 
-            if (stake && sender.hasVoted()) {
+            if (stake && sender.hasVoted() && transaction.type === 0) {
                 // Update sender's voted on delegate voteBalance according to fee paid
                 const senderDelegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
                 let senderVoteBalance: Utils.BigNumber = senderDelegate.getAttribute(
