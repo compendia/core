@@ -3,6 +3,7 @@ import { Utils } from "@arkecosystem/crypto";
 import { Interfaces } from "@nosplatform/stake-transactions-crypto";
 
 class Staking {
+    // Gets the stakes that are currently in grace period (for API to return vote power from stakes in grace)
     public static getGraced(sender: State.IWallet): Utils.BigNumber {
         const senderStakes = sender.hasAttribute("stakes") ? sender.getAttribute("stakes", {}) : {};
         const gracedStakes = Object.values(senderStakes).filter((stake: Interfaces.IStakeObject) => {

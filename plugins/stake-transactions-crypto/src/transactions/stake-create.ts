@@ -1,6 +1,6 @@
 import ByteBuffer from "bytebuffer";
 
-import { Transactions, Utils } from "@arkecosystem/crypto";
+import { Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 
 import { StakeTransactionGroup, StakeTransactionType } from "../enums";
 import { IStakeCreateAsset } from "../interfaces";
@@ -51,15 +51,25 @@ export class StakeCreateTransaction extends Transactions.Transaction {
 
     protected static defaultStaticFee: Utils.BigNumber = Utils.BigNumber.ZERO;
 
-    public serialize(): ByteBuffer {
+    public serialize(options?: Interfaces.ISerializeOptions): ByteBuffer {
         // @ts-ignore
         const { data } = this;
+
+        if (!data.recipientId) {
+            data.recipientId = Identities.Address.fromPublicKey(data.senderPublicKey);
+        }
+
         const stakeCreate = data.asset.stakeCreate as IStakeCreateAsset;
 
         const buffer = new ByteBuffer(24, true);
         buffer.writeUint64(+stakeCreate.duration);
         buffer.writeUint64(+stakeCreate.amount);
         buffer.writeUint64(+stakeCreate.timestamp);
+
+        const { addressBuffer, addressError } = Identities.Address.toBuffer(data.recipientId);
+        options.addressError = addressError;
+        buffer.append(addressBuffer);
+
         return buffer;
     }
 
@@ -71,6 +81,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         stakeCreate.duration = buf.readUint64().toInt();
         stakeCreate.amount = Utils.BigNumber.make(buf.readUint64().toString());
         stakeCreate.timestamp = buf.readUint64().toInt();
+        data.recipientId = Identities.Address.fromBuffer(buf.readBytes(21).toBuffer());
 
         data.asset = {
             stakeCreate,

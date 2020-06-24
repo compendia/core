@@ -483,33 +483,58 @@ export class WalletManager implements State.IWalletManager {
         const milestone = Managers.configManager.getMilestone();
 
         // If stake transaction group and not a stakeCancel transaction
-        if (transaction.typeGroup === 100 && [0, 1].includes(transaction.type) && sender.hasVoted()) {
-            // Check if transaction is of type stakeCreate
-            const delegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
-            let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-            // Only update voteBalance on stakeCreate if there is no powerUp milestone
-            if (transaction.type === 0 && !milestone.powerUp) {
-                const stake = transaction.asset.stakeCreate;
+        if (transaction.typeGroup === 100 && [0, 1].includes(transaction.type)) {
+            let stake: any;
+            let sPower: Utils.BigNumber;
+            if (transaction.type === 0) {
+                stake = transaction.asset.stakeCreate;
                 const multiplier: number = milestone.stakeLevels[stake.duration];
-                const sPower: Utils.BigNumber = stake.amount.times(multiplier).dividedBy(10);
-                const balanceWithFeeFixed = stake.amount.plus(transaction.fee);
-                voteBalance = revert
-                    ? voteBalance.minus(sPower).plus(balanceWithFeeFixed)
-                    : voteBalance.minus(balanceWithFeeFixed).plus(sPower);
+                sPower = stake.amount.times(multiplier).dividedBy(10);
             } else if (transaction.type === 1) {
-                const stake = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
-                voteBalance = revert
-                    ? voteBalance
-                          .plus(stake.power)
-                          .plus(transaction.fee)
-                          .minus(stake.amount)
-                    : voteBalance
-                          .minus(stake.power)
-                          .minus(transaction.fee)
-                          .plus(stake.amount);
+                stake = sender.getAttribute("stakes")[transaction.asset.stakeRedeem.id];
+                sPower = stake.power;
             }
-            delegate.setAttribute("delegate.voteBalance", voteBalance);
-            // If Vote transaction
+            // Only update voteBalance on stakeCreate if there is no powerUp milestone
+            let delegate: State.IWallet;
+            let voteBalance: Utils.BigNumber;
+            if (recipient.hasVoted()) {
+                delegate = this.findByPublicKey(recipient.getAttribute("vote"));
+                voteBalance = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+            }
+
+            if (recipient.hasVoted()) {
+                if (transaction.type === 0) {
+                    // Most logic for handling stakeCreate for recipient WITH powerUp periods
+                    // is handled in power-up.ts (apply) and the StakeCreate handler (revertForRecipient)
+                    if (!milestone.powerUp) {
+                        voteBalance = revert ? voteBalance.minus(sPower) : voteBalance.plus(sPower);
+                    } else if (!revert) {
+                        // We handle stakeCreate revert in the StakeCreate revertForRecipient Handler
+                        // We only need to handle adding the stake.amount to the voteBalance here (instead of in applyToRecipient).
+                        voteBalance = voteBalance.plus(stake.amount);
+                    }
+                } else if (transaction.type === 1) {
+                    voteBalance = revert
+                        ? voteBalance.plus(sPower).minus(stake.amount)
+                        : voteBalance.minus(sPower).plus(stake.amount);
+                }
+                delegate.setAttribute("delegate.voteBalance", voteBalance);
+            }
+
+            if (stake && sender.hasVoted()) {
+                // Update sender's voted on delegate voteBalance according to fee paid
+                const senderDelegate: State.IWallet = this.findByPublicKey(sender.getAttribute("vote"));
+                let senderVoteBalance: Utils.BigNumber = senderDelegate.getAttribute(
+                    "delegate.voteBalance",
+                    Utils.BigNumber.ZERO,
+                );
+                senderVoteBalance = revert
+                    ? senderVoteBalance.plus(stake.amount).plus(transaction.fee)
+                    : senderVoteBalance.minus(stake.amount).minus(transaction.fee);
+                senderDelegate.setAttribute("delegate.voteBalance", senderVoteBalance);
+            }
+
+            // Else if Vote transaction
         } else if (
             transaction.type === Enums.TransactionType.Vote &&
             transaction.typeGroup === Enums.TransactionTypeGroup.Core

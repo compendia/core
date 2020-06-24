@@ -8,7 +8,13 @@ import {
 } from "@nosplatform/stake-transactions-crypto";
 
 import { app } from "@arkecosystem/core-container";
-import { StakeAlreadyCanceledError, StakeGraceEndedError, StakeNotFoundError, WalletHasNoStakeError } from "../errors";
+import {
+    StakeAlreadyCanceledError,
+    StakeGraceEndedError,
+    StakeNotFoundError,
+    WalletHasNoStakeError,
+    WalletNotStakerError,
+} from "../errors";
 import { ExpireHelper } from "../helpers";
 import { StakeCreateTransactionHandler } from "./stake-create";
 
@@ -77,6 +83,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         const { data }: Interfaces.ITransaction = transaction;
         const txId = data.asset.stakeCancel.id;
         const stake: StakeInterfaces.IStakeObject = stakes[txId];
+
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
             .getStore()
@@ -89,6 +96,10 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
 
         if (!(txId in stakes)) {
             throw new StakeNotFoundError();
+        }
+
+        if (stake.senderPublicKey !== transaction.data.senderPublicKey) {
+            throw new WalletNotStakerError();
         }
 
         if (stake.status === "canceled") {

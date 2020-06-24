@@ -12,7 +12,6 @@ export class StakeCreateBuilder extends Transactions.TransactionBuilder<StakeCre
         this.data.fee = StakeCreateTransaction.staticFee();
         this.data.amount = Utils.BigNumber.ZERO;
         this.data.asset = { stakeCreate: { duration: 0, amount: Utils.BigNumber.ZERO, timestamp: 0 } };
-        this.signWithSenderAsRecipient = true;
     }
 
     public stakeAsset(duration: number, amount: Utils.BigNumber | string): StakeCreateBuilder {

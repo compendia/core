@@ -2,7 +2,12 @@ import { Managers, Utils } from "@arkecosystem/crypto";
 import { Interfaces } from "@nosplatform/stake-transactions-crypto";
 
 class VotePower {
-    public static stakeObject(s: Interfaces.IStakeCreateAsset, id: string, blockHeight?: number): any {
+    public static stakeObject(
+        s: Interfaces.IStakeCreateAsset,
+        id: string,
+        senderPublicKey: string,
+        blockHeight?: number,
+    ): any {
         const configManager = Managers.configManager;
         const milestone = configManager.getMilestone(blockHeight || undefined);
         const multiplier: number = milestone.stakeLevels[s.duration];
@@ -16,6 +21,7 @@ class VotePower {
         const status = milestone.graceEnd ? "grace" : "active";
         const o: Interfaces.IStakeObject = {
             id,
+            senderPublicKey,
             timestamps,
             duration: s.duration,
             amount,
