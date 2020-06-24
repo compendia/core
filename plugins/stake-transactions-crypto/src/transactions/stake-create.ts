@@ -1,6 +1,6 @@
 import ByteBuffer from "bytebuffer";
 
-import { Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 
 import { StakeTransactionGroup, StakeTransactionType } from "../enums";
 import { IStakeCreateAsset } from "../interfaces";
@@ -66,9 +66,11 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         buffer.writeUint64(+stakeCreate.amount);
         buffer.writeUint64(+stakeCreate.timestamp);
 
-        const { addressBuffer, addressError } = Identities.Address.toBuffer(data.recipientId);
-        options.addressError = addressError;
-        buffer.append(addressBuffer);
+        if (Managers.configManager.getMilestone().transferStake) {
+            const { addressBuffer, addressError } = Identities.Address.toBuffer(data.recipientId);
+            options.addressError = addressError;
+            buffer.append(addressBuffer);
+        }
 
         return buffer;
     }
@@ -81,7 +83,10 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         stakeCreate.duration = buf.readUint64().toInt();
         stakeCreate.amount = Utils.BigNumber.make(buf.readUint64().toString());
         stakeCreate.timestamp = buf.readUint64().toInt();
-        data.recipientId = Identities.Address.fromBuffer(buf.readBytes(21).toBuffer());
+
+        if (Managers.configManager.getMilestone().transferStake) {
+            data.recipientId = Identities.Address.fromBuffer(buf.readBytes(21).toBuffer());
+        }
 
         data.asset = {
             stakeCreate,

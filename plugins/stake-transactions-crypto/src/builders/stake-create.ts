@@ -1,4 +1,4 @@
-import { Crypto, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { Crypto, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 
 import { StakeTransactionGroup, StakeTransactionType } from "../enums";
 import { StakeCreateTransaction } from "../transactions/stake-create";
@@ -12,6 +12,8 @@ export class StakeCreateBuilder extends Transactions.TransactionBuilder<StakeCre
         this.data.fee = StakeCreateTransaction.staticFee();
         this.data.amount = Utils.BigNumber.ZERO;
         this.data.asset = { stakeCreate: { duration: 0, amount: Utils.BigNumber.ZERO, timestamp: 0 } };
+        this.data.recipientId = undefined;
+        this.signWithSenderAsRecipient = !Managers.configManager.getMilestone().transferStake;
     }
 
     public stakeAsset(duration: number, amount: Utils.BigNumber | string): StakeCreateBuilder {
@@ -25,6 +27,9 @@ export class StakeCreateBuilder extends Transactions.TransactionBuilder<StakeCre
         const struct: Interfaces.ITransactionData = super.getStruct();
         struct.amount = this.data.amount;
         struct.asset = this.data.asset;
+        if (Managers.configManager.getMilestone().transferStake) {
+            struct.recipientId = this.data.recipientId;
+        }
         return struct;
     }
 

@@ -56,7 +56,13 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             const transactions = await reader.read();
             for (const transaction of transactions) {
                 const wallet: State.IWallet = walletManager.findByPublicKey(transaction.senderPublicKey);
-                const staker: State.IWallet = walletManager.findByAddress(transaction.recipientId);
+
+                let staker: State.IWallet;
+                if (transaction.recipientId) {
+                    staker = walletManager.findByAddress(transaction.recipientId);
+                } else {
+                    staker = wallet;
+                }
 
                 const stakeObject: StakeInterfaces.IStakeObject = VotePower.stakeObject(
                     transaction.asset.stakeCreate,
@@ -120,7 +126,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             .getStore()
             .getLastBlock();
 
-        const staker = walletManager.findByAddress(transaction.data.recipientId);
+        let staker: State.IWallet;
+        if (transaction.data.recipientId) {
+            staker = walletManager.findByAddress(transaction.data.recipientId);
+        } else {
+            staker = walletManager.findByPublicKey(transaction.data.senderPublicKey);
+        }
 
         const { data }: Interfaces.ITransaction = transaction;
 
@@ -220,7 +231,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
     ): Promise<void> {
-        const staker: State.IWallet = walletManager.findByAddress(transaction.data.recipientId);
+        let staker: State.IWallet;
+        if (transaction.data.recipientId) {
+            staker = walletManager.findByAddress(transaction.data.recipientId);
+        } else {
+            staker = walletManager.findByPublicKey(transaction.data.senderPublicKey);
+        }
         const o: StakeInterfaces.IStakeObject = VotePower.stakeObject(
             transaction.data.asset.stakeCreate,
             transaction.id,
@@ -254,7 +270,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         walletManager: State.IWalletManager,
         // tslint:disable-next-line: no-empty
     ): Promise<void> {
-        const staker: State.IWallet = walletManager.findByAddress(transaction.data.recipientId);
+        let staker: State.IWallet;
+        if (transaction.data.recipientId) {
+            staker = walletManager.findByAddress(transaction.data.recipientId);
+        } else {
+            staker = walletManager.findByPublicKey(transaction.data.senderPublicKey);
+        }
         const stakes = staker.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
         // If the stake is active we need to deduct the stakePower

@@ -44,6 +44,7 @@
             "31557600": 100
         },
         "minimumStake": 1000000000000,
+        "transferStake": true,
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
