@@ -87,6 +87,10 @@ describe("Transaction Forging - Stake create", () => {
                 Utils.BigNumber.make(JSON.parse(wallet.body).data.power).toFixed(),
             );
 
+            expect(Utils.BigNumber.make(JSON.parse(wallet.body).data.balance).toFixed()).toBe(
+                Utils.BigNumber.make(JSON.parse(wallet.body).data.power).toFixed(),
+            );
+
             const stakeRedeem3 = StakeTransactionFactory.stakeRedeem(stakeCreate.id)
                 .withPassphrase(secrets[0])
                 .createOne();
