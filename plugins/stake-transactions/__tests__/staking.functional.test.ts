@@ -84,7 +84,7 @@ describe("Transaction Forging - Stake create", () => {
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("0");
             expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
-                Utils.BigNumber.make(JSON.parse(wallet.body).data.balance).toFixed(),
+                Utils.BigNumber.make(JSON.parse(wallet.body).data.power).toFixed(),
             );
 
             const stakeRedeem3 = StakeTransactionFactory.stakeRedeem(stakeCreate.id)
