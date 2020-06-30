@@ -505,9 +505,6 @@ export class WalletManager implements State.IWalletManager {
             if (recipient.hasVoted()) {
                 delegate = this.findByPublicKey(recipient.getAttribute("vote"));
                 voteBalance = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-            }
-
-            if (recipient.hasVoted()) {
                 if (transaction.type === 0) {
                     // Most logic for handling stakeCreate for recipient WITH powerUp periods
                     // is handled in power-up.ts (apply) and the StakeCreate handler (revertForRecipient)
