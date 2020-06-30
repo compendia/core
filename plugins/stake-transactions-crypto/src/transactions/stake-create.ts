@@ -90,7 +90,10 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         stakeCreate.amount = Utils.BigNumber.make(buf.readUint64().toString());
         stakeCreate.timestamp = buf.readUint64().toInt();
 
-        if (Managers.configManager.getMilestone().transferStake) {
+        const bufferLength = buf.capacity();
+
+        // bufferLength is 168 if there's a recipientId (otherwise 147)
+        if (bufferLength === 168) {
             data.recipientId = Identities.Address.fromBuffer(buf.readBytes(21).toBuffer());
         }
 
