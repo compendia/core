@@ -21,6 +21,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
                 typeGroup: { const: StakeTransactionGroup },
                 amount: { bignumber: { minimum: 0, maximum: 0 } },
                 fee: { bignumber: { minimum: 0, maximum: 0 } },
+                recipientId: { $ref: "address" },
                 asset: {
                     type: "object",
                     required: ["stakeCreate"],
@@ -55,18 +56,23 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         // @ts-ignore
         const { data } = this;
 
-        if (!data.recipientId) {
-            data.recipientId = Identities.Address.fromPublicKey(data.senderPublicKey);
+        let bufferLength = 8 + 8 + 8;
+        // Append recipientId to buffer length if stake is transferable
+        if (Managers.configManager.getMilestone().transferStake) {
+            bufferLength = bufferLength + 21;
         }
 
         const stakeCreate = data.asset.stakeCreate as IStakeCreateAsset;
 
-        const buffer = new ByteBuffer(24, true);
+        const buffer = new ByteBuffer(bufferLength, true);
         buffer.writeUint64(+stakeCreate.duration);
         buffer.writeUint64(+stakeCreate.amount);
         buffer.writeUint64(+stakeCreate.timestamp);
 
         if (Managers.configManager.getMilestone().transferStake) {
+            if (!data.recipientId) {
+                data.recipientId = Identities.Address.fromPublicKey(data.senderPublicKey);
+            }
             const { addressBuffer, addressError } = Identities.Address.toBuffer(data.recipientId);
             options.addressError = addressError;
             buffer.append(addressBuffer);
