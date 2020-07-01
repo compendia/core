@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
--   Merged ARK Core 2.6.39 changes
+-   Merged ARK Core 2.6.42 changes
 -   Initial database ipfs storage features
 -   Hide forging nodes behind Tor with core-chameleon
 
@@ -1541,6 +1541,9 @@ Closed security vulnerabilities:
 [#3695]: https://github.com/ARKEcosystem/core/pull/3695
 [#3746]: https://github.com/ARKEcosystem/core/pull/3746
 [#3806]: https://github.com/ARKEcosystem/core/pull/3806
+[#3818]: https://github.com/ARKEcosystem/core/pull/3818
+[#3823]: https://github.com/ARKEcosystem/core/pull/3823
+[#3830]: https://github.com/ARKEcosystem/core/pull/3830
 [032caa1b990e91937e4bc1561bc1aeaeca9e37d]: https://github.com/ARKEcosystem/core/commit/032caa1b990e91937e4bc1561bc1aeaeca9e37d9
 [1209a36366c8fd3ba31fab2463011b7ce1a7d84]: https://github.com/ARKEcosystem/core/commit/1209a36366c8fd3ba31fab2463011b7ce1a7d844
 [34749bf84bcec3fecd0098c0d42f52deb1f6ba4]: https://github.com/ARKEcosystem/core/commit/34749bf84bcec3fecd0098c0d42f52deb1f6ba4a
