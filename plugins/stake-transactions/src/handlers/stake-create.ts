@@ -160,7 +160,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeTimestampError();
         }
 
-        if (transaction.id in staker.getAttribute("stakes", {})) {
+        if (!transaction.timestamp && transaction.id in staker.getAttribute("stakes", {})) {
             throw new StakeAlreadyExistsError();
         }
 
