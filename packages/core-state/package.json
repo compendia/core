@@ -21,6 +21,12 @@
         "pretest": "bash ../../scripts/pre-test.sh"
     },
     "dependencies": {
+        "@arkecosystem/core-container": "^2.6.42",
+        "@arkecosystem/core-event-emitter": "^2.6.42",
+        "@arkecosystem/core-interfaces": "^2.6.42",
+        "@arkecosystem/core-transactions": "^2.6.42",
+        "@arkecosystem/core-utils": "^2.6.42",
+        "@arkecosystem/crypto": "^2.6.42",
         "@nosplatform/core-helpers": "^0.0.3",
         "dottie": "^2.0.1",
         "immutable": "^4.0.0-rc.12",
