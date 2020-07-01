@@ -30,8 +30,8 @@
                 "stakeRedeem": 0
             }
         },
-        "vendorFieldLength": 64,
-        "multiPaymentLimit": 256,
+        "vendorFieldLength": 0,
+        "multiPaymentLimit": 128,
         "balancePower": 1,
         "stakeLevels": {
             "40": 15,
@@ -40,9 +40,9 @@
             "15778800": 75,
             "31557600": 120
         },
+        "minimumStake": 10000000000,
         "graceEnd": 60,
         "powerUp": 60,
-        "minimumStake": 1000000000000,
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
@@ -55,13 +55,16 @@
     },
     {
         "height": 3,
+        "idFullSha256": true,
         "aip11": true
     },
     {
         "height": 32,
         "stakeLevels": {
             "31557600": 100
-        }
+        },
+        "minimumStake": 1000000000000,
+        "transferStake": true
     },
     {
         "height": 14800,
@@ -70,11 +73,5 @@
     {
         "height": 75600,
         "reward": 200000000
-    },
-    {
-        "height": 1000000000,
-        "block": {
-            "idFullSha256": true
-        }
     }
 ]

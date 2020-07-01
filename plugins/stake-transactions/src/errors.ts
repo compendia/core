@@ -43,6 +43,12 @@ export class WalletHasNoStakeError extends Errors.TransactionError {
     }
 }
 
+export class WalletNotStakerError extends Errors.TransactionError {
+    constructor() {
+        super(`Wallet is not the creator of this stake.`);
+    }
+}
+
 export class StakeAlreadyRedeemedError extends Errors.TransactionError {
     constructor() {
         super(`Stake has already been redeemed.`);

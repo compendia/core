@@ -44,26 +44,33 @@ export const plugin: Container.IPluginDescriptor = {
             for (const hash of newIpfsHashes) {
                 if (hash && !ipfsHashes.includes(hash)) {
                     try {
-                        const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
-                        const stat = JSON.parse(res.body);
                         let fileSizeKey = ipfsIndex[hash];
                         if (String(fileSizeKey).startsWith("db.")) {
                             fileSizeKey = "db";
+                        } else if (String(fileSizeKey).startsWith("schema.")) {
+                            fileSizeKey = "schema";
                         }
-                        const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileSizeKey];
-                        if (stat && stat.CumulativeSize <= maxFileSize && newIpfsHashes.includes(hash)) {
-                            await ipfs.pin.add(hash);
-                            container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
-                        } else {
-                            let error = "Unknown error.";
-                            if (!stat) {
-                                error = "Can't resolve hash.";
-                            } else if (stat.CumulativeSize > maxFileSize) {
-                                error = "Filesize too big.";
+
+                        // Only pin files that aren't databases
+                        if (fileSizeKey !== "db") {
+                            const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
+                            const stat = JSON.parse(res.body);
+
+                            const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileSizeKey];
+                            if (stat && stat.CumulativeSize <= maxFileSize && newIpfsHashes.includes(hash)) {
+                                await ipfs.pin.add(hash);
+                                container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
+                            } else {
+                                let error = "Unknown error.";
+                                if (!stat) {
+                                    error = "Can't resolve hash.";
+                                } else if (stat.CumulativeSize > maxFileSize) {
+                                    error = "Filesize too big.";
+                                }
+                                container
+                                    .resolvePlugin<Logger.ILogger>("logger")
+                                    .warn(`IPFS File ${hash} not added: ${error}`);
                             }
-                            container
-                                .resolvePlugin<Logger.ILogger>("logger")
-                                .warn(`IPFS File ${hash} not added: ${error}`);
                         }
                     } catch (error) {
                         container.resolvePlugin<Logger.ILogger>("logger").error(error);

@@ -4,12 +4,6 @@ import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { createHandyClient } from "handy-redis";
 
-export interface IExpirationObject {
-    publicKey: string;
-    stakeKey: string;
-    redeemableTimestamp: number;
-}
-
 const redis = createHandyClient();
 
 export class ExpireHelper {
@@ -67,7 +61,7 @@ export class ExpireHelper {
             wallet.setAttribute("stakePower", newWalletStakePower);
             wallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
-            const poolWallet = poolService.walletManager.findByPublicKey(wallet.publicKey);
+            const poolWallet = poolService.walletManager.findByAddress(wallet.address);
             poolWallet.setAttribute("stakePower", newWalletStakePower);
             poolWallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
@@ -93,7 +87,7 @@ export class ExpireHelper {
                 walletManager2.reindex(poolDelegate);
             }
 
-            this.emitter.emit("stake.released", { publicKey: wallet.publicKey, stakeKey, block, prevStakePower });
+            this.emitter.emit("stake.released", { address: wallet.address, stakeKey, block, prevStakePower });
         }
 
         // If the stake is somehow still unreleased, don't remove it from db
@@ -114,7 +108,7 @@ export class ExpireHelper {
         if (!exists) {
             await redis.hmset(
                 key,
-                ["publicKey", wallet.publicKey],
+                ["address", wallet.address],
                 ["powerUpTimestamp", stake.timestamps.powerUp.toString()],
                 ["redeemableTimestamp", stake.timestamps.redeemable.toString()],
                 ["stakeKey", stakeKey],
@@ -149,8 +143,8 @@ export class ExpireHelper {
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
             for (const expiration of expirations) {
-                if (expiration && expiration.publicKey) {
-                    const wallet = databaseService.walletManager.findByPublicKey(expiration.publicKey);
+                if (expiration && expiration.address) {
+                    const wallet = databaseService.walletManager.findByAddress(expiration.address);
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[expiration.stakeKey] !== undefined &&
