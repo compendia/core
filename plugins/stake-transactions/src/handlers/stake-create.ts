@@ -111,6 +111,9 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 }
                 staker.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
+                if (staker.address !== wallet.address) {
+                    walletManager.reindex(staker);
+                }
             }
         }
     }
@@ -214,6 +217,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const newBalance = sender.balance.minus(transaction.data.asset.stakeCreate.amount);
         sender.balance = newBalance;
+        walletManager.reindex(sender);
     }
 
     public async revertForSender(
@@ -224,6 +228,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
         const newBalance = sender.balance.plus(transaction.data.asset.stakeCreate.amount);
         sender.balance = newBalance;
+        walletManager.reindex(sender);
     }
 
     public async applyToRecipient(
