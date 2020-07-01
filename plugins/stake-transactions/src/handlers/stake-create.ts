@@ -130,7 +130,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             .getLastBlock();
 
         let staker: State.IWallet;
-        if (transaction.data.recipientId) {
+        if (transaction.data.recipientId && transaction.data.recipientId !== wallet.address) {
             staker = walletManager.findByAddress(transaction.data.recipientId);
         } else {
             staker = walletManager.findByPublicKey(transaction.data.senderPublicKey);
