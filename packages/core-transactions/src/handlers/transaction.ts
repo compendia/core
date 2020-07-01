@@ -142,7 +142,8 @@ export abstract class TransactionHandler implements ITransactionHandler {
     ): Promise<void> {
         if (
             !walletManager.hasByPublicKey(sender.publicKey) &&
-            walletManager.findByAddress(sender.address).balance.isZero()
+            walletManager.findByAddress(sender.address).balance.isZero() &&
+            !walletManager.findByAddress(sender.address).getAttribute("stakes", false)
         ) {
             throw new ColdWalletError();
         }
