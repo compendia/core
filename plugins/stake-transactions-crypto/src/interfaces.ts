@@ -25,6 +25,7 @@ export interface IStakeTimestamps {
 
 export interface IStakeObject {
     id: string;
+    senderPublicKey?: string;
     status: "grace" | "canceled" | "active" | "released" | "redeemed";
     timestamps: IStakeTimestamps;
     duration: number;

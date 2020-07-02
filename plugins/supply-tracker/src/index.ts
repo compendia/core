@@ -369,6 +369,7 @@ export const plugin: Container.IPluginDescriptor = {
                     const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(
                         tx.asset.stakeCreate,
                         tx.id,
+                        tx.senderPublicKey,
                     );
                     const lastSupply = Utils.BigNumber.make(supply.value);
 
@@ -478,7 +479,11 @@ export const plugin: Container.IPluginDescriptor = {
             // On stake revert
             if (tx.typeGroup === 100 && tx.type === 0) {
                 const lastSupply: Utils.BigNumber = Utils.BigNumber.make(supply.value);
-                const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(tx.asset.stakeCreate, tx.id);
+                const o: StakeInterfaces.IStakeObject = StakeHelpers.VotePower.stakeObject(
+                    tx.asset.stakeCreate,
+                    tx.id,
+                    tx.senderPublicKey,
+                );
 
                 supply.value = lastSupply.plus(tx.asset.stakeCreate.amount).toString();
                 staked.value = Utils.BigNumber.make(staked.value)

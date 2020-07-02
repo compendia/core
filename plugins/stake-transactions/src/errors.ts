@@ -15,7 +15,7 @@ export class StakeTimestampError extends Errors.TransactionError {
 
 export class StakeAlreadyExistsError extends Errors.TransactionError {
     constructor() {
-        super(`Stake at this timestamp already exists.`);
+        super(`Stake already exists.`);
     }
 }
 
@@ -40,6 +40,12 @@ export class StakeNotFoundError extends Errors.TransactionError {
 export class WalletHasNoStakeError extends Errors.TransactionError {
     constructor() {
         super(`Wallet has no stake.`);
+    }
+}
+
+export class WalletNotStakerError extends Errors.TransactionError {
+    constructor() {
+        super(`Wallet is not the creator of this stake.`);
     }
 }
 

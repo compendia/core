@@ -7,6 +7,9 @@ module.exports = {
         },
         minimumNetworkReach: 5,
     },
+    "@alessiodf/core-chameleon": {
+        enabled: false,
+    },
     "@arkecosystem/core-state": {},
     "@nosplatform/stake-transactions": {},
     "@arkecosystem/core-magistrate-transactions": {},
@@ -16,10 +19,10 @@ module.exports = {
         cors: true
     },
     "@nosplatform/file-transactions": {
-        fileKeys: ["db.apps", "description"],
+        fileKeys: ["logo", "description"],
         port: 6003,
         wsPort: 6004,
-        gateway: "https://gateway.ipfs.io" 
+        gateway: "https://gateway.ipfs.io"
     },
     "@arkecosystem/core-database-postgres": {
         connection: {

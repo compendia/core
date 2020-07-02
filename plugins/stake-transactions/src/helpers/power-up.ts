@@ -50,8 +50,8 @@ export class PowerUpHelper {
             app.resolvePlugin("logger").info("Processing stake power-ups.");
 
             for (const stake of stakes) {
-                if (stake && stake.publicKey) {
-                    const wallet = walletManager.findByPublicKey(stake.publicKey);
+                if (stake && stake.address) {
+                    const wallet = walletManager.findByAddress(stake.address);
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[stake.stakeKey] !== undefined &&
@@ -70,7 +70,7 @@ export class PowerUpHelper {
                         );
                         const poolWalletManager: State.IWalletManager = poolService.walletManager;
                         await this.powerUp(
-                            poolWalletManager.findByPublicKey(wallet.publicKey),
+                            poolWalletManager.findByAddress(wallet.address),
                             stake.stakeKey,
                             poolService.walletManager,
                         );

@@ -24,42 +24,44 @@
                 "htlcLock": 10000000,
                 "htlcClaim": 0,
                 "htlcRefund": 0,
-                "setFile": 0,
+                "setFile": 10000000,
                 "stakeCreate": 0,
                 "stakeCancel": 10000000,
                 "stakeRedeem": 0
-            },
-            "specialFees": {
-                "setFile": 10000000
             }
         },
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "balancePower": 1,
         "stakeLevels": {
-            "40": 20,
-            "120": 30,
-            "7889400": 60,
-            "15778800": 85,
-            "31557600": 110
+            "40": 15,
+            "120": 25,
+            "7889400": 50,
+            "15778800": 75,
+            "31557600": 100
         },
+        "graceEnd": 60,
+        "powerUp": 60,
         "minimumStake": 1000000000000,
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
-                "logo": 300000
+                "logo": 300000,
+                "db.docs.*": 500000,
+                "schema.*": 500000
             }
         },
-        "vestedWalletPublicKey": "none"
+        "vestedWalletPublicKey": ""
     },
     {
-        "height": 4,
+        "height": 3,
         "aip11": true
     },
     {
-        "height": 20,
-        "graceEnd": 20,
-        "powerUp": 20
+        "height": 32,
+        "stakeLevels": {
+            "31557600": 100
+        }
     },
     {
         "height": 14800,

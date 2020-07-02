@@ -27,7 +27,7 @@ describe("Worker", () => {
             });
 
             await worker.run();
-            await delay(500);
+            await delay(1000);
 
             // @ts-ignore
             expect(worker.sendToMasterAsync).toHaveBeenLastCalledWith("p2p.utils.getHandlers");

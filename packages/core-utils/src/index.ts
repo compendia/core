@@ -10,8 +10,10 @@ import { calculateLockExpirationStatus } from "./lock-expiration-calculator";
 import { NSect } from "./nsect";
 import { OrderedCappedMap } from "./ordered-capped-map";
 import { calculateRound, isNewRound } from "./round-calculator";
+import { SortedArray } from "./sorted-array";
 import { calculate } from "./supply-calculator";
 import * as Plugins from "./transform-plugins";
+import { Tree } from "./tree";
 
 export const delegateCalculator = { calculateApproval, calculateForgedTotal };
 export const expirationCalculator = { calculateTransactionExpiration, calculateLockExpirationStatus };
@@ -29,4 +31,6 @@ export {
     NSect,
     OrderedCappedMap,
     Plugins,
+    Tree,
+    SortedArray,
 };

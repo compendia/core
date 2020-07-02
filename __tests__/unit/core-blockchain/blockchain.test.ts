@@ -8,9 +8,9 @@ import delay from "delay";
 import { Blockchain } from "../../../packages/core-blockchain/src/blockchain";
 import { stateMachine } from "../../../packages/core-blockchain/src/state-machine";
 import "../../utils";
-import { genesisBlock as GB } from "../../utils/config/testnet/genesisBlock";
-import { blocks101to155 } from "../../utils/fixtures/testnet/blocks101to155";
-import { blocks2to100 } from "../../utils/fixtures/testnet/blocks2to100";
+import { genesisBlock as GB } from "../../utils/config/nospluginnet/genesisBlock";
+// import { blocks2to100 } from "../../utils/fixtures/testnet/blocks2to100";
+import { blocks2to100 } from "../../utils/fixtures/nospluginnet/blocks2to100";
 import { config } from "./mocks/config";
 import { database } from "./mocks/database";
 import { logger } from "./mocks/logger";
@@ -31,7 +31,7 @@ const blockchain = new Blockchain({});
 // beforeAll(() => {
 //     // const blocks = [];
 //     // let i = 0;
-//     // for (const block of blocks101to155) {
+//     // for (const block of blocks2to100) {
 //     //     if (true) {
 //     //         if (i > 0) {
 //     //             block.previousBlock = blocks[i - 1].id;
@@ -114,10 +114,10 @@ describe("Blockchain", () => {
         });
 
         it("should enqueue the blocks provided", async () => {
-            blockchain.state.lastDownloadedBlock = blocks101to155[54];
+            blockchain.state.lastDownloadedBlock = blocks2to100[54];
 
             const processQueuePush = jest.spyOn(blockchain.queue, "push");
-            const blocksToEnqueue = [blocks101to155[54]];
+            const blocksToEnqueue = [blocks2to100[54]];
             blockchain.enqueueBlocks(blocksToEnqueue);
             expect(processQueuePush).toHaveBeenCalledWith({ blocks: blocksToEnqueue });
         });
@@ -140,69 +140,60 @@ describe("Blockchain", () => {
         });
 
         it("should process a new chained block", async () => {
-            const mockCallback = jest.fn(() => true);
             blockchain.state.blockchain = {};
 
-            await blockchain.processBlocks([blocks2to100[2]], mockCallback);
-            await delay(200);
+            const acceptedBlocks = await blockchain.processBlocks([blocks2to100[2]]);
 
-            expect(mockCallback.mock.calls.length).toBe(1);
+            expect(acceptedBlocks).not.toBeUndefined();
+
+            expect(acceptedBlocks.length).toBe(1);
         });
 
-        it("should process a valid block already known", async () => {
-            const mockCallback = jest.fn(() => true);
+        it("should handle a valid block already known", async () => {
             const lastBlock = blockchain.getLastBlock().data;
 
-            await blockchain.processBlocks([lastBlock], mockCallback);
-            await delay(200);
+            const acceptedBlocks = await blockchain.processBlocks([lastBlock]);
 
-            expect(mockCallback.mock.calls.length).toBe(1);
+            expect(acceptedBlocks).toBeUndefined();
             expect(blockchain.getLastBlock().data).toEqual(lastBlock);
         });
 
-        it("should process a new block with database saveBlocks failing once", async () => {
-            const mockCallback = jest.fn(() => true);
+        it("should handle database saveBlocks failing once", async () => {
             blockchain.state.blockchain = {};
             database.saveBlocks = jest.fn().mockRejectedValueOnce(new Error("oops"));
             jest.spyOn(blockchain, "removeTopBlocks").mockReturnValueOnce(undefined);
 
-            await blockchain.processBlocks([blocks2to100[2]], mockCallback);
-            await delay(200);
+            const acceptedBlocks = await blockchain.processBlocks([blocks2to100[2]]);
 
-            expect(mockCallback.mock.calls.length).toBe(1);
+            expect(acceptedBlocks).toBeUndefined();
         });
 
-        it("should process a new block with database saveBlocks + getLastBlock failing once", async () => {
-            const mockCallback = jest.fn(() => true);
+        it("should handle a new block with database saveBlocks + getLastBlock failing once", async () => {
             blockchain.state.blockchain = {};
             jest.spyOn(database, "saveBlocks").mockRejectedValueOnce(new Error("oops saveBlocks"));
             jest.spyOn(blockchain, "removeTopBlocks").mockReturnValueOnce(undefined);
 
-            await blockchain.processBlocks([blocks2to100[2]], mockCallback);
-            await delay(200);
+            const acceptedBlocks = await blockchain.processBlocks([blocks2to100[2]]);
 
-            expect(mockCallback.mock.calls.length).toBe(1);
+            expect(acceptedBlocks).toBeUndefined();
         });
 
         it("should broadcast a block if (Crypto.Slots.getSlotNumber() * blocktime <= block.data.timestamp)", async () => {
             blockchain.state.started = true;
             jest.spyOn(Utils, "isBlockChained").mockReturnValueOnce(true);
 
-            const mockCallback = jest.fn(() => true);
             const lastBlock = blockchain.getLastBlock().data;
-            // const spyGetSlotNumber = jest
-            //     .spyOn(Crypto.Slots, "getSlotNumber")
-            //     .mockReturnValue(Math.floor(lastBlock.timestamp / 8000));
+            const spyGetSlotNumber = jest
+                .spyOn(Crypto.Slots, "getSlotNumber")
+                .mockReturnValue(Math.floor(lastBlock.timestamp / 8000));
 
-            // const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
+            const broadcastBlock = jest.spyOn(getMonitor, "broadcastBlock");
 
-            await blockchain.processBlocks([lastBlock], mockCallback);
-            await delay(200);
+            await blockchain.processBlocks([lastBlock]);
 
-            console.log(lastBlock);
+            expect(broadcastBlock).toHaveBeenCalled();
 
-            expect(mockCallback.mock.calls.length).toBe(1);
-            // expect(broadcastBlock).toHaveBeenCalled();
+            spyGetSlotNumber.mockRestore();
         });
     });
 
@@ -265,6 +256,120 @@ describe("Blockchain", () => {
             blockchain.enqueueBlocks = enqueueBlocks;
         });
 
+        it("should handle block from forger if in right slot", () => {
+            blockchain.state.started = true;
+            const dispatch = blockchain.dispatch;
+            const enqueueBlocks = blockchain.enqueueBlocks;
+            blockchain.dispatch = jest.fn(() => true);
+            blockchain.enqueueBlocks = jest.fn(() => true);
+
+            const block = {
+                height: 100,
+                timestamp: Crypto.Slots.getSlotTime(Crypto.Slots.getSlotNumber()),
+            };
+
+            // @ts-ignore
+            blockchain.handleIncomingBlock(block, false);
+
+            expect(blockchain.dispatch).toHaveBeenCalled();
+            expect(blockchain.enqueueBlocks).toHaveBeenCalled();
+
+            blockchain.dispatch = dispatch;
+            blockchain.enqueueBlocks = enqueueBlocks;
+        });
+
+        it("should not handle block from forger if in wrong slot", () => {
+            blockchain.state.started = true;
+            const dispatch = blockchain.dispatch;
+            const enqueueBlocks = blockchain.enqueueBlocks;
+            blockchain.dispatch = jest.fn(() => true);
+            blockchain.enqueueBlocks = jest.fn(() => true);
+
+            const block = {
+                height: 100,
+                timestamp: Crypto.Slots.getSlotTime(Crypto.Slots.getSlotNumber() - 1),
+            };
+
+            // @ts-ignore
+            blockchain.handleIncomingBlock(block, true);
+
+            expect(blockchain.dispatch).not.toHaveBeenCalled();
+            expect(blockchain.enqueueBlocks).not.toHaveBeenCalled();
+
+            blockchain.dispatch = dispatch;
+            blockchain.enqueueBlocks = enqueueBlocks;
+        });
+
+        it("should handle block if not from forger if in wrong slot", () => {
+            blockchain.state.started = true;
+            const dispatch = blockchain.dispatch;
+            const enqueueBlocks = blockchain.enqueueBlocks;
+            blockchain.dispatch = jest.fn(() => true);
+            blockchain.enqueueBlocks = jest.fn(() => true);
+
+            const block = {
+                height: 100,
+                timestamp: Crypto.Slots.getSlotTime(Crypto.Slots.getSlotNumber() - 1),
+            };
+
+            // @ts-ignore
+            blockchain.handleIncomingBlock(block, false);
+
+            expect(blockchain.dispatch).toHaveBeenCalled();
+            expect(blockchain.enqueueBlocks).toHaveBeenCalled();
+
+            blockchain.dispatch = dispatch;
+            blockchain.enqueueBlocks = enqueueBlocks;
+        });
+
+        it("should not handle block from forger if less than 2 seconds left in slot", async () => {
+            blockchain.state.started = true;
+            const dispatch = blockchain.dispatch;
+            const enqueueBlocks = blockchain.enqueueBlocks;
+            blockchain.dispatch = jest.fn(() => true);
+            blockchain.enqueueBlocks = jest.fn(() => true);
+
+            const block = {
+                height: 100,
+                timestamp: Crypto.Slots.getSlotTime(Crypto.Slots.getSlotNumber()),
+            };
+
+            await delay(Crypto.Slots.getTimeInMsUntilNextSlot() - 1000);
+
+            // @ts-ignore
+            blockchain.handleIncomingBlock(block, true);
+
+            expect(blockchain.dispatch).not.toHaveBeenCalled();
+            expect(blockchain.enqueueBlocks).not.toHaveBeenCalled();
+
+            blockchain.dispatch = dispatch;
+            blockchain.enqueueBlocks = enqueueBlocks;
+        }, 10000);
+
+        it("should handle block if not from forger if less than 2 seconds left in slot", async () => {
+            blockchain.state.started = true;
+            const dispatch = blockchain.dispatch;
+            const enqueueBlocks = blockchain.enqueueBlocks;
+            blockchain.dispatch = jest.fn(() => true);
+            blockchain.enqueueBlocks = jest.fn(() => true);
+
+            const block = {
+                height: 100,
+                timestamp: Crypto.Slots.getSlotTime(Crypto.Slots.getSlotNumber()),
+            };
+
+            await delay(Crypto.Slots.getTimeInMsUntilNextSlot() - 1000);
+
+            // @ts-ignore
+            blockchain.handleIncomingBlock(block, false);
+
+            expect(blockchain.dispatch).toHaveBeenCalled();
+            expect(blockchain.enqueueBlocks).toHaveBeenCalled();
+
+            blockchain.dispatch = dispatch;
+            blockchain.enqueueBlocks = enqueueBlocks;
+        }, 10000);
+
         it("should disregard block when blockchain is not ready", async () => {
             blockchain.state.started = false;
             const loggerInfo = jest.spyOn(logger, "info");
@@ -274,7 +379,7 @@ describe("Blockchain", () => {
                 .mockReturnValueOnce(1)
                 .mockReturnValueOnce(1);
 
-            blockchain.handleIncomingBlock(blocks101to155[54]);
+            blockchain.handleIncomingBlock(blocks2to100[54]);
 
             expect(loggerInfo).toHaveBeenCalledWith("Block disregarded because blockchain is not ready");
             blockchain.state.started = true;

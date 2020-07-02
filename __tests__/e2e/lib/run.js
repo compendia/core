@@ -136,7 +136,7 @@ class Runner {
             }
         }
 
-        await delay(2000);
+        await delay(4000);
 
         if (
             blocksDone.length &&

@@ -84,15 +84,16 @@ export class Blockchain implements blockchain.IBlockchain {
         this.actions = stateMachine.actionMap(this);
         this.blockProcessor = new BlockProcessor(this);
 
-        this.queue = async.queue((blockList: { blocks: Interfaces.IBlockData[] }, cb) => {
+        this.queue = async.queue(async (blockList: { blocks: Interfaces.IBlockData[] }): Promise<
+            Interfaces.IBlock[] | undefined
+        > => {
             try {
-                return this.processBlocks(blockList.blocks, cb);
+                return await this.processBlocks(blockList.blocks);
             } catch (error) {
                 logger.error(
                     `Failed to process ${blockList.blocks.length} blocks from height ${blockList.blocks[0].height} in queue.`,
                 );
-                logger.error(error.stack);
-                return cb();
+                return undefined;
             }
         }, 1);
 
@@ -238,6 +239,15 @@ export class Blockchain implements blockchain.IBlockchain {
         const currentSlot: number = Crypto.Slots.getSlotNumber();
         const receivedSlot: number = Crypto.Slots.getSlotNumber(block.timestamp);
 
+        if (fromForger) {
+            const minimumMs: number = 2000;
+            const timeLeftInMs: number = Crypto.Slots.getTimeInMsUntilNextSlot();
+            if (currentSlot !== receivedSlot || timeLeftInMs < minimumMs) {
+                logger.info(`Discarded block ${block.height.toLocaleString()} because it was received too late.`);
+                return;
+            }
+        }
+
         if (receivedSlot > currentSlot) {
             logger.info(`Discarded block ${block.height.toLocaleString()} because it takes a future slot.`);
             return;
@@ -289,8 +299,6 @@ export class Blockchain implements blockchain.IBlockchain {
             }
         }
         this.queue.push({ blocks: currentBlocksChunk });
-
-        this.state.lastDownloadedBlock = blocks.slice(-1)[0];
     }
 
     /**
@@ -393,7 +401,7 @@ export class Blockchain implements blockchain.IBlockchain {
     /**
      * Process the given block.
      */
-    public async processBlocks(blocks: Interfaces.IBlockData[], callback): Promise<Interfaces.IBlock[]> {
+    public async processBlocks(blocks: Interfaces.IBlockData[]): Promise<Interfaces.IBlock[] | undefined> {
         const acceptedBlocks: Interfaces.IBlock[] = [];
         let lastProcessResult: BlockProcessorResult;
 
@@ -405,7 +413,7 @@ export class Blockchain implements blockchain.IBlockchain {
             // Discard remaining blocks as it won't go anywhere anyway.
             this.clearQueue();
             this.resetLastDownloadedBlock();
-            return callback();
+            return undefined;
         }
 
         let forkBlock: Interfaces.IBlock;
@@ -417,9 +425,11 @@ export class Blockchain implements blockchain.IBlockchain {
 
             if (lastProcessResult === BlockProcessorResult.Accepted) {
                 acceptedBlocks.push(blockInstance);
+                this.state.lastDownloadedBlock = blockInstance.data;
             } else {
                 if (lastProcessResult === BlockProcessorResult.Rollback) {
                     forkBlock = blockInstance;
+                    this.state.lastDownloadedBlock = blockInstance.data;
                 }
 
                 break; // if one block is not accepted, the other ones won't be chained anyway
@@ -455,7 +465,7 @@ export class Blockchain implements blockchain.IBlockchain {
                 await this.database.deleteRound(deleteRoundsAfter + 1);
                 await this.database.loadBlocksFromCurrentRound();
 
-                return callback();
+                return undefined;
             }
         }
 
@@ -473,7 +483,7 @@ export class Blockchain implements blockchain.IBlockchain {
             this.forkBlock(forkBlock);
         }
 
-        return callback(acceptedBlocks);
+        return acceptedBlocks;
     }
 
     /**

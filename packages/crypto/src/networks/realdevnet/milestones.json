@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.8.0"]
+            "minimumVersions": ["^2.9.0"]
         },
         "reward": 0,
         "topDelegates": 0,
@@ -29,9 +29,6 @@
                 "stakeRedeem": 0,
                 "stakeCancel": 10000000,
                 "setFile": 0
-            },
-            "specialFees": {
-                "setFile": 10000000
             }
         },
         "balancePower": 1,
@@ -45,7 +42,9 @@
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
-                "logo": 300000
+                "logo": 300000,
+                "db.docs.*": 500000,
+                "schema.*": 500000
             }
         },
         "vendorFieldLength": 255,
@@ -72,5 +71,13 @@
     {
         "height": 852815,
         "vendorFieldLength": 0
+    },
+    {
+        "height": 1727250,
+        "stakeLevels": {
+            "86400": 30
+        },
+        "setFile": 1000000,
+        "transferStake": true
     }
 ]
