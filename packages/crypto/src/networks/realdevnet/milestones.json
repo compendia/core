@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.8.0"]
+            "minimumVersions": ["^2.9.0"]
         },
         "reward": 0,
         "topDelegates": 0,
@@ -71,5 +71,13 @@
     {
         "height": 852815,
         "vendorFieldLength": 0
+    },
+    {
+        "height": 1726780,
+        "stakeLevels": {
+            "86400": 30
+        },
+        "setFile": 1000000,
+        "transferStake": true
     }
 ]
