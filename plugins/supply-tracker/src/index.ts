@@ -270,39 +270,63 @@ export const plugin: Container.IPluginDescriptor = {
                 const round = await findOrCreate("Round", roundData.round);
                 if (
                     tx.typeGroup === Enums.TransactionTypeGroup.Core &&
-                    tx.type === Enums.TransactionType.Transfer &&
+                    (tx.type === Enums.TransactionType.Transfer || tx.type === Enums.TransactionType.MultiPayment) &&
                     tx.blockId !== genesisBlock.id
                 ) {
-                    if (senderAddress === genesisBlock.transactions[0].recipientId) {
+                    // Handle mint multitransfer
+                    let amount = Utils.BigNumber.ZERO;
+                    if (tx.type === Enums.TransactionType.MultiPayment) {
+                        amount = tx.asset.payments.reduce((a, p) => a.plus(p.amount), Utils.BigNumber.ZERO);
                         // Add coins to supply when sent from mint address
                         supply.value = Utils.BigNumber.make(supply.value)
-                            .plus(tx.amount)
+                            .plus(amount)
                             .toString();
                         await supply.save();
 
                         // Save round data
                         round.forged = Utils.BigNumber.make(round.forged)
-                            .plus(tx.amount)
+                            .plus(amount)
                             .toString();
 
                         await round.save();
                         logger.info(
-                            `Transaction from mint wallet: ${tx.amount.toString()} added to supply. New supply: ${
+                            `Transaction from mint wallet: ${amount.toString()} added to supply. New supply: ${
                                 supply.value
                             }`,
                         );
-                    } else if (tx.recipientId === genesisBlock.transactions[0].recipientId) {
-                        // Remove coins from supply when sent to mint address
-                        supply.value = Utils.BigNumber.make(supply.value)
-                            .minus(tx.amount)
-                            .toString();
-                        await supply.save();
-                        // Save round data
-                        round.forged = Utils.BigNumber.make(round.forged)
-                            .minus(tx.amount)
-                            .toString();
+                    } else {
+                        // Handle regular mint transfer
+                        if (senderAddress === genesisBlock.transactions[0].recipientId) {
+                            // Add coins to supply when sent from mint address
+                            supply.value = Utils.BigNumber.make(supply.value)
+                                .plus(tx.amount)
+                                .toString();
+                            await supply.save();
 
-                        await round.save();
+                            // Save round data
+                            round.forged = Utils.BigNumber.make(round.forged)
+                                .plus(tx.amount)
+                                .toString();
+
+                            await round.save();
+                            logger.info(
+                                `Transaction from mint wallet: ${tx.amount.toString()} added to supply. New supply: ${
+                                    supply.value
+                                }`,
+                            );
+                        } else if (tx.recipientId === genesisBlock.transactions[0].recipientId) {
+                            // Remove coins from supply when sent to mint address
+                            supply.value = Utils.BigNumber.make(supply.value)
+                                .minus(tx.amount)
+                                .toString();
+                            await supply.save();
+                            // Save round data
+                            round.forged = Utils.BigNumber.make(round.forged)
+                                .minus(tx.amount)
+                                .toString();
+
+                            await round.save();
+                        }
                     }
                 }
             });
