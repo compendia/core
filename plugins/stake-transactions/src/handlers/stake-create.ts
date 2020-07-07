@@ -2,7 +2,7 @@ import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
-import { Constants, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Constants, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
     Enums,
     Interfaces as StakeInterfaces,
@@ -185,17 +185,19 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         pool: TransactionPool.IConnection,
         processor: TransactionPool.IProcessor,
     ): Promise<{ type: string; message: string } | null> {
+        // Only trigger for self-stake create/redeem
         if (
-            (await pool.senderHasTransactionsOfType(
+            ((await pool.senderHasTransactionsOfType(
                 data.senderPublicKey,
                 Enums.StakeTransactionType.StakeCreate,
                 Enums.StakeTransactionGroup,
             )) ||
-            (await pool.senderHasTransactionsOfType(
-                data.senderPublicKey,
-                Enums.StakeTransactionType.StakeRedeem,
-                Enums.StakeTransactionGroup,
-            ))
+                (await pool.senderHasTransactionsOfType(
+                    data.senderPublicKey,
+                    Enums.StakeTransactionType.StakeRedeem,
+                    Enums.StakeTransactionGroup,
+                ))) &&
+            (!data.recipientId || data.recipientId === Identities.Address.fromPublicKey(data.senderPublicKey))
         ) {
             return {
                 type: "ERR_PENDING",

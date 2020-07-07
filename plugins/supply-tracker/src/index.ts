@@ -334,55 +334,59 @@ export const plugin: Container.IPluginDescriptor = {
 
         // On stake powerup
         emitter.on("stake.powerup", async ({ stake, block }) => {
-            q(async () => {
-                const o: StakeInterfaces.IStakeObject = stake;
-                const lastSupply = Utils.BigNumber.make(supply.value);
-                supply.value = lastSupply.minus(o.amount).toString();
-                staked.value = Utils.BigNumber.make(staked.value)
-                    .plus(o.amount)
-                    .toString();
+            const o: StakeInterfaces.IStakeObject = stake;
+            const genesisBlock: Interfaces.IBlockData = app.getConfig().all().genesisBlock;
+            // Only remove staked coins from circulation if they're not sent by the genesis wallet (since those never entered circulation anyway)
+            if (Identities.Address.fromPublicKey(o.senderPublicKey) !== genesisBlock.transactions[0].recipientId) {
+                q(async () => {
+                    const lastSupply = Utils.BigNumber.make(supply.value);
+                    supply.value = lastSupply.minus(o.amount).toString();
+                    staked.value = Utils.BigNumber.make(staked.value)
+                        .plus(o.amount)
+                        .toString();
 
-                await supply.save();
-                await staked.save();
-                // Save round data
-                let lastBlock: Interfaces.IBlockData = block;
-                if (!lastBlock) {
-                    lastBlock = app
-                        .resolvePlugin<State.IStateService>("state")
-                        .getStore()
-                        .getLastBlock().data;
-                }
-                const roundData = roundCalculator.calculateRound(lastBlock.height);
+                    await supply.save();
+                    await staked.save();
+                    // Save round data
+                    let lastBlock: Interfaces.IBlockData = block;
+                    if (!lastBlock) {
+                        lastBlock = app
+                            .resolvePlugin<State.IStateService>("state")
+                            .getStore()
+                            .getLastBlock().data;
+                    }
+                    const roundData = roundCalculator.calculateRound(lastBlock.height);
 
-                const round = await findOrCreate("Round", roundData.round);
-                round.staked = Utils.BigNumber.make(round.staked)
-                    .plus(o.amount)
-                    .toString();
-                await round.save();
+                    const round = await findOrCreate("Round", roundData.round);
+                    round.staked = Utils.BigNumber.make(round.staked)
+                        .plus(o.amount)
+                        .toString();
+                    await round.save();
 
-                // Save duration-specific stake stat
-                let stat = await Statistic.findOne({ name: `stakes.${o.duration}` });
-                if (!stat) {
-                    stat = new Statistic();
-                    stat.name = `stakes.${o.duration}`;
-                    stat.value = "0";
-                }
-                stat.value = Utils.BigNumber.make(stat.value)
-                    .plus(o.amount)
-                    .toFixed();
-                await stat.save();
+                    // Save duration-specific stake stat
+                    let stat = await Statistic.findOne({ name: `stakes.${o.duration}` });
+                    if (!stat) {
+                        stat = new Statistic();
+                        stat.name = `stakes.${o.duration}`;
+                        stat.value = "0";
+                    }
+                    stat.value = Utils.BigNumber.make(stat.value)
+                        .plus(o.amount)
+                        .toFixed();
+                    await stat.save();
 
-                totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
-                    .plus(o.power)
-                    .toString();
-                await totalStakePower.save();
+                    totalStakePower.value = Utils.BigNumber.make(totalStakePower.value)
+                        .plus(o.power)
+                        .toString();
+                    await totalStakePower.save();
 
-                logger.info(
-                    `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
-                        Constants.ARKTOSHI,
-                    )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
-                );
-            });
+                    logger.info(
+                        `Stake created at block ${lastBlock.height}. Supply updated. Previous: ${lastSupply.dividedBy(
+                            Constants.ARKTOSHI,
+                        )} - New: ${Utils.BigNumber.make(supply.value).dividedBy(Constants.ARKTOSHI)}`,
+                    );
+                });
+            }
         });
 
         // On stake create (only if powerUp is not set in milestone)

@@ -60,6 +60,7 @@ export const transformWallet = (wallet: State.IWallet) => {
                     powerUp: formatTimestamp(stake.timestamps.powerUp).unix,
                     redeemable: formatTimestamp(stake.timestamps.redeemable).unix,
                 },
+                senderPublicKey: stake.senderPublicKey,
             };
         }
 
