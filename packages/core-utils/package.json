@@ -21,7 +21,7 @@
         "@arkecosystem/core-container": "^2.6.49",
         "@arkecosystem/core-interfaces": "^2.6.49",
         "@arkecosystem/crypto": "^2.6.49",
-        "cli-table3": "^0.5.1",
+        "cli-table3": "^0.6.0",
         "dayjs": "^1.8.15",
         "fast-json-parse": "^1.0.3",
         "got": "^9.6.0",

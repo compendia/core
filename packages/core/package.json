@@ -74,7 +74,7 @@
         "chalk": "^3.0.0",
         "clear": "^0.1.0",
         "cli-progress": "^3.0.0",
-        "cli-table3": "^0.5.1",
+        "cli-table3": "^0.6.0",
         "cli-ux": "^5.3.1",
         "dayjs": "^1.8.15",
         "deepmerge": "^4.0.0",
