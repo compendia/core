@@ -1,7 +1,8 @@
 import { app } from "@arkecosystem/core-container";
 import { Logger, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { Interfaces, Utils } from "@arkecosystem/crypto";
+import { Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { Enums } from "@nosplatform/file-transactions-crypto";
 import { IDynamicFeeMatch } from "./interfaces";
 
 // @TODO: better name
@@ -74,7 +75,27 @@ export const dynamicFeeMatcher = async (transaction: Interfaces.ITransaction): P
             );
         }
     } else {
-        const staticFee: Utils.BigNumber = transaction.staticFee;
+        let staticFee: Utils.BigNumber = transaction.staticFee;
+
+        // Apply special static fee logic for schema registrations
+        const isSetFileTransaction: boolean =
+            transaction.typeGroup === Enums.FileTransactionGroup &&
+            transaction.type === Enums.FileTransactionType.SetFile;
+        const isSchemaTransaction: boolean =
+            isSetFileTransaction &&
+            transaction.data?.asset?.fileKey &&
+            String(transaction.data.asset.fileKey).startsWith("schema.") &&
+            Managers.configManager.getMilestone().fees?.specialFees?.setFile?.schemaRegistration;
+
+        if (
+            isSchemaTransaction &&
+            Managers.configManager.getMilestone().fees?.specialFees?.setFile?.schemaRegistration !== undefined
+        ) {
+            staticFee = Utils.BigNumber.make(
+                Managers.configManager.getMilestone().fees.specialFees.setFile.schemaRegistration,
+            );
+        }
+
         if (fee.isEqualTo(staticFee)) {
             broadcast = true;
             enterPool = true;

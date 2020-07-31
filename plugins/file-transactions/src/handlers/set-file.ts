@@ -7,7 +7,15 @@ import { Enums, Transactions as FileTransactions } from "@nosplatform/file-trans
 import got from "got";
 import * as multibase from "multibase";
 import * as multihash from "multihashes";
-import { FileKeyInvalid, InvalidMultiHash, IpfsHashAlreadyExists, SenderNotDelegate } from "../errors";
+import {
+    FileKeyInvalid,
+    InvalidMultiHash,
+    IpfsHashAlreadyExists,
+    SchemaAlreadyExists,
+    SenderNotDelegate,
+} from "../errors";
+import { SetFileHelper } from "../helpers";
+import { FileIndex } from "../wallet-manager";
 
 export class SetFileTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -85,6 +93,18 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             throw new IpfsHashAlreadyExists();
         }
 
+        if (SetFileHelper.isSchemaTransaction(transaction.data.asset.fileKey)) {
+            const dbWalletManager: State.IWalletManager = app.resolvePlugin<Database.IDatabaseService>("database")
+                .walletManager;
+            const dbSchema: State.IWallet = dbWalletManager.findByIndex(
+                FileIndex.Schemas,
+                SetFileHelper.getKey(transaction.data.asset.fileKey),
+            );
+            if (dbSchema) {
+                throw new SchemaAlreadyExists();
+            }
+        }
+
         return super.throwIfCannotBeApplied(transaction, wallet, walletManager);
     }
 
@@ -104,6 +124,20 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                 type: "ERR_PENDING",
                 message: `File transaction for wallet already in the pool`,
             };
+        }
+
+        if (SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
+            const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+            const dbSchema: State.IWallet = databaseService.walletManager.findByIndex(
+                FileIndex.Schemas,
+                SetFileHelper.getKey(data.asset.fileKey),
+            );
+            if (dbSchema) {
+                return {
+                    type: "ERR_SCHEMA_EXISTS",
+                    message: `Schema "${dbSchema}" already exists.`,
+                };
+            }
         }
 
         const ipfsHash = data.asset.ipfsHash;
@@ -134,33 +168,36 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             };
         }
 
-        const options = app.resolveOptions("file-transactions");
-        const statUrl = `${options.gateway}/api/v0/object/stat/${data.asset.ipfsHash}`;
-        const res = await got.get(statUrl);
-        if (!res.body) {
-            // Couldn't resolve body
-            return {
-                type: "ERR_RESOLVE_STAT",
-                message: `"${statUrl}" could not be resolved`,
-            };
-        }
+        // Validate non-db file size
+        if (!String(data.asset.fileKey).startsWith("db.")) {
+            const options = app.resolveOptions("file-transactions");
+            const statUrl = `${options.gateway}/api/v0/object/stat/${data.asset.ipfsHash}`;
+            const res = await got.get(statUrl);
+            if (!res.body) {
+                // Couldn't resolve body
+                return {
+                    type: "ERR_RESOLVE_STAT",
+                    message: `"${statUrl}" could not be resolved`,
+                };
+            }
 
-        const stat = JSON.parse(res.body);
-        if (!stat || !stat.CumulativeSize) {
-            // Couldn't json body data
-            return {
-                type: "ERR_RESOLVE_STAT",
-                message: `"${statUrl}" data could not be resolved`,
-            };
-        }
+            const stat = JSON.parse(res.body);
+            if (!stat || !stat.CumulativeSize) {
+                // Couldn't json body data
+                return {
+                    type: "ERR_RESOLVE_STAT",
+                    message: `"${statUrl}" data could not be resolved`,
+                };
+            }
 
-        const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileKey];
-        if (stat.CumulativeSize > maxFileSize) {
-            // File too big
-            return {
-                type: "ERR_FILE_SIZE",
-                message: `${stat.CumulativeSize} bytes is greater than allowed max file size of ${maxFileSize}.`,
-            };
+            const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileKey];
+            if (stat.CumulativeSize > maxFileSize) {
+                // File too big
+                return {
+                    type: "ERR_FILE_SIZE",
+                    message: `${stat.CumulativeSize} bytes is greater than allowed max file size of ${maxFileSize}.`,
+                };
+            }
         }
 
         return null;

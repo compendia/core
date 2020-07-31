@@ -77,7 +77,14 @@
         "stakeLevels": {
             "86400": 30
         },
-        "setFile": 1000000,
         "transferStake": true
+    },
+    {
+        "height": 1730070,
+        "fees": {
+            "staticFees": {
+                "setFile": 10000000
+            }
+        }
     }
 ]

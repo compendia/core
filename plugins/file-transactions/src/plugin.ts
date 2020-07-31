@@ -10,6 +10,7 @@ import path from "path";
 
 import { defaults } from "./defaults";
 import { SetFileTransactionHandler } from "./handlers";
+import { FileIndex, schemaIndexer } from "./wallet-manager";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 
@@ -19,6 +20,14 @@ export const plugin: Container.IPluginDescriptor = {
     alias: "file-transactions",
     async register(container: Container.IContainer, options) {
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Module File Transactions");
+        // Register schema indexer
+        container
+            .resolvePlugin<EventEmitter.EventEmitter>("event-emitter")
+            .once(ApplicationEvents.StateStarting, (database: Database.IDatabaseService) => {
+                const walletManager = database.walletManager;
+                walletManager.registerIndex(FileIndex.Schemas, schemaIndexer);
+            });
+
         Handlers.Registry.registerTransactionHandler(SetFileTransactionHandler);
         const ipfsHashes = [];
         let ipfs;

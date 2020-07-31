@@ -7,6 +7,12 @@ export class IpfsHashAlreadyExists extends Errors.TransactionError {
     }
 }
 
+export class SchemaAlreadyExists extends Errors.TransactionError {
+    constructor() {
+        super(`Failed to apply transaction: Schema already exists.`);
+    }
+}
+
 export class FileKeyInvalid extends Errors.TransactionError {
     constructor() {
         super(`Failed to apply transaction: Invalid IPFS Key.`);
