@@ -399,6 +399,140 @@ describe("Block", () => {
             expect(blockHighS.verification.errors).toEqual(["Failed to verify block signature"]);
         });
 
+        it("should fail to verify a block with wrong signature length", () => {
+            const block = BlockFactory.fromData({
+                id: "3733c7742cee388faa48489db787621e65bfc15178eaa12695f6476a4a373601",
+                version: 0,
+                timestamp: 102041016,
+                height: 5470549,
+                reward: Utils.BigNumber.make("200000000"),
+                previousBlock: "2d270cae7e2bd9da27f6160b521859820f2c90315672e1774733bdd6415abb86",
+                numberOfTransactions: 0,
+                totalAmount: Utils.BigNumber.ZERO,
+                totalFee: Utils.BigNumber.ZERO,
+                removedFee: Utils.BigNumber.ZERO,
+                payloadLength: 0,
+                payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
+                blockSignature:
+                    "3044022008b86fc7793cf7e7479be902171045282023c5a85840b54648a354904e2bb8110220129628a64a2e96f86ff810bcf9c5ca77eff006f0b8d896e28db3bd47805acb0d",
+            });
+
+            // const block = BlockFactory.make({
+            //     id: "3733c7742cee388faa48489db787621e65bfc15178eaa12695f6476a4a373601",
+            //     version: 0,
+            //     timestamp: 102041016,
+            //     height: 5470549,
+            //     reward: Utils.BigNumber.make("200000000"),
+            //     previousBlock: "2d270cae7e2bd9da27f6160b521859820f2c90315672e1774733bdd6415abb86",
+            //     numberOfTransactions: 0,
+            //     totalAmount: Utils.BigNumber.ZERO,
+            //     totalFee: Utils.BigNumber.ZERO,
+            //     removedFee: Utils.BigNumber.ZERO,
+            //     payloadLength: 0,
+            //     payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            //     generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
+            //     blockSignature:
+            //         "3044022008b86fc7793cf7e7479be902171045282023c5a85840b54648a354904e2bb8110220129628a64a2e96f86ff810bcf9c5ca77eff006f0b8d896e28db3bd47805acb0d",
+            // }, Identities.Keys.fromPassphrase("passphrase"));
+
+            // console.log(block);
+
+            // console.dir(Blocks.BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")));
+            // const s = Block.serialize(dummyBlock).toString("hex");
+            // console.log(s);
+
+            expect(block.verification.verified).toBeTrue();
+            expect(block.verification.errors).toEqual([]);
+
+            const blockInvalidSignatureLength = BlockFactory.fromData({
+                id: "62b348a7aba2c60506929eec1311eaecb48ef232d4b154db2ede3f5e53700be9",
+                version: 0,
+                timestamp: 102041016,
+                height: 5470549,
+                reward: Utils.BigNumber.make("200000000"),
+                previousBlock: "2d270cae7e2bd9da27f6160b521859820f2c90315672e1774733bdd6415abb86",
+                numberOfTransactions: 0,
+                totalAmount: Utils.BigNumber.ZERO,
+                totalFee: Utils.BigNumber.ZERO,
+                removedFee: Utils.BigNumber.ZERO,
+                payloadLength: 0,
+                payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                generatorPublicKey: "026a423b3323de175dd82788c7eab57850c6a37ea6a470308ebadd7007baf8ceb3",
+                blockSignature:
+                    "3046022100c92d7d0c3ea2ba72576f6494a81fc498d0420286896f806a7ead443d0b5d89720220501610f0d5498d028fd27676ea2597a5cb80cf5896e77fe2fa61623d31ff290c00",
+            });
+
+            expect(blockInvalidSignatureLength.verification.verified).toBeFalse();
+            expect(blockInvalidSignatureLength.verification.errors).toEqual(["Failed to verify block signature"]);
+        });
+
+        it("should fail to verify a block with negative R", () => {
+            const block = BlockFactory.fromData({
+                id: "3733c7742cee388faa48489db787621e65bfc15178eaa12695f6476a4a373601",
+                version: 0,
+                timestamp: 102041016,
+                height: 5470549,
+                reward: Utils.BigNumber.make("200000000"),
+                previousBlock: "2d270cae7e2bd9da27f6160b521859820f2c90315672e1774733bdd6415abb86",
+                numberOfTransactions: 0,
+                totalAmount: Utils.BigNumber.ZERO,
+                totalFee: Utils.BigNumber.ZERO,
+                removedFee: Utils.BigNumber.ZERO,
+                payloadLength: 0,
+                payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                generatorPublicKey: "02e012f0a7cac12a74bdc17d844cbc9f637177b470019c32a53cef94c7a56e2ea9",
+                blockSignature:
+                    "3044022008b86fc7793cf7e7479be902171045282023c5a85840b54648a354904e2bb8110220129628a64a2e96f86ff810bcf9c5ca77eff006f0b8d896e28db3bd47805acb0d",
+            });
+
+            // const block = BlockFactory.make({
+            //     id: "62b348a7aba2c60506929eec1311eaecb48ef232d4b154db2ede3f5e53700be9",
+            //     version: 0,
+            //     timestamp: 102041016,
+            //     height: 5470549,
+            //     reward: Utils.BigNumber.make("200000000"),
+            //     previousBlock: "2d270cae7e2bd9da27f6160b521859820f2c90315672e1774733bdd6415abb86",
+            //     numberOfTransactions: 0,
+            //     totalAmount: Utils.BigNumber.ZERO,
+            //     totalFee: Utils.BigNumber.ZERO,
+            //     removedFee: Utils.BigNumber.ZERO,
+            //     payloadLength: 0,
+            //     payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            //     generatorPublicKey: "026a423b3323de175dd82788c7eab57850c6a37ea6a470308ebadd7007baf8ceb3",
+            //     blockSignature:
+            //         "3045022100c92d7d0c3ea2ba72576f6494a81fc498d0420286896f806a7ead443d0b5d89720220501610f0d5498d028fd27676ea2597a5cb80cf5896e77fe2fa61623d31ff290c",
+            // }, Identities.Keys.fromPassphrase("passphrase"));
+
+            // console.log(block);
+
+            // console.dir(BlockFactory.make(block, Identities.Keys.fromPassphrase("passphrase")));
+
+            expect(block.verification.verified).toBeTrue();
+            expect(block.verification.errors).toEqual([]);
+
+            const blockInvalidR = BlockFactory.fromData({
+                id: "62b348a7aba2c60506929eec1311eaecb48ef232d4b154db2ede3f5e53700be9",
+                version: 0,
+                timestamp: 102041016,
+                height: 5470549,
+                reward: Utils.BigNumber.make("200000000"),
+                previousBlock: "2d270cae7e2bd9da27f6160b521859820f2c90315672e1774733bdd6415abb86",
+                numberOfTransactions: 0,
+                totalAmount: Utils.BigNumber.ZERO,
+                totalFee: Utils.BigNumber.ZERO,
+                removedFee: Utils.BigNumber.ZERO,
+                payloadLength: 0,
+                payloadHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                generatorPublicKey: "026a423b3323de175dd82788c7eab57850c6a37ea6a470308ebadd7007baf8ceb3",
+                blockSignature:
+                    "30440220c92d7d0c3ea2ba72576f6494a81fc498d0420286896f806a7ead443d0b5d89720220501610f0d5498d028fd27676ea2597a5cb80cf5896e77fe2fa61623d31ff290c",
+            });
+
+            expect(blockInvalidR.verification.verified).toBeFalse();
+            expect(blockInvalidR.verification.errors).toEqual(["Failed to verify block signature"]);
+        });
+
         it("should construct the block (header only)", () => {
             const block = BlockFactory.fromHex(dummyBlock2.serialized);
             const actual = block.toJson();

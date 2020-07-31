@@ -575,21 +575,21 @@ describe("Peer socket endpoint", () => {
 
         it("should close the connection if the initial HTTP request is not processed within 2 seconds", async done => {
             const socket = new net.Socket();
-            await delay(2000);
+            await delay(4000);
             socket.connect(4007, "127.0.0.1", async () => {
                 await delay(500);
                 expect(socket.destroyed).toBe(false);
                 await delay(4000);
                 expect(socket.destroyed).toBe(true);
                 server.killWorkers({ immediate: true });
-                await delay(2000); // give time to workers to respawn
+                await delay(4000); // give time to workers to respawn
                 done();
             });
         });
 
         it("should close the connection if is is not fully established from start to finish within 4 seconds", async done => {
             const socket = new net.Socket();
-            await delay(2000);
+            await delay(4000);
             socket.connect(4007, "127.0.0.1", async () => {
                 expect(socket.destroyed).toBe(false);
                 // @ts-ignore
