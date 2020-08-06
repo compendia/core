@@ -13,19 +13,15 @@ Check our [dedicated documentation site](https://docs.compendia.org) for informa
 
 ## Documentation
 
--   Development : https://docs.compendia.org
+https://docs.compendia.org
 
 ## API Documentation
 
--
+https://docs.compendia.org/api/
 
-## GitHub Development Bounty
+## Security Vulnerability Rewards / Bug Bounty
 
--
-
-## Security
-
-If you discover a security vulnerability within this package, please send an e-mail to contact@nos.io. All security vulnerabilities will be promptly addressed.
+https://docs.compendia.org/guide/bug-bounty.html
 
 ## Credits
 
