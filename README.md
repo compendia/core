@@ -6,14 +6,14 @@
 
 ## Introduction
 
-This repository contains all modules that make up the nOS Core.
+This repository contains all modules that make up the Compendia Core.
 
-Check our [dedicated documentation site](https://learn.ark.dev) for information about all available plugins and [How to write a Core Plugin
+Check our [dedicated documentation site](https://docs.compendia.org) for information about all available plugins and [How to write a Core Plugin
 ](https://learn.ark.dev/application-development/how-to-write-core-dapps) if you want to get started with developing your own plugins.
 
 ## Documentation
 
--   Development : https://docs.nos.io
+-   Development : https://docs.compendia.org
 
 ## API Documentation
 
@@ -28,6 +28,8 @@ Check our [dedicated documentation site](https://learn.ark.dev) for information 
 If you discover a security vulnerability within this package, please send an e-mail to contact@nos.io. All security vulnerabilities will be promptly addressed.
 
 ## Credits
+
+Created by [Dean van Dugteren](https://github.com/Deanpress) ([Twitter](https://twitter.com/deanpress))
 
 Based on [Ark Core](https://github.com/ArkEcosystem).
 
