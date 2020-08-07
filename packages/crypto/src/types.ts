@@ -8,6 +8,7 @@ export type NetworkType =
     | typeof networks.realdevnet.network
     | typeof networks.staging.network
     | typeof networks.nospluginnet.network
-    | typeof networks.realtestnet.network;
+    | typeof networks.realtestnet.network
+    | typeof networks.realmainnet.network;
 
 export type NetworkName = keyof typeof networks;
