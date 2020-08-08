@@ -5,6 +5,7 @@
             "minimumVersions": ["^2.9.0"]
         },
         "reward": 0,
+        "topReward": 0,
         "activeDelegates": 47,
         "topDelegates": 0,
         "blocktime": 6,
@@ -17,6 +18,7 @@
         "epoch": "2020-08-07T14:00:00.000Z",
         "vendorFieldLength": 0,
         "multiPaymentLimit": 128,
+        "staticFeesOnly": true,
         "fees": {
             "staticFees": {
                 "transfer": 10000000,

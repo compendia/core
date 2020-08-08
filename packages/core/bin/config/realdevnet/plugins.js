@@ -46,7 +46,7 @@ module.exports = {
                 stakeCreate: 0,
                 stakeRedeem: 0,
                 stakeCancel: 100,
-                setFile: 0
+                setFile: 1000
             },
         },
     },
