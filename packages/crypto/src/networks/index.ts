@@ -6,3 +6,4 @@ export { nospluginnet } from "./nospluginnet";
 export { realdevnet } from "./realdevnet";
 export { staging } from "./staging";
 export { realtestnet } from "./realtestnet";
+export { realmainnet } from "./realmainnet";

@@ -1,0 +1,18 @@
+{
+    "name": "realmainnet",
+    "messagePrefix": "realmainnet message:\n",
+    "bip32": {
+        "public": 70617039,
+        "private": 70615956
+    },
+    "pubKeyHash": 88,
+    "nethash": "3fa86227bd6005262247f6288be55681f8a0bf751e91a9f81608d4c5926bf22f",
+    "wif": 171,
+    "slip44": 543,
+    "aip20": 0,
+    "client": {
+        "token": "BIND",
+        "symbol": "ß",
+        "explorer": "https://bindscan.io"
+    }
+}
