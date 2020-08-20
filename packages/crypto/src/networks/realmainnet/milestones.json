@@ -23,15 +23,15 @@
             "staticFees": {
                 "transfer": 10000000,
                 "secondSignature": 50000000,
-                "delegateRegistration": 2500000000,
+                "delegateRegistration": 25000000000,
                 "vote": 100000000,
                 "multiSignature": 50000000,
                 "multiPayment": 25000000,
-                "delegateResignation": 100000000,
+                "delegateResignation": 1000000000,
                 "stakeCreate": 0,
                 "stakeRedeem": 0,
-                "stakeCancel": 100000000,
-                "setFile": 10000000
+                "stakeCancel": 500000000,
+                "setFile": 100000000
             }
         },
         "balancePower": 1,
@@ -59,11 +59,11 @@
         }
     },
     {
-        "height": 144009,
-        "minimumStake": 10000000000
+        "height": 220000,
+        "minimumStake": 500000000000
     },
     {
-        "height": 438276,
+        "height": 300000,
         "reward": 390000000,
         "topReward": 484000000,
         "topDelegates": 5
