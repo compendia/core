@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.9.0"]
+            "minimumVersions": ["^2.9.12"]
         },
         "reward": 0,
         "topReward": 0,
