@@ -42,7 +42,7 @@
         },
         "minimumStake": 10000000000,
         "graceEnd": 3600,
-        "powerUp": 169200,
+        "powerUp": 3600,
         "transferStake": true,
         "ipfs": {
             "maxFileSize": {

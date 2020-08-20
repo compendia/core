@@ -51,7 +51,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             roundHeight,
         );
 
-        // TODO: get milestone belonging to transaction block height
         while (reader.hasNext()) {
             const transactions = await reader.read();
             for (const transaction of transactions) {
@@ -73,7 +72,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const newBalance = wallet.balance.minus(stakeObject.amount);
                 const stakes = staker.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-                // TODO: Check if stake is released, active, or graced and assign to correct helper.
                 let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
                 if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
                     // released
