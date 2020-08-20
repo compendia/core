@@ -15,7 +15,7 @@
             "maxPayload": 6300000,
             "acceptExpiredTransactionTimestamps": false
         },
-        "epoch": "2020-08-20T18:20:00.000Z",
+        "epoch": "2020-08-21T16:00:00.000Z",
         "vendorFieldLength": 0,
         "multiPaymentLimit": 128,
         "staticFeesOnly": true,
@@ -38,11 +38,11 @@
         "stakeLevels": {
             "7889400": 50,
             "15778800": 75,
-            "31557600": 100
+            "31557600": 120
         },
         "minimumStake": 10000000000,
         "graceEnd": 3600,
-        "powerUp": 3600,
+        "powerUp": 169200,
         "transferStake": true,
         "ipfs": {
             "maxFileSize": {
@@ -60,7 +60,10 @@
     },
     {
         "height": 600,
-        "minimumStake": 500000000000
+        "minimumStake": 500000000000,
+        "stakeLevels": {
+            "31557600": 100
+        }
     },
     {
         "height": 700,
