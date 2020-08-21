@@ -1,7 +1,7 @@
 {
     "name": "@nosplatform/stake-transactions-crypto",
     "description": "Provides stake transactions crypto logic for Ark Core",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "contributors": [
         "Dean van Dugteren <dean@nos.io>"
     ],
@@ -27,8 +27,8 @@
         "updates": "../../node_modules/npm-check-updates/bin/npm-check-updates -a"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.6.49",
-        "@arkecosystem/crypto": "^2.6.49"
+        "@arkecosystem/core-interfaces": "^2.6.52",
+        "@arkecosystem/crypto": "^2.6.52"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",

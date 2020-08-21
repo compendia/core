@@ -1,14 +1,14 @@
 import "jest-extended";
 
-import { State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { State } from "@arkecosystem/core-interfaces";
 import { Wallets } from "@arkecosystem/core-state";
-import { Crypto, Enums, Errors, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Crypto, Errors, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
     AlreadyVotedError,
-    HtlcLockExpiredError,
-    HtlcLockNotExpiredError,
-    HtlcLockTransactionNotFoundError,
-    HtlcSecretHashMismatchError,
+    // HtlcLockExpiredError,
+    // HtlcLockNotExpiredError,
+    // HtlcLockTransactionNotFoundError,
+    // HtlcSecretHashMismatchError,
     InsufficientBalanceError,
     InvalidMultiSignatureError,
     InvalidSecondSignatureError,
@@ -30,20 +30,10 @@ import {
 } from "../../../packages/core-transactions/src/errors";
 import { Handlers, Interfaces as TransactionsInterfaces } from "../../../packages/core-transactions/src/index";
 import { TransactionFactory } from "../../helpers/transaction-factory";
-import { htlcSecretHex, htlcSecretHashHex } from "../../utils/fixtures";
-
-const { EpochTimestamp, BlockHeight } = Enums.HtlcLockExpirationType;
 
 const mockLastBlockData: Partial<Interfaces.IBlockData> = { timestamp: Crypto.Slots.getTime(), height: 4 };
 
-const makeBlockHeightTimestamp = (heightRelativeToLastBlock = 2) =>
-    mockLastBlockData.height + heightRelativeToLastBlock;
-const makeExpiredTimestamp = type =>
-    type === EpochTimestamp ? mockLastBlockData.timestamp - 9 : makeBlockHeightTimestamp(-2);
-const makeNotExpiredTimestamp = type =>
-    type === EpochTimestamp ? mockLastBlockData.timestamp + 99 : makeBlockHeightTimestamp(9);
-
-let mockTransaction;
+const mockTransaction: any = undefined;
 jest.mock("@arkecosystem/core-container", () => {
     return {
         app: {
@@ -1081,6 +1071,7 @@ describe("DelegateResignationTransaction", () => {
     });
 });
 
+/*
 describe.each([EpochTimestamp, BlockHeight])("Htlc lock - expiration type %i", expirationType => {
     const htlcLockAsset = {
         secretHash: htlcSecretHashHex,
@@ -1680,3 +1671,4 @@ describe.each([EpochTimestamp, BlockHeight])("Htlc refund - expiration type %i",
         });
     });
 });
+*/

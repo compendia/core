@@ -12,7 +12,6 @@ module.exports = {
     },
     "@arkecosystem/core-state": {},
     "@nosplatform/stake-transactions": {},
-    "@arkecosystem/core-magistrate-transactions": {},
     "@nosplatform/storage": {
         port: 6002,
         host: "0.0.0.0",

@@ -226,3 +226,9 @@ export class HtlcLockExpiredError extends TransactionError {
         super(`Failed to apply transaction, because the associated HTLC lock transaction expired.`);
     }
 }
+
+export class StaticFeeMismatchError extends TransactionError {
+    constructor() {
+        super(`Failed to apply transaction, because the transaction fee does not match the static fee.`);
+    }
+}

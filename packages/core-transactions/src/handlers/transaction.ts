@@ -12,6 +12,7 @@ import {
     InvalidSecondSignatureError,
     LegacyMultiSignatureError,
     SenderWalletMismatchError,
+    StaticFeeMismatchError,
     UnexpectedMultiSignatureError,
     UnexpectedSecondSignatureError,
 } from "../errors";
@@ -146,6 +147,13 @@ export abstract class TransactionHandler implements ITransactionHandler {
             !walletManager.findByAddress(sender.address).getAttribute("stakes", false)
         ) {
             throw new ColdWalletError();
+        }
+
+        if (
+            Managers.configManager.getMilestone().staticFeesOnly &&
+            !transaction.data.fee.isEqualTo(transaction.staticFee)
+        ) {
+            throw new StaticFeeMismatchError();
         }
 
         return this.performGenericWalletChecks(transaction, sender, walletManager);

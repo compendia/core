@@ -5,7 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [2.9.7] - 2020-07-31
+## [2.9.12] - 2020-08-20
+
+-   Bump core version and chameleon dependency
+-   Set initial realmainnet production milestones
+
+## [2.9.11] - 2020-08-11
+
+### Fixed
+
+-   Discard zero-padded R/S (#3950) (9f197fa1, @air1one)
+-   Check sig length value vs r/s length (#3950) (c2d3f2e5, @air1one)
+-   Find by address / public key before username (#3950) (ddd19cc2, @air1one)
+
+## [2.9.8] - 2020-07-22
 
 ### Fixed
 
@@ -989,6 +1002,7 @@ Closed security vulnerabilities:
 -   Initial Release
 
 [unreleased]: https://github.com/ARKEcosystem/core/compare/master...develop
+[2.6.25]: https://github.com/ARKEcosystem/core/compare/2.6.49...2.6.25
 [2.6.49]: https://github.com/ARKEcosystem/core/compare/2.6.42...2.6.49
 [2.6.42]: https://github.com/ARKEcosystem/core/compare/2.6.39...2.6.42
 [2.6.39]: https://github.com/ARKEcosystem/core/compare/2.6.38...2.6.39
@@ -1558,6 +1572,7 @@ Closed security vulnerabilities:
 [#3830]: https://github.com/ARKEcosystem/core/pull/3830
 [#3904]: https://github.com/ARKEcosystem/core/pull/3904
 [#3905]: https://github.com/ARKEcosystem/core/pull/3905
+[#3950]: https://github.com/ARKEcosystem/core/pull/3950
 [032caa1b990e91937e4bc1561bc1aeaeca9e37d]: https://github.com/ARKEcosystem/core/commit/032caa1b990e91937e4bc1561bc1aeaeca9e37d9
 [1209a36366c8fd3ba31fab2463011b7ce1a7d84]: https://github.com/ARKEcosystem/core/commit/1209a36366c8fd3ba31fab2463011b7ce1a7d844
 [34749bf84bcec3fecd0098c0d42f52deb1f6ba4]: https://github.com/ARKEcosystem/core/commit/34749bf84bcec3fecd0098c0d42f52deb1f6ba4a

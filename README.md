@@ -1,4 +1,4 @@
-# nOS Core
+# Compendia Core
 
 [![License: MIT](https://badgen.now.sh/badge/license/MIT/green)](https://opensource.org/licenses/MIT)
 
@@ -39,4 +39,4 @@ Based on [Ark Core](https://github.com/ArkEcosystem).
 
 ## License
 
-[MIT](LICENSE) © [nOS](https://nos.io)
+[MIT](LICENSE) © [nOS Limited](https://nos.io)
