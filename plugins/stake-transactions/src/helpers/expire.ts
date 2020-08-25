@@ -104,12 +104,14 @@ export class ExpireHelper {
         skipPowerUp?: boolean,
     ): Promise<void> {
         // Function to infinitely retry storing score value to redis
-        const zAdd = async (db, key, val) => {
+        const zAdd = async (db: string, score: number, member: string) => {
             // Store it
-            await redis.zadd(db, [key, val]);
+            await redis.zadd(db, [score, member]);
             // Check if it exists, else retry
-            while (!(await redis.zscore(db, key))) {
-                await redis.zadd(db, [key, val]);
+            let zscore = await redis.zscore(db, member);
+            while (!zscore) {
+                await redis.zadd(db, [score, member]);
+                zscore = await redis.zscore(db, member);
             }
         };
 
@@ -133,6 +135,17 @@ export class ExpireHelper {
                     data.redeemableTimestamp !== stake.timestamps.redeemable.toString() ||
                     data.stakeKey !== stakeKey
                 ) {
+                    console.log("--------data--------");
+                    console.log(data);
+                    console.log("--------exists--------");
+                    console.log(exists);
+                    console.log("--------stake--------");
+                    console.log(stake);
+                    console.log("--------stakeKey--------");
+                    console.log(stakeKey);
+                    console.log("--------address--------");
+                    console.log(wallet.address);
+
                     await redis.hset(
                         key,
                         ["address", wallet.address],
