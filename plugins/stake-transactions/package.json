@@ -31,8 +31,7 @@
         "@arkecosystem/core-transactions": "^2.6.52",
         "@arkecosystem/crypto": "^2.6.52",
         "@nosplatform/stake-transactions-crypto": "^0.2.4",
-        "handy-redis": "^1.8.3",
-        "redis": "^3.0.2"
+        "better-sqlite3": "^7.1.0"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",
