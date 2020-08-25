@@ -5,11 +5,7 @@ import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-c
 import { database, IStakeDbItem } from "../index";
 
 export class PowerUpHelper {
-    public static async powerUp(
-        wallet: State.IWallet,
-        stakeKey: string,
-        walletManager: State.IWalletManager,
-    ): Promise<void> {
+    public static powerUp(wallet: State.IWallet, stakeKey: string, walletManager: State.IWalletManager): Promise<void> {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
         const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
@@ -27,7 +23,7 @@ export class PowerUpHelper {
         walletManager.reindex(wallet);
     }
 
-    public static async removePowerUp(stakeKey: string): Promise<void> {
+    public static removePowerUp(stakeKey: string): Promise<void> {
         const updateStatement = database.prepare(`UPDATE stakes SET status = 1 WHERE key = :key`);
 
         updateStatement.run({ key: stakeKey });
@@ -72,14 +68,14 @@ export class PowerUpHelper {
                         this.emitter.emit("stake.powerup", { stake: stakeObj, block });
 
                         // Remove queued power-up from in mem db
-                        await this.removePowerUp(stake.key);
+                        this.removePowerUp(stake.key);
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete stake from db in this case
                         app.resolvePlugin("logger").info(
                             `Unknown powerup ${stake.key} of wallet ${wallet.address}. Deleted from powerups.`,
                         );
-                        await this.removePowerUp(stake.key);
+                        this.removePowerUp(stake.key);
                     }
                 }
             }
