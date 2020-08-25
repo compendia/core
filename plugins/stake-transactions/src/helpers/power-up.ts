@@ -35,7 +35,7 @@ export class PowerUpHelper {
     ): Promise<void> {
         const lastTime = block.timestamp;
         const stakes: IStakeDbItem[] = database
-            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime} AND status = 0`)
+            .prepare(`SELECT * FROM stakes WHERE powerup <= ${lastTime} AND status = 0`)
             .all();
         if (stakes.length > 0) {
             app.resolvePlugin("logger").info("Processing stake power-ups.");
