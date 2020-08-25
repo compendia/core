@@ -5,7 +5,7 @@ import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-c
 import { database, IStakeDbItem } from "../index";
 
 export class PowerUpHelper {
-    public static powerUp(wallet: State.IWallet, stakeKey: string, walletManager: State.IWalletManager): Promise<void> {
+    public static powerUp(wallet: State.IWallet, stakeKey: string, walletManager: State.IWalletManager): void {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
         const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
@@ -23,7 +23,7 @@ export class PowerUpHelper {
         walletManager.reindex(wallet);
     }
 
-    public static removePowerUp(stakeKey: string): Promise<void> {
+    public static removePowerUp(stakeKey: string): void {
         const updateStatement = database.prepare(`UPDATE stakes SET status = 1 WHERE key = :key`);
 
         updateStatement.run({ key: stakeKey });
@@ -51,14 +51,14 @@ export class PowerUpHelper {
                         app.resolvePlugin("logger").info(`Power-up Stake ${stake.key} of wallet ${wallet.address}.`);
 
                         // Power up in db wallet
-                        await this.powerUp(wallet, stake.key, walletManager);
+                        this.powerUp(wallet, stake.key, walletManager);
 
                         // Power up in pool wallet
                         const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                             "transaction-pool",
                         );
                         const poolWalletManager: State.IWalletManager = poolService.walletManager;
-                        await this.powerUp(
+                        this.powerUp(
                             poolWalletManager.findByAddress(wallet.address),
                             stake.key,
                             poolService.walletManager,
