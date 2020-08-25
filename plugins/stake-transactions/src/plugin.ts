@@ -5,12 +5,23 @@ import { StakeCancelTransactionHandler } from "./handlers";
 import { StakeCreateTransactionHandler } from "./handlers/stake-create";
 import { StakeRedeemTransactionHandler } from "./handlers/stake-redeem";
 import * as StakeHelpers from "./helpers";
+import { database } from "./index";
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
     defaults,
     alias: "stake-transactions",
     async register(container: Container.IContainer, options) {
+        database.exec(`
+            PRAGMA journal_mode=WAL;
+            CREATE TABLE IF NOT EXISTS stakes (
+                "key" VARCHAR(64) PRIMARY KEY,
+                "address" VARCHAR(34) NOT NULL,
+                "powerup" INT NOT NULL,
+                "redeemable" INT NOT NULL,
+                "STATUS" INT NOT NULL
+            );
+        `);
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Create Transaction");
         Handlers.Registry.registerTransactionHandler(StakeCreateTransactionHandler);
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Cancel Transaction");

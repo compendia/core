@@ -101,24 +101,20 @@ export class ExpireHelper {
         blockHeight?: number,
         skipPowerUp?: boolean,
     ): void {
-        const exists = database.prepare(`SELECT count(*) FROM stakes WHERE key = ${stakeKey}`).get();
+        // Write to SQLite in-mem db
+        const insertStatement = database.prepare(
+            `INSERT OR IGNORE INTO stakes ` +
+                "(key, address, powerup, redeemable, status) VALUES " +
+                "(:key, :address, :powerup, :redeemable, :status);",
+        );
 
-        if (!Number(exists)) {
-            // Write to SQLite in-mem db
-            const insertStatement = database.prepare(
-                `INSERT INTO stakes ` +
-                    "(key, address, powerup, redeemable, status) VALUES " +
-                    "(:key, :address, :powerup, :redeemable, :status);",
-            );
-
-            insertStatement.run({
-                key: stakeKey,
-                address: wallet.address,
-                powerup: stake.timestamps.powerUp.toString(),
-                redeemable: stake.timestamps.redeemable.toString(),
-                status: 0,
-            });
-        }
+        insertStatement.run({
+            key: stakeKey,
+            address: wallet.address,
+            powerup: stake.timestamps.powerUp.toString(),
+            redeemable: stake.timestamps.redeemable.toString(),
+            status: 0,
+        });
     }
 
     public static removeExpiry(stakeKey: string): void {
