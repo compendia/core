@@ -65,7 +65,9 @@ export class PowerUpHelper {
                         );
 
                         const stakeObj = wallet.getAttribute("stakes")[stake.key];
-                        this.emitter.emit("stake.powerup", { stake: stakeObj, block });
+                        if (this.emitter !== undefined) {
+                            this.emitter.emit("stake.powerup", { stake: stakeObj, block });
+                        }
 
                         // Remove queued power-up from in mem db
                         this.removePowerUp(stake.key);

@@ -85,7 +85,9 @@ export class ExpireHelper {
                 walletManager2.reindex(poolDelegate);
             }
 
-            this.emitter.emit("stake.released", { address: wallet.address, stakeKey, block, prevStakePower });
+            if (this.emitter !== undefined) {
+                this.emitter.emit("stake.released", { address: wallet.address, stakeKey, block, prevStakePower });
+            }
         }
 
         // If the stake is somehow still unreleased, don't remove it from db

@@ -30,7 +30,7 @@
         "@arkecosystem/core-utils": "^2.6.52",
         "@arkecosystem/crypto": "^2.6.52",
         "@arkecosystem/utils": "^1.1",
-        "@nosplatform/stake-transactions": "^0.2.0",
+        "@nosplatform/stake-transactions": "^0.2.2",
         "bluebird": "^3.5.5",
         "cpy-cli": "^2.0.0",
         "dayjs": "^1.8.15",
