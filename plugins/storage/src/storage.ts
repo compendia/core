@@ -1,6 +1,5 @@
 import { Container, Logger } from "@arkecosystem/core-interfaces";
 import { Managers } from "@arkecosystem/crypto";
-import { createHandyClient } from "handy-redis";
 import * as path from "path";
 // TypeORM imports
 import "reflect-metadata";
@@ -36,9 +35,6 @@ export const plugin: Container.IPluginDescriptor = {
 
         container.resolvePlugin<Logger.ILogger>("logger").info(`Registering Storage Plug-in.`);
         container.resolvePlugin<Logger.ILogger>("logger").info(`Storage Plug-in Database Path: ${dbPath}`);
-
-        const redis = createHandyClient();
-        await redis.flushdb();
 
         await createConnection({
             type: "sqlite",

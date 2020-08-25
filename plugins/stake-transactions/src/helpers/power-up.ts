@@ -2,16 +2,10 @@ import { app } from "@arkecosystem/core-container";
 import { EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
-import { createHandyClient } from "handy-redis";
-
-const redis = createHandyClient();
+import { database, IStakeDbItem } from "../index";
 
 export class PowerUpHelper {
-    public static async powerUp(
-        wallet: State.IWallet,
-        stakeKey: string,
-        walletManager: State.IWalletManager,
-    ): Promise<void> {
+    public static powerUp(wallet: State.IWallet, stakeKey: string, walletManager: State.IWalletManager): void {
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
         const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
@@ -29,8 +23,10 @@ export class PowerUpHelper {
         walletManager.reindex(wallet);
     }
 
-    public static async removePowerUp(stakeKey: string): Promise<void> {
-        await redis.zrem("stake_powerups", `stake:${stakeKey}`);
+    public static removePowerUp(stakeKey: string): void {
+        const updateStatement = database.prepare(`UPDATE stakes SET status = 1 WHERE key = :key`);
+
+        updateStatement.run({ key: stakeKey });
     }
 
     public static async processPowerUps(
@@ -38,15 +34,10 @@ export class PowerUpHelper {
         walletManager: State.IWalletManager,
     ): Promise<void> {
         const lastTime = block.timestamp;
-        const keys = await redis.zrangebyscore("stake_powerups", 0, lastTime);
-        const stakes = [];
-        let stakesCount = 0;
-        for (const key of keys) {
-            const obj = await redis.hgetall(key);
-            stakes.push(obj);
-            stakesCount++;
-        }
-        if (stakes && stakesCount > 0 && stakes.length) {
+        const stakes: IStakeDbItem[] = database
+            .prepare(`SELECT * FROM stakes WHERE powerup <= ${lastTime} AND status = 0`)
+            .all();
+        if (stakes.length > 0) {
             app.resolvePlugin("logger").info("Processing stake power-ups.");
 
             for (const stake of stakes) {
@@ -54,39 +45,39 @@ export class PowerUpHelper {
                     const wallet = walletManager.findByAddress(stake.address);
                     if (
                         wallet.hasAttribute("stakes") &&
-                        wallet.getAttribute("stakes")[stake.stakeKey] !== undefined &&
-                        wallet.getAttribute("stakes")[stake.stakeKey].status === "grace"
+                        wallet.getAttribute("stakes")[stake.key] !== undefined &&
+                        wallet.getAttribute("stakes")[stake.key].status === "grace"
                     ) {
-                        app.resolvePlugin("logger").info(
-                            `Power-up Stake ${stake.stakeKey} of wallet ${wallet.address}.`,
-                        );
+                        app.resolvePlugin("logger").info(`Power-up Stake ${stake.key} of wallet ${wallet.address}.`);
 
                         // Power up in db wallet
-                        await this.powerUp(wallet, stake.stakeKey, walletManager);
+                        this.powerUp(wallet, stake.key, walletManager);
 
                         // Power up in pool wallet
                         const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                             "transaction-pool",
                         );
                         const poolWalletManager: State.IWalletManager = poolService.walletManager;
-                        await this.powerUp(
+                        this.powerUp(
                             poolWalletManager.findByAddress(wallet.address),
-                            stake.stakeKey,
+                            stake.key,
                             poolService.walletManager,
                         );
 
-                        const stakeObj = wallet.getAttribute("stakes")[stake.stakeKey];
-                        this.emitter.emit("stake.powerup", { stake: stakeObj, block });
+                        const stakeObj = wallet.getAttribute("stakes")[stake.key];
+                        if (this.emitter !== undefined) {
+                            this.emitter.emit("stake.powerup", { stake: stakeObj, block });
+                        }
 
-                        // Remove queued power-up from redis
-                        await this.removePowerUp(stake.stakeKey);
+                        // Remove queued power-up from in mem db
+                        this.removePowerUp(stake.key);
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete stake from db in this case
                         app.resolvePlugin("logger").info(
-                            `Unknown powerup ${stake.stakeKey} of wallet ${wallet.address}. Deleted from powerups.`,
+                            `Unknown powerup ${stake.key} of wallet ${wallet.address}. Deleted from powerups.`,
                         );
-                        await this.removePowerUp(stake.stakeKey);
+                        this.removePowerUp(stake.key);
                     }
                 }
             }

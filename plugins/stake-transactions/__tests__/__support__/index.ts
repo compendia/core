@@ -3,9 +3,9 @@ import "jest-extended";
 import { Container, Database, State } from "@arkecosystem/core-interfaces";
 import { Wallets } from "@arkecosystem/core-state";
 import { Crypto, Identities, Managers, Utils } from "@arkecosystem/crypto";
+import { database } from "@nosplatform/stake-transactions";
 import delay from "delay";
 import * as fs from "fs";
-import { createHandyClient } from "handy-redis";
 import cloneDeep from "lodash.clonedeep";
 import * as path from "path";
 import { secrets } from "../../../../__tests__/utils/config/nospluginnet/delegates.json";
@@ -21,9 +21,19 @@ export const setUp = async (): Promise<void> => {
         if (fs.existsSync(dbPath)) {
             fs.unlinkSync(dbPath);
         }
-
-        const redis = createHandyClient();
-        await redis.flushdb();
+        database.exec(`
+        DROP TABLE IF EXISTS stakes
+    `);
+        database.exec(`
+    PRAGMA journal_mode=WAL;
+    CREATE TABLE IF NOT EXISTS stakes (
+        "key" VARCHAR(64) PRIMARY KEY,
+        "address" VARCHAR(34) NOT NULL,
+        "powerup" INT NOT NULL,
+        "redeemable" INT NOT NULL,
+        "STATUS" INT NOT NULL
+    );
+`);
 
         app = await setUpContainer({
             include: [
@@ -73,9 +83,9 @@ export const tearDown = async (): Promise<void> => {
     }
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     await databaseService.reset();
-    await app.tearDown();
-    const redis = createHandyClient();
-    await redis.flushdb();
+    database.exec(`
+    DROP TABLE IF EXISTS stakes
+`);
 };
 
 export const snoozeForBlock = async (sleep: number = 0, height: number = 1): Promise<void> => {

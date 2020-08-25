@@ -66,7 +66,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
                 stake.status = "canceled";
                 stakes[txId] = stake;
 
-                await ExpireHelper.removeExpiry(transaction.id);
+                ExpireHelper.removeExpiry(transaction.id);
 
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 walletManager.reindex(wallet);
@@ -165,7 +165,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
         if (walletManager.constructor.name !== "TempWalletManager") {
-            await ExpireHelper.removeExpiry(transaction.id);
+            ExpireHelper.removeExpiry(transaction.id);
         }
 
         walletManager.reindex(sender);
@@ -189,7 +189,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
         sender.balance = newBalance;
 
         if (walletManager.constructor.name !== "TempWalletManager") {
-            await ExpireHelper.storeExpiry(stake, sender, txId);
+            ExpireHelper.storeExpiry(stake, sender, txId);
         }
 
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));

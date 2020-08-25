@@ -5,6 +5,7 @@ import { Container, Database, State, TransactionPool } from "@arkecosystem/core-
 import { Wallets } from "@arkecosystem/core-state";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Blocks, Crypto, Identities, Interfaces, Managers, Utils } from "@arkecosystem/crypto";
+import { database } from "@nosplatform/stake-transactions";
 import delay from "delay";
 import cloneDeep from "lodash.clonedeep";
 import socketCluster from "socketcluster-client";
@@ -20,7 +21,19 @@ let app: Container.IContainer;
 export const setUp = async (): Promise<Container.IContainer | undefined> => {
     try {
         process.env.CORE_RESET_DATABASE = "1";
-
+        database.exec(`
+        DROP TABLE IF EXISTS stakes
+    `);
+        database.exec(`
+    PRAGMA journal_mode=WAL;
+    CREATE TABLE IF NOT EXISTS stakes (
+        "key" VARCHAR(64) PRIMARY KEY,
+        "address" VARCHAR(34) NOT NULL,
+        "powerup" INT NOT NULL,
+        "redeemable" INT NOT NULL,
+        "STATUS" INT NOT NULL
+    );
+`);
         app = await setUpContainer({
             include: [
                 "@arkecosystem/core-event-emitter",
@@ -81,7 +94,9 @@ export const setUp = async (): Promise<Container.IContainer | undefined> => {
 export const tearDown = async (): Promise<void> => {
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     await databaseService.reset();
-
+    database.exec(`
+    DROP TABLE IF EXISTS stakes
+`);
     await app.tearDown();
 };
 
