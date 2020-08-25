@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 -   Replace redis with in-memory sqlite for improved staking data consistency.
+
+## [2.9.13] - 2020-08-23
+
+### Changed
+
 -   Bump ipfs dependency to 0.49.0.
 
 ## [2.9.12] - 2020-08-20
