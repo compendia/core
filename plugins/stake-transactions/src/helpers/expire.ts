@@ -123,8 +123,8 @@ export class ExpireHelper {
                     ["redeemableTimestamp", stake.timestamps.redeemable.toString()],
                     ["stakeKey", stakeKey],
                 );
-                const exists = await redis.exists(`stake:${stakeKey}`);
-                const data = await redis.hgetall(`stake:${stakeKey}`);
+                let exists = await redis.exists(`stake:${stakeKey}`);
+                let data = await redis.hgetall(`stake:${stakeKey}`);
                 while (
                     !exists ||
                     !data ||
@@ -140,6 +140,8 @@ export class ExpireHelper {
                         ["redeemableTimestamp", stake.timestamps.redeemable.toString()],
                         ["stakeKey", stakeKey],
                     );
+                    exists = await redis.exists(`stake:${stakeKey}`);
+                    data = await redis.hgetall(`stake:${stakeKey}`);
                 }
             };
 
