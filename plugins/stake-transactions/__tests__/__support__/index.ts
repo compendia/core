@@ -3,6 +3,7 @@ import "jest-extended";
 import { Container, Database, State } from "@arkecosystem/core-interfaces";
 import { Wallets } from "@arkecosystem/core-state";
 import { Crypto, Identities, Managers, Utils } from "@arkecosystem/crypto";
+import { database } from "@nosplatform/stake-transactions";
 import delay from "delay";
 import * as fs from "fs";
 import cloneDeep from "lodash.clonedeep";
@@ -20,6 +21,9 @@ export const setUp = async (): Promise<void> => {
         if (fs.existsSync(dbPath)) {
             fs.unlinkSync(dbPath);
         }
+        database.exec(`
+        DROP TABLE IF EXISTS stakes
+    `);
 
         app = await setUpContainer({
             include: [
@@ -69,6 +73,9 @@ export const tearDown = async (): Promise<void> => {
     }
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     await databaseService.reset();
+    database.exec(`
+    DROP TABLE IF EXISTS stakes
+`);
 };
 
 export const snoozeForBlock = async (sleep: number = 0, height: number = 1): Promise<void> => {
