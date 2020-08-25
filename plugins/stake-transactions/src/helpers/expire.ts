@@ -113,7 +113,7 @@ export class ExpireHelper {
             address: wallet.address,
             powerup: stake.timestamps.powerUp.toString(),
             redeemable: stake.timestamps.redeemable.toString(),
-            status: 0,
+            status: skipPowerUp ? 1 : 0,
         });
     }
 
