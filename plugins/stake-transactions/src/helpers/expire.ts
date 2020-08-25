@@ -103,21 +103,55 @@ export class ExpireHelper {
         blockHeight?: number,
         skipPowerUp?: boolean,
     ): Promise<void> {
-        const key = `stake:${stakeKey}`;
-        const exists = await redis.exists(key);
-        if (!exists) {
-            await redis.hmset(
-                key,
-                ["address", wallet.address],
-                ["powerUpTimestamp", stake.timestamps.powerUp.toString()],
-                ["redeemableTimestamp", stake.timestamps.redeemable.toString()],
-                ["stakeKey", stakeKey],
-            );
-            await redis.zadd("stake_expirations", [stake.timestamps.redeemable, key]);
-            if (Managers.configManager.getMilestone(blockHeight).powerUp && !skipPowerUp) {
-                await redis.zadd("stake_powerups", [stake.timestamps.powerUp, key]);
+        // Function to
+        const zAdd = async (db, key, val) => {
+            const store = async () => {
+                await redis.zadd(db, [key, val]);
+            };
+            // Store it
+            await store();
+            // Check if it exists, else retry
+            if (!(await redis.zscore(db, key))) {
+                await store();
             }
-        }
+        };
+
+        const storeStake = async (stake, wallet, stakeKey) => {
+            const key = `stake:${stakeKey}`;
+
+            const store = async () => {
+                await redis.hset(
+                    key,
+                    ["address", wallet.address],
+                    ["powerUpTimestamp", stake.timestamps.powerUp.toString()],
+                    ["redeemableTimestamp", stake.timestamps.redeemable.toString()],
+                    ["stakeKey", stakeKey],
+                );
+            };
+
+            await store();
+
+            const exists = await redis.exists(`stake:${stakeKey}`);
+            const data = await redis.hgetall(`stake:${stakeKey}`);
+            if (
+                !exists ||
+                !data ||
+                data.address !== wallet.address ||
+                data.powerUpTimestamp !== stake.timestamps.powerUp.toString() ||
+                data.redeemableTimestamp !== stake.timestamps.redeemable.toString() ||
+                data.stakeKey !== stakeKey
+            ) {
+                await store();
+            }
+
+            await zAdd("stake_expirations", stake.timestamps.redeemable, key);
+            if (Managers.configManager.getMilestone(blockHeight).powerUp && !skipPowerUp) {
+                await zAdd("stake_powerups", stake.timestamps.powerUp, key);
+            }
+
+            return true;
+        };
+        await storeStake(stake, wallet, stakeKey);
     }
 
     public static async removeExpiry(stakeKey: string): Promise<void> {

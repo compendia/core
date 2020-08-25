@@ -14,6 +14,7 @@ export const plugin: Container.IPluginDescriptor = {
     defaults,
     alias: "stake-transactions",
     async register(container: Container.IContainer, options) {
+        await redis.flushdb();
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Create Transaction");
         Handlers.Registry.registerTransactionHandler(StakeCreateTransactionHandler);
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Cancel Transaction");
