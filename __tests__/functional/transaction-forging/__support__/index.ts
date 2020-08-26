@@ -8,7 +8,7 @@ import * as fs from "fs";
 import cloneDeep from "lodash.clonedeep";
 import * as path from "path";
 
-import { database } from "@nosplatform/stake-transactions";
+import { database, initDb } from "@nosplatform/stake-transactions";
 import { secrets } from "../../../utils/config/testnet/delegates.json";
 import { setUpContainer } from "../../../utils/helpers/container";
 
@@ -26,16 +26,7 @@ export const setUp = async (): Promise<Container.IContainer> => {
         database.exec(`
         DROP TABLE IF EXISTS stakes
     `);
-        database.exec(`
-    PRAGMA journal_mode=WAL;
-    CREATE TABLE IF NOT EXISTS stakes (
-        "key" VARCHAR(64) PRIMARY KEY,
-        "address" VARCHAR(34) NOT NULL,
-        "powerup" INT NOT NULL,
-        "redeemable" INT NOT NULL,
-        "STATUS" INT NOT NULL
-    );
-`);
+        initDb();
 
         app = await setUpContainer({
             include: [

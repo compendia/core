@@ -9,8 +9,8 @@ import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Crypto, Identities, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { configManager } from "@arkecosystem/crypto/dist/managers";
+import { database, initDb } from "@nosplatform/stake-transactions";
 import { Builders as StakeBuilders } from "@nosplatform/stake-transactions-crypto/src";
-import { database } from "@nosplatform/stake-transactions/src";
 
 // import {
 //     DatabaseConnectionStub
@@ -41,16 +41,7 @@ beforeAll(async () => {
     DROP TABLE IF EXISTS stakes
 `);
 
-    database.exec(`
-    PRAGMA journal_mode=WAL;
-    CREATE TABLE IF NOT EXISTS stakes (
-        "key" VARCHAR(64) PRIMARY KEY,
-        "address" VARCHAR(34) NOT NULL,
-        "powerup" INT NOT NULL,
-        "redeemable" INT NOT NULL,
-        "STATUS" INT NOT NULL
-    );
-`);
+    initDb();
     const dbPath = path.resolve(__dirname, `../../storage/databases/unitnet.sqlite`);
     if (fs.existsSync(dbPath)) {
         fs.unlinkSync(dbPath);
