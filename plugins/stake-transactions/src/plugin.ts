@@ -1,19 +1,18 @@
 import { Container, Logger } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { createHandyClient } from "handy-redis";
 import { defaults } from "./defaults";
 import { StakeCancelTransactionHandler } from "./handlers";
 import { StakeCreateTransactionHandler } from "./handlers/stake-create";
 import { StakeRedeemTransactionHandler } from "./handlers/stake-redeem";
 import * as StakeHelpers from "./helpers";
-
-const redis = createHandyClient();
+import { initDb } from "./index";
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
     defaults,
     alias: "stake-transactions",
     async register(container: Container.IContainer, options) {
+        initDb();
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Create Transaction");
         Handlers.Registry.registerTransactionHandler(StakeCreateTransactionHandler);
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Stake Cancel Transaction");
@@ -28,7 +27,6 @@ export const plugin: Container.IPluginDescriptor = {
         Handlers.Registry.deregisterTransactionHandler(StakeCancelTransactionHandler);
         container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering Stake Redeem Transaction");
         Handlers.Registry.deregisterTransactionHandler(StakeRedeemTransactionHandler);
-        await redis.flushdb();
     },
 };
 

@@ -78,7 +78,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.status = "released";
                     addPower = stakeObject.power;
-                    await ExpireHelper.removeExpiry(transaction.id);
+                    ExpireHelper.removeExpiry(transaction.id);
                 } else {
                     // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
@@ -91,7 +91,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         addPower = stakeObject.power;
                     }
                     // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
-                    await ExpireHelper.storeExpiry(
+                    ExpireHelper.storeExpiry(
                         stakeObject,
                         staker,
                         transaction.id,
@@ -264,7 +264,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         // Only store the expiry if it's not a tempWalletManager
         if (walletManager.constructor.name !== "TempWalletManager") {
-            await ExpireHelper.storeExpiry(o, staker, transaction.id);
+            ExpireHelper.storeExpiry(o, staker, transaction.id);
         }
 
         walletManager.reindex(staker);
@@ -303,7 +303,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
         // Only remove the expiry if it's not a tempWalletManager
         if (walletManager.constructor.name !== "TempWalletManager") {
-            await ExpireHelper.removeExpiry(transaction.id);
+            ExpireHelper.removeExpiry(transaction.id);
         }
 
         walletManager.reindex(staker);

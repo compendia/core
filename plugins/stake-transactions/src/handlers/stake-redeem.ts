@@ -56,7 +56,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power);
                 stake.status = "redeemed";
                 stakes[txId] = stake;
-                await ExpireHelper.removeExpiry(transaction.id);
+                ExpireHelper.removeExpiry(transaction.id);
                 wallet.balance = newBalance;
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
                 wallet.setAttribute<Utils.BigNumber>("stakePower", newPower);

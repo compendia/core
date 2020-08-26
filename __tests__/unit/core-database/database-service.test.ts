@@ -6,6 +6,7 @@ import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { Database, EventEmitter, State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { Blocks, Constants, Enums, Identities, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { initDb } from "@nosplatform/stake-transactions";
 import { DatabaseService } from "../../../packages/core-database/src/database-service";
 import { Wallet, WalletManager } from "../../../packages/core-state/src/wallets";
 import { roundCalculator } from "../../../packages/core-utils";
@@ -25,6 +26,7 @@ let container;
 let emitter: EventEmitter.EventEmitter;
 
 beforeAll(() => {
+    initDb();
     container = app;
     // @ts-ignore
     emitter = container.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");

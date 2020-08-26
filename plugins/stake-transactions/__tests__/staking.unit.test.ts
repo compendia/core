@@ -10,6 +10,7 @@ import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Crypto, Identities, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { configManager } from "@arkecosystem/crypto/dist/managers";
 import { Builders as StakeBuilders } from "@nosplatform/stake-transactions-crypto/src";
+import { database, initDb } from "@nosplatform/stake-transactions/src";
 
 // import {
 //     DatabaseConnectionStub
@@ -36,6 +37,11 @@ import { PowerUpHelper } from "../src/helpers";
 // import { ExpireHelper } from '../src/helpers';
 
 beforeAll(async () => {
+    database.exec(`
+    DROP TABLE IF EXISTS stakes
+`);
+
+    initDb();
     const dbPath = path.resolve(__dirname, `../../storage/databases/unitnet.sqlite`);
     if (fs.existsSync(dbPath)) {
         fs.unlinkSync(dbPath);
@@ -249,7 +255,7 @@ describe("Stake Power-up", () => {
 
         expect(voter.getAttribute("stakePower")).toBeFalsy();
 
-        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower")).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
@@ -312,7 +318,7 @@ describe("Stake Power-up", () => {
             },
         });
 
-        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["7889400"]).dividedBy(10),
@@ -567,7 +573,7 @@ describe("Stake Cancel Transactions", () => {
             expect(error).toBeInstanceOf(StakeGraceEndedError);
         }
 
-        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
 
         expect(voter.balance).toEqual(voterBalanceAfterVote.minus(stakeTransaction.data.asset.stakeCreate.amount));
 
@@ -646,7 +652,7 @@ describe("Stake Cancel Transactions", () => {
             expect(error).toBeInstanceOf(WalletNotStakerError);
         }
 
-        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
 
         expect(voter.balance).toEqual(voterBalanceAfterVote);
 
@@ -815,7 +821,7 @@ describe("Stake Send Power-up", () => {
 
         expect(voter.getAttribute("stakePower")).toBeFalsy();
 
-        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower")).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
@@ -921,7 +927,7 @@ describe("Stake Send Power-up", () => {
             },
         });
 
-        await PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["7889400"]).dividedBy(10),

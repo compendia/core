@@ -8,6 +8,7 @@ import * as fs from "fs";
 import cloneDeep from "lodash.clonedeep";
 import * as path from "path";
 
+import { database, initDb } from "@nosplatform/stake-transactions";
 import { secrets } from "../../../utils/config/testnet/delegates.json";
 import { setUpContainer } from "../../../utils/helpers/container";
 
@@ -21,6 +22,11 @@ export const setUp = async (): Promise<Container.IContainer> => {
         if (fs.existsSync(dbPath)) {
             fs.unlinkSync(dbPath);
         }
+
+        database.exec(`
+        DROP TABLE IF EXISTS stakes
+    `);
+        initDb();
 
         app = await setUpContainer({
             include: [
@@ -63,7 +69,9 @@ export const setUp = async (): Promise<Container.IContainer> => {
 export const tearDown = async (): Promise<void> => {
     const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
     await databaseService.reset();
-
+    database.exec(`
+    DROP TABLE IF EXISTS stakes
+`);
     await app.tearDown();
 };
 
