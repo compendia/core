@@ -74,9 +74,6 @@ export class PowerUpHelper {
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete stake from db in this case
-                        app.resolvePlugin("logger").info(
-                            `Unknown powerup ${stake.key} of wallet ${wallet.address}. Deleted from powerups.`,
-                        );
                         this.removePowerUp(stake.key);
                     }
                 }
