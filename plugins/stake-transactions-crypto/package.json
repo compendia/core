@@ -1,7 +1,7 @@
 {
     "name": "@nosplatform/stake-transactions-crypto",
     "description": "Provides stake transactions crypto logic for Ark Core",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "contributors": [
         "Dean van Dugteren <dean@nos.io>"
     ],
