@@ -1,6 +1,6 @@
 import ByteBuffer from "bytebuffer";
 
-import { Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
+import { Identities, Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
 
 import { StakeTransactionGroup, StakeTransactionType } from "../enums";
 import { IStakeCreateAsset } from "../interfaces";
@@ -58,9 +58,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
 
         let bufferLength = 8 + 8 + 8;
         // Append recipientId to buffer length if stake is transferable
-        if (Managers.configManager.getMilestone().transferStake) {
-            bufferLength = bufferLength + 21;
-        }
+        bufferLength = bufferLength + 21;
 
         const stakeCreate = data.asset.stakeCreate as IStakeCreateAsset;
 
@@ -69,14 +67,12 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         buffer.writeUint64(+stakeCreate.amount);
         buffer.writeUint64(+stakeCreate.timestamp);
 
-        if (Managers.configManager.getMilestone().transferStake) {
-            if (!data.recipientId) {
-                data.recipientId = Identities.Address.fromPublicKey(data.senderPublicKey);
-            }
-            const { addressBuffer, addressError } = Identities.Address.toBuffer(data.recipientId);
-            options.addressError = addressError;
-            buffer.append(addressBuffer);
+        if (!data.recipientId) {
+            data.recipientId = Identities.Address.fromPublicKey(data.senderPublicKey);
         }
+        const { addressBuffer, addressError } = Identities.Address.toBuffer(data.recipientId);
+        options.addressError = addressError;
+        buffer.append(addressBuffer);
 
         return buffer;
     }
@@ -89,13 +85,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
         stakeCreate.duration = buf.readUint64().toInt();
         stakeCreate.amount = Utils.BigNumber.make(buf.readUint64().toString());
         stakeCreate.timestamp = buf.readUint64().toInt();
-
-        const bufferLength = buf.capacity();
-
-        // bufferLength is 168 if there's a recipientId (otherwise 147)
-        if (bufferLength === 168) {
-            data.recipientId = Identities.Address.fromBuffer(buf.readBytes(21).toBuffer());
-        }
+        data.recipientId = Identities.Address.fromBuffer(buf.readBytes(21).toBuffer());
 
         data.asset = {
             stakeCreate,
