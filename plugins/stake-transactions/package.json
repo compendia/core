@@ -30,7 +30,7 @@
         "@arkecosystem/core-interfaces": "^2.6.52",
         "@arkecosystem/core-transactions": "^2.6.52",
         "@arkecosystem/crypto": "^2.6.52",
-        "@nosplatform/stake-transactions-crypto": "^0.2.4",
+        "@nosplatform/stake-transactions-crypto": "^0.2.6",
         "better-sqlite3": "^7.1.0"
     },
     "devDependencies": {

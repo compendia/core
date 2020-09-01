@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.9.12"]
+            "minimumVersions": ["^2.9.14"]
         },
         "reward": 0,
         "topReward": 0,
@@ -43,7 +43,6 @@
         "minimumStake": 10000000000,
         "graceEnd": 3600,
         "powerUp": 169200,
-        "transferStake": true,
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
@@ -56,6 +55,12 @@
         "aip11": true,
         "block": {
             "idFullSha256": true
+        }
+    },
+    {
+        "height": 161000,
+        "p2p": {
+            "minimumVersions": ["^2.10.0"]
         }
     },
     {
