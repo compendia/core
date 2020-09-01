@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2020-09-01
+
+### Fixed
+
+-   Stake Create transaction now accepts second signatures.
+-   Mainnet nodes will reject nodes below v2.10.0 from block 161,000.
+
 ## [2.9.14] - 2020-08-24
 
 ### Changed
