@@ -28,7 +28,7 @@
         "@arkecosystem/core-state": "^2.6.54",
         "@arkecosystem/core-utils": "^2.6.54",
         "@arkecosystem/crypto": "^2.6.54",
-        "@arkecosystem/core-database": "^2.6.52",
+        "@arkecosystem/core-database": "^2.6.54",
         "delay": "^4.3.0",
         "lodash.isempty": "^4.4.0",
         "lodash.uniq": "^4.5.0",
