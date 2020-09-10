@@ -28,20 +28,26 @@ class Database {
 
     public findById(id: string): IWebhook {
         try {
-            return this.database
-                .get("webhooks")
-                .find({ id })
-                .value();
+            return (
+                this.database
+                    .get("webhooks")
+                    // @ts-ignore
+                    .find({ id })
+                    .value()
+            );
         } catch (error) {
             return undefined;
         }
     }
 
     public findByEvent(event: string): IWebhook[] {
-        return this.database
-            .get("webhooks")
-            .filter({ event })
-            .value();
+        return (
+            this.database
+                .get("webhooks")
+                // @ts-ignore
+                .filter({ event })
+                .value()
+        );
     }
 
     public create(data: IWebhook): IWebhook {
@@ -49,6 +55,7 @@ class Database {
 
         this.database
             .get("webhooks")
+            // @ts-ignore
             .push(data)
             .write();
 
@@ -56,16 +63,20 @@ class Database {
     }
 
     public update(id: string, data: IWebhook): IWebhook {
-        return this.database
-            .get("webhooks")
-            .find({ id })
-            .assign(data)
-            .write();
+        return (
+            this.database
+                .get("webhooks")
+                // @ts-ignore
+                .find({ id })
+                .assign(data)
+                .write()
+        );
     }
 
     public destroy(id: string): void {
         this.database
             .get("webhooks")
+            // @ts-ignore
             .remove({ id })
             .write();
     }
