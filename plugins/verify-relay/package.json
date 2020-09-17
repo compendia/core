@@ -1,0 +1,31 @@
+{
+    "name": "@alessiodf/verify-relay",
+    "description": "Relay Verifier for ARK Core",
+    "homepage": "https://github.com/alessiodf/verify-relay",
+    "version": "1.0.0",
+    "contributors": [
+        "alessiodf <alessiodf@pm.me>"
+    ],
+    "license": "GPL-3.0-or-later",
+    "main": "dist/index.js",
+    "files": [
+        "dist/*.js"
+    ],
+    "scripts": {
+        "compile": "../../node_modules/typescript/bin/tsc",
+        "build": "yarn clean && yarn compile",
+        "clean": "del dist"
+    },
+    "dependencies": {
+        "@arkecosystem/core-interfaces": "^2.6.57",
+        "@arkecosystem/core-container": "^2.6.57",
+        "@arkecosystem/crypto": "^2.6.57"
+    },
+    "prettier": {
+        "printWidth": 100,
+        "singleQuote": false,
+        "tabWidth": 4,
+        "trailingComma": "none",
+        "useTabs": false
+    }
+}
