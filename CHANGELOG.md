@@ -5,9 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.10.6] - 2020-08-11
+
+## Changed
+
+-   Add relay verifier API endpoint for validators (@alessiodf)
+
+## Fixed
+
+-   Only verify peer blocks < our height (c968e69d, @alessiodf)
+-   Stricter multipayment tx check (620027df, @air1one, reported by @alessiodf)
+-   Initialize maxPayload on connection create (3ac3eb17, @alessiodf)
+
 ## [2.10.2] - 2020-09-09
 
-### Changed
+## Fixed
 
 -   Verify peer claimed state (24a8b044, @air1one)
 
