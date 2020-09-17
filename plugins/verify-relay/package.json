@@ -1,7 +1,7 @@
 {
-    "name": "@alessiodf/core-chameleon",
-    "description": "Core Chameleon for ARK Core",
-    "homepage": "https://github.com/alessiodf/core-chameleon",
+    "name": "@alessiodf/verify-relay",
+    "description": "Relay Verifier for ARK Core",
+    "homepage": "https://github.com/alessiodf/verify-relay",
     "version": "1.0.0",
     "contributors": [
         "alessiodf <alessiodf@pm.me>"
@@ -9,8 +9,7 @@
     "license": "GPL-3.0-or-later",
     "main": "dist/index.js",
     "files": [
-        "dist/*.js",
-        "chameleon.sh"
+        "dist/*.js"
     ],
     "scripts": {
         "compile": "../../node_modules/typescript/bin/tsc",
@@ -18,11 +17,9 @@
         "clean": "del dist"
     },
     "dependencies": {
-        "agent-base": "^6.0.0",
-        "socks": "^2.3.3"
-    },
-    "devDependencies": {
-        "@arkecosystem/core": "^2.10.6"
+        "@arkecosystem/core-interfaces": "^2.6.57",
+        "@arkecosystem/core-container": "^2.6.57",
+        "@arkecosystem/crypto": "^2.6.57"
     },
     "prettier": {
         "printWidth": 100,
