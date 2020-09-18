@@ -1,14 +1,14 @@
 import { app } from "@arkecosystem/core-container";
-import { Container, Logger, EventEmitter } from "@arkecosystem/core-interfaces";
+import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
+import { Container, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
 import { defaults } from "./defaults";
 import { StakeCancelTransactionHandler } from "./handlers";
 import { StakeCreateTransactionHandler } from "./handlers/stake-create";
 import { StakeRedeemTransactionHandler } from "./handlers/stake-redeem";
 import * as StakeHelpers from "./helpers";
-import { initDb } from "./index";
-import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
 import { QueueHelper } from "./helpers";
+import { initDb } from "./index";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 

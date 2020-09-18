@@ -17,7 +17,7 @@ import {
     StakeNotIntegerError,
     StakeTimestampError,
 } from "../errors";
-import { ExpireHelper, VotePower, QueueHelper } from "../helpers";
+import { ExpireHelper, QueueHelper, VotePower } from "../helpers";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -51,6 +51,10 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
             roundHeight,
         );
 
+        const secondToLastRoundBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+            roundHeight - Managers.configManager.getMilestone(roundHeight).activeDelegates,
+        );
+
         while (reader.hasNext()) {
             const transactions = await reader.read();
             for (const transaction of transactions) {
@@ -73,9 +77,6 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const stakes = staker.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
                 let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
-
-                // queued is true if the stake power should be applied after voteBalance bootstrap.
-
                 if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
                     // released
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
@@ -83,35 +84,29 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     addPower = stakeObject.power;
                     ExpireHelper.removeExpiry(transaction.id);
                 } else {
+                    // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
                     if (
                         !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
-                        (
-                            roundBlock.timestamp >= stakeObject.timestamps.powerUp
-                        )
+                        roundBlock.timestamp >= stakeObject.timestamps.powerUp
                     ) {
-                        // Else if not released, check if powerUp is configured in the transaction's round.
-                        // Activate the stakes made before the most recent round in the database.
                         // Powered up
                         stakeObject.status = "active";
-
-                        // If powered up during latest round: Queue stake to apply stakePower after state generation finished.  
-                        if (stakeObject.timestamps.powerUp >= roundBlock.timestamp) {
+                        if (stakeObject.timestamps.powerUp < roundBlock.timestamp && stakeObject.timestamps.powerUp >= secondToLastRoundBlock.timestamp) {
                             QueueHelper.add(stakeObject, staker, stakeObject.id);
                         } else {
-                            // If powered up before latest round: Add power directly.
                             addPower = stakeObject.power;
                         }
-
-                        // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
-                        ExpireHelper.storeExpiry(
-                            stakeObject,
-                            staker,
-                            transaction.id,
-                            roundBlock.height,
-                            stakeObject.status === "active",
-                        );
                     }
+
+                    // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
+                    ExpireHelper.storeExpiry(
+                        stakeObject,
+                        staker,
+                        transaction.id,
+                        roundBlock.height,
+                        stakeObject.status === "active",
+                    );
                 }
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
