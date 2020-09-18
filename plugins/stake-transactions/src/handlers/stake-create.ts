@@ -1,5 +1,6 @@
 import { app } from "@arkecosystem/core-container";
-import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { ApplicationEvents } from "@arkecosystem/core-event-emitter";
+import { Database, EventEmitter, Shared, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Constants, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
@@ -17,7 +18,7 @@ import {
     StakeNotIntegerError,
     StakeTimestampError,
 } from "../errors";
-import { ExpireHelper, VotePower } from "../helpers";
+import { ExpireHelper, PowerUpHelper, VotePower } from "../helpers";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -44,12 +45,16 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
         const stateService = app.resolvePlugin<State.IStateService>("state");
         const lastBlock: Interfaces.IBlock = stateService.getStore().getLastBlock();
-        const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
+        const round: Shared.IRoundInfo = roundCalculator.calculateRound(lastBlock.data.height);
+        const roundHeight: number = round.roundHeight;
         const roundBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
             roundHeight,
         );
+
+        let pendingPowerUp: boolean = false;
 
         while (reader.hasNext()) {
             const transactions = await reader.read();
@@ -66,7 +71,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 const stakeObject: StakeInterfaces.IStakeObject = VotePower.stakeObject(
                     transaction.asset.stakeCreate,
                     transaction.id,
-                    transaction.senderPublicKey,
+                    transaction.senderPublicKey, // TODO: should this be staker.publicKey?
                     transaction.blockHeight,
                 );
                 const newBalance = wallet.balance.minus(stakeObject.amount);
@@ -75,7 +80,11 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
                 if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
                     // released
-                    stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
+                    stakeObject.power = Utils.BigNumber.make(
+                        Utils.BigNumber.make(stakeObject.power)
+                            .dividedBy(2)
+                            .toFixed(),
+                    );
                     stakeObject.status = "released";
                     addPower = stakeObject.power;
                     ExpireHelper.removeExpiry(transaction.id);
@@ -86,9 +95,19 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
                         roundBlock.timestamp >= stakeObject.timestamps.powerUp
                     ) {
-                        // Powered up
-                        stakeObject.status = "active";
-                        addPower = stakeObject.power;
+                        const heightAfterPowerUp: number = (await databaseService.blocksBusinessRepository.search({
+                            timestamp: { from: stakeObject.timestamps.powerUp },
+                            limit: 1,
+                            orderBy: "timestamp:asc",
+                        })).rows[0].height;
+                        const powerRound: Shared.IRoundInfo = roundCalculator.calculateRound(heightAfterPowerUp);
+                        if (powerRound.round !== round.round - 1 || lastBlock.data.height !== roundHeight) {
+                            // Powered up
+                            stakeObject.status = "active";
+                            addPower = stakeObject.power;
+                        } else {
+                            pendingPowerUp = true;
+                        }
                     }
                     // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
                     ExpireHelper.storeExpiry(
@@ -113,6 +132,12 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     walletManager.reindex(staker);
                 }
             }
+        }
+
+        if (pendingPowerUp) {
+            emitter.once(ApplicationEvents.BlockApplied, () => {
+                PowerUpHelper.processPowerUps(roundBlock, databaseService.walletManager);
+            });
         }
     }
 
