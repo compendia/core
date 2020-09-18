@@ -19,6 +19,12 @@ const initDb = () => {
         "redeemable" INT NOT NULL,
         "STATUS" INT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS stake_queue (
+        "key" VARCHAR(64) PRIMARY KEY,
+        "address" VARCHAR(34) NOT NULL,
+        "powerup" INT NOT NULL,
+        "redeemable" INT NOT NULL
+    );
     `);
 };
 
