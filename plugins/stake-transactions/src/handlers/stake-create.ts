@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { Database, EventEmitter, Shared, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Constants, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
@@ -82,14 +82,34 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 } else {
                     // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
-                    if (
-                        !Managers.configManager.getMilestone(txRoundHeight).powerUp ||
-                        roundBlock.timestamp >= stakeObject.timestamps.powerUp
-                    ) {
-                        // Powered up
+
+                    if (!Managers.configManager.getMilestone(txRoundHeight).powerUp) {
                         stakeObject.status = "active";
                         addPower = stakeObject.power;
+                    } else if (roundBlock.timestamp >= stakeObject.timestamps.powerUp) {
+                        const blockWhenPoweredUp: Interfaces.IBlockData = (await databaseService.blocksBusinessRepository.search(
+                            {
+                                timestamp: { from: stakeObject.timestamps.powerUp },
+                                limit: 1,
+                                orderBy: "timestamp:asc",
+                            },
+                        )).rows[0];
+                        const roundWhenPoweredUp: Shared.IRoundInfo = roundCalculator.calculateRound(
+                            blockWhenPoweredUp.height,
+                        );
+                        const nextRoundAfterPowerUp: Shared.IRoundInfo = roundCalculator.calculateRound(
+                            roundWhenPoweredUp.roundHeight + roundWhenPoweredUp.maxDelegates,
+                        );
+                        const powerUpEffectiveFrom: number =
+                            roundCalculator.calculateRound(
+                                nextRoundAfterPowerUp.roundHeight + nextRoundAfterPowerUp.maxDelegates,
+                            ).roundHeight - 1;
+                        if (lastBlock.data.height >= powerUpEffectiveFrom) {
+                            stakeObject.status = "active";
+                            addPower = stakeObject.power;
+                        }
                     }
+
                     // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
                     ExpireHelper.storeExpiry(
                         stakeObject,
