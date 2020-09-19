@@ -1,5 +1,7 @@
 import { app } from "@arkecosystem/core-container";
-import { EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+
+import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { database, IStakeDbItem } from "../index";
@@ -30,9 +32,17 @@ export class PowerUpHelper {
     }
 
     public static async processPowerUps(
-        block: Interfaces.IBlockData,
+        currentBlock: Interfaces.IBlockData,
         walletManager: State.IWalletManager,
     ): Promise<void> {
+        let block: Interfaces.IBlockData;
+        const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        if (roundCalculator.isNewRound(currentBlock.height)) {
+            block = currentBlock;
+        } else {
+            const roundHeight: number = roundCalculator.calculateRound(currentBlock.height).roundHeight;
+            block = await databaseService.blocksBusinessRepository.findByHeight(roundHeight);
+        }
         const lastTime = block.timestamp;
         const stakes: IStakeDbItem[] = database
             .prepare(`SELECT * FROM stakes WHERE powerup <= ${lastTime} AND status = 0`)
