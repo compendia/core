@@ -23,6 +23,7 @@ export class DatabaseService implements Database.IDatabaseService {
     public restoredDatabaseIntegrity: boolean = false;
     public forgingDelegates: State.IWallet[] = undefined;
     public cache: Map<any, any> = new Map();
+    private coldStart: boolean = true;
 
     constructor(
         options: Record<string, any>,
@@ -78,9 +79,10 @@ export class DatabaseService implements Database.IDatabaseService {
     public async applyBlock(block: Interfaces.IBlock): Promise<void> {
         await this.walletManager.applyBlock(block);
 
-        if (roundCalculator.isNewRound(block.data.height)) {
+        if (this.coldStart || roundCalculator.isNewRound(block.data.height)) {
             await StakeHelpers.PowerUpHelper.processPowerUps(block.data, this.walletManager);
             await StakeHelpers.ExpireHelper.processExpirations(block.data);
+            this.coldStart = false;
         }
 
         if (this.blocksInCurrentRound) {
