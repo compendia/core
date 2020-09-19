@@ -1,7 +1,7 @@
 {
     "name": "@nosplatform/stake-transactions",
     "description": "Provides stake transactions for Ark Core",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "contributors": [
         "Dean van Dugteren <dean@nos.io>"
     ],
