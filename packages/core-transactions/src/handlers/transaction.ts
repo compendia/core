@@ -14,6 +14,7 @@ import {
     LegacyMultiSignatureRegistrationError,
     MissingMultiSignatureOnSenderError,
     SenderWalletMismatchError,
+    StaticFeeMismatchError,
     UnexpectedSecondSignatureError,
     UnsupportedMultiSignatureTransactionError,
 } from "../errors";

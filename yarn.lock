@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@arkecosystem/exchange-json-rpc@^2.1.0":
+"@arkecosystem/exchange-json-rpc@^2.0.1":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@arkecosystem/exchange-json-rpc/-/exchange-json-rpc-2.1.0.tgz#7080cf46d724eef70f1a50ae84313066fbbc8ca9"
   integrity sha512-30qeh5/IKb06XWcpwAJpdh433PEZ83yTVnw/pUOoarowB8MSmUvvPffC7Kta5SBKK0ajXMZA3evD/VGJs0xifg==
