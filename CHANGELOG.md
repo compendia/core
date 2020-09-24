@@ -5,9 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [2.10.6] - 2020-08-11
+## [2.10.13] - 2020-09-25
 
-## Changed
+### Fixed
+
+-   Remove duplicates entity resigned/isResigned (#3858) (90bf42de, @air1one)
+-   Rate limit and peer broadcast (#4054) (6988cdd4, @air1one)
+
+### Changed
+
+-   Accept peers in the 2.7 range (#3848) (aab40895, @faustbrian)
+-   Add devnet exception (#3967) (78c49b4a, @air1one)
+-   Throw more specific multi-signature exceptions (#3976) (48e67e51, @faustbrian)
+-   Add devnet exception (#4031) (5da4f4df, @air1one)
+
+## [2.10.7] - 2020-09-19
+
+### Fixed
+
+-   Accurate stake power-up timing on node bootstrap
+
+## [2.10.6] - 2020-09-17
+
+### Added
 
 -   Add relay verifier API endpoint for validators (@alessiodf)
 
@@ -1041,7 +1061,10 @@ Closed security vulnerabilities:
 -   Initial Release
 
 [unreleased]: https://github.com/ARKEcosystem/core/compare/master...develop
-[2.6.25]: https://github.com/ARKEcosystem/core/compare/2.6.49...2.6.25
+[2.7.0]: https://github.com/ARKEcosystem/core/compare/2.6.57...2.7.0
+[2.6.57]: https://github.com/ARKEcosystem/core/compare/2.6.54...2.6.57
+[2.6.54]: https://github.com/ARKEcosystem/core/compare/2.6.52...2.6.54
+[2.6.52]: https://github.com/ARKEcosystem/core/compare/2.6.49...2.6.52
 [2.6.49]: https://github.com/ARKEcosystem/core/compare/2.6.42...2.6.49
 [2.6.42]: https://github.com/ARKEcosystem/core/compare/2.6.39...2.6.42
 [2.6.39]: https://github.com/ARKEcosystem/core/compare/2.6.38...2.6.39
@@ -1606,12 +1629,32 @@ Closed security vulnerabilities:
 [#3695]: https://github.com/ARKEcosystem/core/pull/3695
 [#3746]: https://github.com/ARKEcosystem/core/pull/3746
 [#3806]: https://github.com/ARKEcosystem/core/pull/3806
+[#3817]: https://github.com/ARKEcosystem/core/pull/3817
 [#3818]: https://github.com/ARKEcosystem/core/pull/3818
 [#3823]: https://github.com/ARKEcosystem/core/pull/3823
 [#3830]: https://github.com/ARKEcosystem/core/pull/3830
+[#3836]: https://github.com/ARKEcosystem/core/pull/3836
+[#3845]: https://github.com/ARKEcosystem/core/pull/3845
+[#3847]: https://github.com/ARKEcosystem/core/pull/3847
+[#3848]: https://github.com/ARKEcosystem/core/pull/3848
+[#3850]: https://github.com/ARKEcosystem/core/pull/3850
+[#3858]: https://github.com/ARKEcosystem/core/pull/3858
+[#3877]: https://github.com/ARKEcosystem/core/pull/3877
 [#3904]: https://github.com/ARKEcosystem/core/pull/3904
 [#3905]: https://github.com/ARKEcosystem/core/pull/3905
+[#3937]: https://github.com/ARKEcosystem/core/pull/3937
 [#3950]: https://github.com/ARKEcosystem/core/pull/3950
+[#3967]: https://github.com/ARKEcosystem/core/pull/3967
+[#3976]: https://github.com/ARKEcosystem/core/pull/3976
+[#3986]: https://github.com/ARKEcosystem/core/pull/3986
+[#4008]: https://github.com/ARKEcosystem/core/pull/4008
+[#4017]: https://github.com/ARKEcosystem/core/pull/4017
+[#4020]: https://github.com/ARKEcosystem/core/pull/4020
+[#4024]: https://github.com/ARKEcosystem/core/pull/4024
+[#4029]: https://github.com/ARKEcosystem/core/pull/4029
+[#4031]: https://github.com/ARKEcosystem/core/pull/4031
+[#4053]: https://github.com/ARKEcosystem/core/pull/4053
+[#4054]: https://github.com/ARKEcosystem/core/pull/4054
 [032caa1b990e91937e4bc1561bc1aeaeca9e37d]: https://github.com/ARKEcosystem/core/commit/032caa1b990e91937e4bc1561bc1aeaeca9e37d9
 [1209a36366c8fd3ba31fab2463011b7ce1a7d84]: https://github.com/ARKEcosystem/core/commit/1209a36366c8fd3ba31fab2463011b7ce1a7d844
 [34749bf84bcec3fecd0098c0d42f52deb1f6ba4]: https://github.com/ARKEcosystem/core/commit/34749bf84bcec3fecd0098c0d42f52deb1f6ba4a

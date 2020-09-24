@@ -8,13 +8,14 @@ import assert from "assert";
 import {
     ColdWalletError,
     InsufficientBalanceError,
-    InvalidMultiSignatureError,
+    InvalidMultiSignaturesError,
     InvalidSecondSignatureError,
     LegacyMultiSignatureError,
+    LegacyMultiSignatureRegistrationError,
+    MissingMultiSignatureOnSenderError,
     SenderWalletMismatchError,
-    StaticFeeMismatchError,
-    UnexpectedMultiSignatureError,
     UnexpectedSecondSignatureError,
+    UnsupportedMultiSignatureTransactionError,
 } from "../errors";
 import { IDynamicFeeContext, ITransactionHandler } from "../interfaces";
 
@@ -113,7 +114,7 @@ export abstract class TransactionHandler implements ITransactionHandler {
             transaction.type === Enums.TransactionType.MultiSignature &&
             transaction.typeGroup === Enums.TransactionTypeGroup.Core;
         if (isMultiSignatureRegistration && !Managers.configManager.getMilestone().aip11) {
-            throw new UnexpectedMultiSignatureError();
+            throw new LegacyMultiSignatureRegistrationError();
         }
 
         if (sender.hasMultiSignature()) {
@@ -125,14 +126,14 @@ export abstract class TransactionHandler implements ITransactionHandler {
             }
 
             if (!dbSender.hasMultiSignature()) {
-                throw new UnexpectedMultiSignatureError();
+                throw new MissingMultiSignatureOnSenderError();
             }
 
             if (!dbSender.verifySignatures(data, dbSender.getAttribute("multiSignature"))) {
-                throw new InvalidMultiSignatureError();
+                throw new InvalidMultiSignaturesError();
             }
         } else if (transaction.data.signatures && !isMultiSignatureRegistration) {
-            throw new UnexpectedMultiSignatureError();
+            throw new UnsupportedMultiSignatureTransactionError();
         }
     }
 

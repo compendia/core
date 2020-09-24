@@ -10,3 +10,14 @@ export interface IBridgechainWalletAttributes {
     bridgechainAsset: Interfaces.IBridgechainRegistrationAsset;
     resigned?: boolean;
 }
+
+export interface IEntityWallet {
+    type: number;
+    subType: number;
+    data: Interfaces.IEntityAssetData;
+    resigned?: boolean;
+}
+
+export interface IEntitiesWallet {
+    [registrationId: string]: IEntityWallet;
+}
