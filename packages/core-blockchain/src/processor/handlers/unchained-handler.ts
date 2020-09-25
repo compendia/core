@@ -81,7 +81,7 @@ export class UnchainedHandler extends BlockHandler {
             }
 
             case UnchainedBlockStatus.ExceededNotReadyToAcceptNewHeightMaxAttempts: {
-                this.blockchain.state.numberOfBlocksToRollback = 5000; // TODO: find a better heuristic based on peer information
+                this.blockchain.state.numberOfBlocksToRollback = 235; // TODO: find a better heuristic based on peer information
                 return BlockProcessorResult.Rollback;
             }
 
