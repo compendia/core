@@ -1,5 +1,6 @@
 import { createServer, mountServer } from "@arkecosystem/core-http-utils";
 import { notFound } from "@hapi/boom";
+import BigNumber from "bignumber.js";
 import { Round, Statistic } from "./entities";
 
 export const startServer = async config => {
@@ -35,6 +36,20 @@ export const startServer = async config => {
             const stats = await Statistic.findOne({ name: request.params.name });
             if (stats) {
                 return stats.value;
+            } else {
+                return notFound();
+            }
+        },
+    });
+
+    // Formatted Supply
+    server.route({
+        method: "GET",
+        path: "/api/v1/supply",
+        async handler(request, h) {
+            const stats = await Statistic.findOne({ name: "supply" });
+            if (stats) {
+                return new BigNumber(stats.value).div(1e8).toString();
             } else {
                 return notFound();
             }
