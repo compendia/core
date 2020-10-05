@@ -44,6 +44,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        databaseService.options.estimateTotalCount = true;
         const stateService = app.resolvePlugin<State.IStateService>("state");
         const lastBlock: Interfaces.IBlock = stateService.getStore().getLastBlock();
         const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
@@ -134,6 +135,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 }
             }
         }
+        databaseService.options.estimateTotalCount = !process.env.CORE_API_NO_ESTIMATED_TOTAL_COUNT;
     }
 
     public async throwIfCannotBeApplied(
