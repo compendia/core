@@ -56,6 +56,24 @@ export const startServer = async config => {
         },
     });
 
+    // Formatted Supply
+    server.route({
+        method: "GET",
+        path: "/api/v1/total-supply",
+        async handler(request, h) {
+            const stats = await Statistic.findOne({ name: "supply" });
+            const staked = await Statistic.findOne({ name: "staked" });
+            if (stats && staked) {
+                return new BigNumber(stats.value)
+                    .plus(staked.value)
+                    .div(1e8)
+                    .toString();
+            } else {
+                return notFound();
+            }
+        },
+    });
+
     // Statistics
     server.route({
         method: "GET",
