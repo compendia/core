@@ -17,9 +17,9 @@
         "clean": "del dist"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.7.0",
-        "@arkecosystem/core-container": "^2.7.0",
-        "@arkecosystem/crypto": "^2.7.0"
+        "@arkecosystem/core-interfaces": "^2.7.1",
+        "@arkecosystem/core-container": "^2.7.1",
+        "@arkecosystem/crypto": "^2.7.1"
     },
     "prettier": {
         "printWidth": 100,

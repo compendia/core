@@ -18,12 +18,12 @@
         "clean": "rm -rf dist/"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.7.0",
-        "@arkecosystem/core-container": "^2.7.0",
-        "@arkecosystem/core-transactions": "^2.7.0",
-        "@arkecosystem/crypto": "^2.7.0",
-        "@nosplatform/stake-transactions": "^0.2.4",
-        "@nosplatform/storage": "^0.0.2",
+        "@arkecosystem/core-interfaces": "^2.7.1",
+        "@arkecosystem/core-container": "^2.7.1",
+        "@arkecosystem/core-transactions": "^2.7.1",
+        "@arkecosystem/crypto": "^2.7.1",
+        "@nosplatform/stake-transactions": "^0.2.5",
+        "@nosplatform/storage": "^0.0.3",
         "bytebuffer": "^5.0.1"
     },
     "devDependencies": {

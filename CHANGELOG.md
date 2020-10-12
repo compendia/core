@@ -5,16 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [2.10.14] - 2020-09-25
-
-### Added
-
--   Round Monitor allowing for safe restarts of forging nodes (@alessiodf)
+## [2.10.14] - 2020-10-12
 
 ### Fixed
 
 -   Remove duplicates entity resigned/isResigned (#3858) (90bf42de, @air1one)
 -   Rate limit and peer broadcast (#4054) (6988cdd4, @air1one)
+-   Destroy connection after terminate (#4065) (a853d63f, @air1one)
 
 ### Changed
 
@@ -1659,6 +1656,7 @@ Closed security vulnerabilities:
 [#4031]: https://github.com/ARKEcosystem/core/pull/4031
 [#4053]: https://github.com/ARKEcosystem/core/pull/4053
 [#4054]: https://github.com/ARKEcosystem/core/pull/4054
+[#4065]: https://github.com/ARKEcosystem/core/pull/4065
 [032caa1b990e91937e4bc1561bc1aeaeca9e37d]: https://github.com/ARKEcosystem/core/commit/032caa1b990e91937e4bc1561bc1aeaeca9e37d9
 [1209a36366c8fd3ba31fab2463011b7ce1a7d84]: https://github.com/ARKEcosystem/core/commit/1209a36366c8fd3ba31fab2463011b7ce1a7d844
 [34749bf84bcec3fecd0098c0d42f52deb1f6ba4]: https://github.com/ARKEcosystem/core/commit/34749bf84bcec3fecd0098c0d42f52deb1f6ba4a
