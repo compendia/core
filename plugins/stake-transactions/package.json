@@ -1,7 +1,7 @@
 {
     "name": "@nosplatform/stake-transactions",
     "description": "Provides stake transactions for Ark Core",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "contributors": [
         "Dean van Dugteren <dean@nos.io>"
     ],
@@ -27,10 +27,10 @@
         "updates": "../../node_modules/npm-check-updates/bin/npm-check-updates -a"
     },
     "dependencies": {
-        "@arkecosystem/core-interfaces": "^2.6.57",
-        "@arkecosystem/core-transactions": "^2.6.57",
-        "@arkecosystem/crypto": "^2.6.57",
-        "@nosplatform/stake-transactions-crypto": "^0.2.7",
+        "@arkecosystem/core-interfaces": "^2.7.1",
+        "@arkecosystem/core-transactions": "^2.7.1",
+        "@arkecosystem/crypto": "^2.7.1",
+        "@nosplatform/stake-transactions-crypto": "^0.2.8",
         "better-sqlite3": "^7.1.0"
     },
     "devDependencies": {

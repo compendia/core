@@ -1,14 +1,14 @@
 import Hapi from "@hapi/hapi";
-import { BridgechainController } from "./controller";
+import { EntityController } from "./controller";
 import * as Schema from "./schema";
 
 export const registerRoutes = (server: Hapi.Server): void => {
-    const controller = new BridgechainController();
+    const controller = new EntityController();
     server.bind(controller);
 
     server.route({
         method: "GET",
-        path: "/bridgechains",
+        path: "/entities",
         handler: controller.index,
         options: {
             validate: Schema.index,
@@ -16,8 +16,17 @@ export const registerRoutes = (server: Hapi.Server): void => {
     });
 
     server.route({
+        method: "GET",
+        path: "/entities/{id}",
+        handler: controller.show,
+        options: {
+            validate: Schema.show,
+        },
+    });
+
+    server.route({
         method: "POST",
-        path: "/bridgechains/search",
+        path: "/entities/search",
         handler: controller.search,
         options: {
             validate: Schema.search,
