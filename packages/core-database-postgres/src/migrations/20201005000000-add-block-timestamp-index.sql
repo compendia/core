@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "blocks_timestamp_asc" ON ${schema~}.blocks ("timestamp" ASC);

@@ -200,21 +200,19 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
         const maxPeersPerPeer: number = 50;
         const ownPeers: P2P.IPeer[] = this.storage.getPeers();
         const theirPeers: P2P.IPeer[] = Object.values(
-            (
-                await Promise.all(
-                    shuffle(this.storage.getPeers())
-                        .slice(0, 8)
-                        .map(async (peer: P2P.IPeer) => {
-                            try {
-                                const hisPeers = await this.communicator.getPeers(peer);
-                                return hisPeers || [];
-                            } catch (error) {
-                                this.logger.debug(`Failed to get peers from ${peer.ip}: ${error.message}`);
-                                return [];
-                            }
-                        }),
-                )
-            )
+            (await Promise.all(
+                shuffle(this.storage.getPeers())
+                    .slice(0, 8)
+                    .map(async (peer: P2P.IPeer) => {
+                        try {
+                            const hisPeers = await this.communicator.getPeers(peer);
+                            return hisPeers || [];
+                        } catch (error) {
+                            this.logger.debug(`Failed to get peers from ${peer.ip}: ${error.message}`);
+                            return [];
+                        }
+                    }),
+            ))
                 .map(peers =>
                     shuffle(peers)
                         .slice(0, maxPeersPerPeer)
@@ -325,7 +323,7 @@ export class NetworkMonitor implements P2P.INetworkMonitor {
         );
 
         // Now rollback blocks equal to the distance to the most common height.
-        return { forked: true, blocksToRollback: Math.min(lastBlock.data.height - highestCommonHeight, 5000) };
+        return { forked: true, blocksToRollback: Math.min(lastBlock.data.height - highestCommonHeight, 235) };
     }
 
     public async downloadBlocksFromHeight(
