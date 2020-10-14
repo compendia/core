@@ -121,9 +121,8 @@ export class ExpireHelper {
 
     public static removeExpiry(stakeKey: string): void {
         // Write to SQLite in-mem db
-        const deleteStatement = database.prepare(`DELETE FROM stakes WHERE key = :key`);
-
-        deleteStatement.run({ key: stakeKey });
+        const updateStatement = database.prepare(`UPDATE stakes SET status = 2 WHERE key = :key`);
+        updateStatement.run({ key: stakeKey });
     }
 
     public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {

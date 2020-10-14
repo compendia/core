@@ -1,6 +1,8 @@
+import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
-import { Interfaces, Transactions, Utils } from "@arkecosystem/crypto";
+import { roundCalculator } from "@arkecosystem/core-utils";
+import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
     Enums,
     Interfaces as StakeInterfaces,
@@ -14,7 +16,8 @@ import {
     StakeNotYetRedeemableError,
     WalletHasNoStakeError,
 } from "../errors";
-import { ExpireHelper } from "../helpers";
+import { BlockHelper } from "../helpers/block";
+import { RedeemHelper } from "../helpers/redeem";
 import { StakeCancelTransactionHandler } from "./stake-cancel";
 import { StakeCreateTransactionHandler } from "./stake-create";
 
@@ -42,27 +45,55 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
-        // TODO: get milestone belonging to transaction block height
+        const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+        databaseService.options.estimateTotalCount = true;
+        const stateService = app.resolvePlugin<State.IStateService>("state");
+        const lastBlock: Interfaces.IBlock = stateService.getStore().getLastBlock();
+        const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
+        const roundBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+            roundHeight,
+        );
+
         while (reader.hasNext()) {
             const transactions = await reader.read();
             for (const transaction of transactions) {
                 const wallet: State.IWallet = walletManager.findByPublicKey(transaction.senderPublicKey);
                 const s: StakeInterfaces.IStakeRedeemAsset = transaction.asset.stakeRedeem;
                 const txId = s.id;
-                // Refund stake
                 const stakes = wallet.getAttribute("stakes", {});
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
-                const newBalance = wallet.balance.plus(stake.amount);
-                const newPower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO).minus(stake.power);
-                stake.status = "redeemed";
+                stake.status = "redeeming";
+                const redeemDelay: number = Managers.configManager.getMilestone(transaction.blockHeight).redeemTime;
+                const redeemBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+                    transaction.blockHeight - 1,
+                );
+
+                // Get the time that the stake should be redeemeed
+                const redeemTime = redeemBlock.timestamp + redeemDelay;
+                stake.timestamps.redeemAt = redeemTime;
+
+                // If the current round timestamp has already passed the "redeemAt" timestamp
+                // and the exact block that the stake should be redeemed has passed
+                // then the stake should be redeemed.
+                const redeemedEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(redeemTime);
+                if (
+                    roundBlock.timestamp >= stake.timestamps.redeemAt &&
+                    lastBlock.data.height >= redeemedEffectiveFrom
+                ) {
+                    RedeemHelper.redeem(wallet, stake.id, walletManager);
+                    RedeemHelper.removeRedeem(stake.id);
+                } else {
+                    // If the time hasn't yet come for the stake to be redeemed
+                    // then the stake redemption should be queued for the future.
+                    RedeemHelper.setRedeeming(txId, stake.timestamps.redeemAt);
+                }
+
                 stakes[txId] = stake;
-                ExpireHelper.removeExpiry(transaction.id);
-                wallet.balance = newBalance;
                 wallet.setAttribute<StakeInterfaces.IStakeArray>("stakes", JSON.parse(JSON.stringify(stakes)));
-                wallet.setAttribute<Utils.BigNumber>("stakePower", newPower);
                 walletManager.reindex(wallet);
             }
         }
+        databaseService.options.estimateTotalCount = !process.env.CORE_API_NO_ESTIMATED_TOTAL_COUNT;
     }
 
     public async throwIfCannotBeApplied(
@@ -88,11 +119,10 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             throw new StakeAlreadyCanceledError();
         }
 
-        if (stakes[txId].status === "redeemed") {
+        if (stakes[txId].status === "redeeming" || stakes[txId].status === "redeemed") {
             throw new StakeAlreadyRedeemedError();
         }
 
-        // TODO: Get transaction's block round timestamp instead of transaction timestamp.
         if (
             (!transaction.timestamp && stakes[txId].status !== "released") ||
             (transaction.timestamp && transaction.timestamp < stakes[txId].timestamps.redeemable)
@@ -141,18 +171,25 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const t = transaction.data;
         const txId = t.asset.stakeRedeem.id;
         const stakes = sender.getAttribute("stakes", {});
-        const stake = stakes[txId];
+        const stake: StakeInterfaces.IStakeObject = stakes[txId];
 
         // Refund stake
-        const newBalance = sender.balance.plus(stake.amount);
-        const newPower = sender.getAttribute("stakePower").minus(stake.power);
-        stake.status = "redeemed";
+        // const newBalance = sender.balance.plus(stake.amount);
+        // const newPower = sender.getAttribute("stakePower").minus(stake.power);
+        stake.status = "redeeming";
         stakes[txId] = stake;
+        const redeemTime: number = Managers.configManager.getMilestone().redeemTime;
+        const lastBlock: Interfaces.IBlock = app
+            .resolvePlugin<State.IStateService>("state")
+            .getStore()
+            .getLastBlock();
 
-        sender.balance = newBalance;
-        sender.setAttribute("stakePower", newPower);
+        const redeemAt = lastBlock.data.timestamp + redeemTime;
+
+        // sender.balance = newBalance;
+        // sender.setAttribute("stakePower", newPower);
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
-
+        RedeemHelper.setRedeeming(txId, redeemAt);
         walletManager.reindex(sender);
     }
 
@@ -167,13 +204,14 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const stakes = sender.getAttribute("stakes", {});
         const stake = stakes[txId];
         // Revert refund stake
-        const newBalance = sender.balance.minus(stake.amount);
-        const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power);
-        stake.status = "redeemed";
+        // const newBalance = sender.balance.minus(stake.amount);
+        // const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power);
+        stake.status = "released";
         stakes[txId] = stake;
 
-        sender.balance = newBalance;
-        sender.setAttribute("stakePower", newPower);
+        // sender.balance = newBalance;
+        // sender.setAttribute("stakePower", newPower);
+        RedeemHelper.revertRedeeming(txId);
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
         walletManager.reindex(sender);

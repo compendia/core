@@ -78,8 +78,13 @@ describe("Transaction Forging - Stake create", () => {
             // Block 7
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
 
-            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("redeemed");
-
+            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("redeeming");
+            expect(JSON.parse(wallet.body).data.stakePower).toBe("1000000000000");
+            expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
+                Utils.BigNumber.make("1000000000000")
+                    .plus(JSON.parse(wallet.body).data.balance)
+                    .toFixed(),
+            );
             await expect(stakeRedeem2.id).toBeForged();
             wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("0");
