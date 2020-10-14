@@ -1,4 +1,4 @@
-import { Managers, Utils } from "@arkecosystem/crypto";
+import { Identities, Managers, Utils } from "@arkecosystem/crypto";
 import got from "got";
 
 import { secrets } from "../../../__tests__/utils/config/testnet/delegates.json";
@@ -19,7 +19,9 @@ describe("Transaction Forging - Stake create", () => {
                 .withPassphrase(secrets[0])
                 .createOne();
 
-            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            const address = Identities.Address.fromPassphrase(secrets[0]);
+
+            wallet = await got.get(`http://localhost:4003/api/v2/wallets/${address}`);
             let jWallet;
             jWallet = JSON.parse(wallet.body).data;
             expect(jWallet.attributes.delegate.voteBalance).toBe(jWallet.balance);
@@ -32,7 +34,7 @@ describe("Transaction Forging - Stake create", () => {
             await support.snoozeForBlock(1);
             await expect(stakeCreate.id).toBeForged();
 
-            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            wallet = await got.get(`http://localhost:4003/api/v2/wallets/${address}`);
             jWallet = JSON.parse(wallet.body).data;
             expect(jWallet.stakePower).toBe("0");
             expect(jWallet.attributes.delegate.voteBalance).toBe(jWallet.power);
@@ -40,8 +42,9 @@ describe("Transaction Forging - Stake create", () => {
             await support.snoozeForBlock(1);
             await support.snoozeForBlock(1);
 
-            // Round 2
-            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            // Round 3
+            wallet = await got.get(`http://localhost:4003/api/v2/wallets/${address}`);
+            console.dir(JSON.parse(wallet.body).data);
             expect(JSON.parse(wallet.body).data.stakePower).toBe("2000000000000");
             expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
                 Utils.BigNumber.make("2000000000000")
@@ -59,7 +62,7 @@ describe("Transaction Forging - Stake create", () => {
             await support.snoozeForBlock(1);
 
             // Round 3
-            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            wallet = await got.get(`http://localhost:4003/api/v2/wallets/${address}`);
             expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("released");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("1000000000000");
             expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
@@ -76,7 +79,7 @@ describe("Transaction Forging - Stake create", () => {
             await support.snoozeForBlock(1);
 
             // Block 7
-            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            wallet = await got.get(`http://localhost:4003/api/v2/wallets/${address}`);
 
             expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("redeeming");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("1000000000000");
@@ -86,7 +89,13 @@ describe("Transaction Forging - Stake create", () => {
                     .toFixed(),
             );
             await expect(stakeRedeem2.id).toBeForged();
-            wallet = await got.get("http://localhost:4003/api/v2/wallets/ANBkoGqWeTSiaEVgVzSKZd3jS7UWzv9PSo");
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
+            await support.snoozeForBlock(1);
+
+            wallet = await got.get(`http://localhost:4003/api/v2/wallets/${address}`);
+            expect(JSON.parse(wallet.body).data.stakes[stakeCreate.id].status).toBe("redeemed");
             expect(JSON.parse(wallet.body).data.stakePower).toBe("0");
             expect(JSON.parse(wallet.body).data.attributes.delegate.voteBalance).toBe(
                 Utils.BigNumber.make(JSON.parse(wallet.body).data.power).toFixed(),

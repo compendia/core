@@ -41,7 +41,7 @@ export class RedeemHelper {
 
     public static setRedeeming(stakeKey: string, redeemAt: number): void {
         const updateStatement = database.prepare(`UPDATE stakes SET status = 3, redeem_at = :time WHERE key = :key`);
-        updateStatement.run({ key: stakeKey, time: redeemAt });
+        updateStatement.run({ key: stakeKey, time: Number(redeemAt.toFixed(0)) });
     }
 
     public static revertRedeeming(stakeKey: string): void {

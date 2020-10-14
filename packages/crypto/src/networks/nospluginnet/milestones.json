@@ -36,7 +36,7 @@
         "balancePower": 1,
         "graceEnd": 4,
         "powerUp": 4,
-        "redeemTime": 4,
+        "redeemTime": 16,
         "stakeLevels": {
             "20": 20,
             "120": 30,

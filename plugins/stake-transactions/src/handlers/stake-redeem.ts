@@ -159,7 +159,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("stake.redeemed", transaction.data);
+        emitter.emit("stake.redeeming", transaction.data);
     }
 
     public async applyToSender(
@@ -189,7 +189,9 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         // sender.balance = newBalance;
         // sender.setAttribute("stakePower", newPower);
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
-        RedeemHelper.setRedeeming(txId, redeemAt);
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            RedeemHelper.setRedeeming(txId, redeemAt);
+        }
         walletManager.reindex(sender);
     }
 

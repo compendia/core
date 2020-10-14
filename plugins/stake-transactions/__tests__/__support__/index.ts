@@ -15,6 +15,8 @@ jest.setTimeout(1200000);
 
 let app: Container.IContainer;
 export const setUp = async (): Promise<void> => {
+    Managers.configManager.setFromPreset("nospluginnet");
+
     try {
         process.env.CORE_RESET_DATABASE = "1";
         const dbPath = path.resolve(__dirname, `../../../storage/databases/nospluginnet.sqlite`);

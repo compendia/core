@@ -90,9 +90,9 @@ export class ExpireHelper {
             }
         }
 
-        // If the stake is somehow still unreleased, don't remove it from db
+        // If the stake is somehow still unreleased, don't set it to released
         if (!(block.timestamp <= stake.timestamps.redeemable)) {
-            this.removeExpiry(stakeKey);
+            this.setReleased(stakeKey);
         }
     }
 
@@ -121,6 +121,12 @@ export class ExpireHelper {
 
     public static removeExpiry(stakeKey: string): void {
         // Write to SQLite in-mem db
+        const deleteStatement = database.prepare(`DELETE FROM stakes WHERE key = :key`);
+        deleteStatement.run({ key: stakeKey });
+    }
+
+    public static setReleased(stakeKey: string): void {
+        // Write to SQLite in-mem db
         const updateStatement = database.prepare(`UPDATE stakes SET status = 2 WHERE key = :key`);
         updateStatement.run({ key: stakeKey });
     }
@@ -128,7 +134,7 @@ export class ExpireHelper {
     public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {
         const lastTime = block.timestamp;
         const expirations: IStakeDbItem[] = database
-            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime}`)
+            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime} AND status = 1`)
             .all();
 
         if (expirations.length > 0) {

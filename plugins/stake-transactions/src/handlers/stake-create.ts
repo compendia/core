@@ -80,7 +80,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.status = "released";
                     addPower = stakeObject.power;
-                    ExpireHelper.removeExpiry(transaction.id);
+                    ExpireHelper.setReleased(transaction.id);
                 } else {
                     // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;

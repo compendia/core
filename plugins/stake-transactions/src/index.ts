@@ -16,7 +16,7 @@ const initDb = () => {
         "key" VARCHAR(64) PRIMARY KEY,
         "address" VARCHAR(34) NOT NULL,
         "powerup" INT NOT NULL,
-        "redeem_at" INT NOT NULL,
+        "redeem_at" INT,
         "redeemable" INT NOT NULL,
         "status" INT NOT NULL 
     );
