@@ -75,13 +75,12 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 // If the current round timestamp has already passed the "redeemAt" timestamp
                 // and the exact block that the stake should be redeemed has passed
                 // then the stake should be redeemed.
-                const redeemedEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(redeemTime);
-                if (
-                    roundBlock.timestamp >= stake.timestamps.redeemAt &&
-                    lastBlock.data.height >= redeemedEffectiveFrom
-                ) {
-                    RedeemHelper.redeem(wallet, stake.id, walletManager);
-                    RedeemHelper.removeRedeem(stake.id);
+                if (roundBlock.timestamp >= stake.timestamps.redeemAt) {
+                    const redeemedEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(redeemTime);
+                    if (lastBlock.data.height >= redeemedEffectiveFrom) {
+                        RedeemHelper.redeem(wallet, stake.id, walletManager);
+                        RedeemHelper.removeRedeem(stake.id);
+                    }
                 } else {
                     // If the time hasn't yet come for the stake to be redeemed
                     // then the stake redemption should be queued for the future.
