@@ -71,6 +71,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 // Get the time that the stake should be redeemeed
                 const redeemTime = redeemBlock.timestamp + redeemDelay;
                 stake.timestamps.redeemAt = redeemTime;
+                RedeemHelper.setRedeeming(txId, stake.timestamps.redeemAt);
 
                 // If the current round timestamp has already passed the "redeemAt" timestamp
                 // and the exact block that the stake should be redeemed has passed
@@ -81,10 +82,6 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                         RedeemHelper.redeem(wallet, stake.id, walletManager);
                         RedeemHelper.removeRedeem(stake.id);
                     }
-                } else {
-                    // If the time hasn't yet come for the stake to be redeemed
-                    // then the stake redemption should be queued for the future.
-                    RedeemHelper.setRedeeming(txId, stake.timestamps.redeemAt);
                 }
 
                 stakes[txId] = stake;
@@ -172,11 +169,6 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const stakes = sender.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[txId];
 
-        // Refund stake
-        // const newBalance = sender.balance.plus(stake.amount);
-        // const newPower = sender.getAttribute("stakePower").minus(stake.power);
-        stake.status = "redeeming";
-        stakes[txId] = stake;
         const redeemTime: number = Managers.configManager.getMilestone().redeemTime;
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
@@ -184,6 +176,13 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
             .getLastBlock();
 
         const redeemAt = lastBlock.data.timestamp + redeemTime;
+        stake.timestamps.redeemAt = redeemAt;
+
+        // Refund stake
+        // const newBalance = sender.balance.plus(stake.amount);
+        // const newPower = sender.getAttribute("stakePower").minus(stake.power);
+        stake.status = "redeeming";
+        stakes[txId] = stake;
 
         // sender.balance = newBalance;
         // sender.setAttribute("stakePower", newPower);
@@ -208,11 +207,14 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         // const newBalance = sender.balance.minus(stake.amount);
         // const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power);
         stake.status = "released";
+        stake.timestamps.redeemAt = undefined;
         stakes[txId] = stake;
 
         // sender.balance = newBalance;
         // sender.setAttribute("stakePower", newPower);
-        RedeemHelper.revertRedeeming(txId);
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            RedeemHelper.revertRedeeming(txId);
+        }
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
         walletManager.reindex(sender);

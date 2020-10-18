@@ -48,7 +48,7 @@ export class PowerUpHelper {
             .prepare(`SELECT * FROM stakes WHERE powerup <= ${lastTime} AND status = 0`)
             .all();
         if (stakes.length > 0) {
-            app.resolvePlugin("logger").info("Processing stake power-ups.");
+            app.resolvePlugin("logger").debug("Processing stake power-ups.");
 
             for (const stake of stakes) {
                 if (stake && stake.address) {
@@ -58,7 +58,7 @@ export class PowerUpHelper {
                         wallet.getAttribute("stakes")[stake.key] !== undefined &&
                         wallet.getAttribute("stakes")[stake.key].status === "grace"
                     ) {
-                        app.resolvePlugin("logger").info(`Power-up Stake ${stake.key} of wallet ${wallet.address}.`);
+                        app.resolvePlugin("logger").debug(`Power-up Stake ${stake.key} of wallet ${wallet.address}.`);
 
                         // Power up in db wallet
                         this.powerUp(wallet, stake.key, walletManager);

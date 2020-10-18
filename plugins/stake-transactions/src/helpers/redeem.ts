@@ -63,10 +63,11 @@ export class RedeemHelper {
         }
         const lastTime = block.timestamp;
         const stakes: IStakeDbItem[] = database
-            .prepare(`SELECT * FROM stakes WHERE status = 3 AND redeem_at IS NOT NULL AND redeem_at <= ${lastTime}`)
+            .prepare(`SELECT * FROM stakes WHERE status = 3 AND redeem_at <= ${lastTime}`)
             .all();
+
         if (stakes.length > 0) {
-            app.resolvePlugin("logger").info("Processing stake redeems.");
+            app.resolvePlugin("logger").debug("Processing stake redeems.");
 
             for (const stake of stakes) {
                 if (stake && stake.address) {
@@ -76,7 +77,7 @@ export class RedeemHelper {
                         wallet.getAttribute("stakes")[stake.key] !== undefined &&
                         wallet.getAttribute("stakes")[stake.key].status === "redeeming"
                     ) {
-                        app.resolvePlugin("logger").info(`Redeem Stake ${stake.key} of wallet ${wallet.address}.`);
+                        app.resolvePlugin("logger").debug(`Redeem Stake ${stake.key} of wallet ${wallet.address}.`);
 
                         // Power up in db wallet
                         this.redeem(wallet, stake.key, walletManager);

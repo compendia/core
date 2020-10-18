@@ -97,16 +97,17 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                             addPower = stakeObject.power;
                         }
                     }
-
-                    // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
-                    ExpireHelper.storeExpiry(
-                        stakeObject,
-                        staker,
-                        transaction.id,
-                        roundBlock.height,
-                        stakeObject.status === "active",
-                    );
                 }
+
+                // Store stake in in-mem sqlite db
+                ExpireHelper.storeExpiry(
+                    stakeObject,
+                    staker,
+                    transaction.id,
+                    roundBlock.height,
+                    stakeObject.status === "active",
+                );
+
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
                 if (!addPower.isZero()) {
