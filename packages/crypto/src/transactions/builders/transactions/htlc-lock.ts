@@ -1,4 +1,3 @@
-import { Managers } from "../../..";
 import { IHtlcLockAsset, ITransactionData } from "../../../interfaces";
 import { BigNumber } from "../../../utils";
 import { HtlcLockTransaction } from "../../types";
