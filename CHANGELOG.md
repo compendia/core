@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.10.19] - 2020-10-26
+
+### Changed
+
+-   Enable trustProxy option (850ade02, @air1one)
+-   Return [] if asked higher blocks than current (312899c9, @air1one)
+
+### Fixed
+
+-   Check that message is a string (5e1c5a33, @air1one)
+-   Ban if not authorized on internal (dd96ee49, @air1one)
+-   Strict greater than (8006a8da, @air1one)
+
 ## [2.10.14] - 2020-10-12
 
 ### Fixed
