@@ -293,16 +293,20 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         }
         const stakes = staker.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-        // If the stake is active we need to deduct the stakePower
-        if (stakes[transaction.id].status === "active") {
-            const stake = stakes[transaction.id];
+        // If the stake is active or grace we need to deduct the stakePower or amount
+        const stake = stakes[transaction.id];
+        if (["active", "grace"].includes(stake.status)) {
             const stakePower = staker.getAttribute("stakePower", Utils.BigNumber.ZERO);
             staker.setAttribute("stakePower", stakePower.minus(stake.power));
             // If active + after a powerUp period and the sender has voted we update the delegate voteBalance too
             if (Managers.configManager.getMilestone().powerUp && staker.hasVoted()) {
                 const delegate: State.IWallet = walletManager.findByPublicKey(staker.getAttribute("vote"));
                 let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-                voteBalance = voteBalance.minus(stake.power);
+                if (stake.status === "active") {
+                    voteBalance = voteBalance.minus(stake.power);
+                } else if (stake.status === "grace") {
+                    voteBalance = voteBalance.minus(stake.amount);
+                }
                 delegate.setAttribute("delegate.voteBalance", voteBalance);
                 walletManager.reindex(delegate);
             }
