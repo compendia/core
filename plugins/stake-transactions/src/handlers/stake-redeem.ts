@@ -203,9 +203,23 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         const txId = t.asset.stakeRedeem.id;
         const stakes = sender.getAttribute("stakes", {});
         const stake = stakes[txId];
-        // Revert refund stake
-        // const newBalance = sender.balance.minus(stake.amount);
-        // const newPower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO).plus(stake.power);
+
+        // If stake was already redeemed we need to add back the stake's vote power
+        // and revert the amount from staker balance
+        if (stake.status === "redeemed") {
+            const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
+            sender.setAttribute("stakePower", stakePower.plus(stake.power));
+            // If active + after a powerUp period and the sender has voted we update the delegate voteBalance too
+            if (sender.hasVoted()) {
+                const delegate: State.IWallet = walletManager.findByPublicKey(sender.getAttribute("vote"));
+                let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
+                voteBalance = voteBalance.plus(stake.power);
+                delegate.setAttribute("delegate.voteBalance", voteBalance);
+                walletManager.reindex(delegate);
+            }
+            sender.balance = sender.balance.minus(stake.amount);
+        }
+
         stake.status = "released";
         stake.timestamps.redeemAt = undefined;
         stakes[txId] = stake;
