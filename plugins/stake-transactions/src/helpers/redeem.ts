@@ -95,10 +95,10 @@ export class RedeemHelper {
 
                         const stakeObj = wallet.getAttribute("stakes")[stake.key];
                         if (this.emitter !== undefined) {
-                            this.emitter.emit("stake.redeem", { stake: stakeObj, block });
+                            this.emitter.emit("stake.redeemed", { stake: stakeObj, block });
                         }
 
-                        // Remove queued power-up from in mem db
+                        // Remove queued redeem from in-mem db
                         this.removeRedeem(stake.key);
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate,
