@@ -209,14 +209,6 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
         if (stake.status === "redeemed") {
             const stakePower = sender.getAttribute("stakePower", Utils.BigNumber.ZERO);
             sender.setAttribute("stakePower", stakePower.plus(stake.power));
-            // If active + after a powerUp period and the sender has voted we update the delegate voteBalance too
-            if (sender.hasVoted()) {
-                const delegate: State.IWallet = walletManager.findByPublicKey(sender.getAttribute("vote"));
-                let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-                voteBalance = voteBalance.plus(stake.power);
-                delegate.setAttribute("delegate.voteBalance", voteBalance);
-                walletManager.reindex(delegate);
-            }
             sender.balance = sender.balance.minus(stake.amount);
         }
 
