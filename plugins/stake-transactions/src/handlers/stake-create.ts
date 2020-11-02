@@ -1,5 +1,5 @@
 import { app } from "@arkecosystem/core-container";
-import { Database, EventEmitter, Shared, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Constants, Identities, Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
@@ -18,6 +18,7 @@ import {
     StakeTimestampError,
 } from "../errors";
 import { ExpireHelper, VotePower } from "../helpers";
+import { BlockHelper } from "../helpers/block";
 
 export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -79,7 +80,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                     stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
                     stakeObject.status = "released";
                     addPower = stakeObject.power;
-                    ExpireHelper.removeExpiry(transaction.id);
+                    ExpireHelper.setReleased(transaction.id);
                 } else {
                     // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;
@@ -88,38 +89,25 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                         stakeObject.status = "active";
                         addPower = stakeObject.power;
                     } else if (roundBlock.timestamp >= stakeObject.timestamps.powerUp) {
-                        const blockWhenPoweredUp: Interfaces.IBlockData = (await databaseService.blocksBusinessRepository.search(
-                            {
-                                timestamp: { from: stakeObject.timestamps.powerUp },
-                                limit: 1,
-                                orderBy: "timestamp:asc",
-                            },
-                        )).rows[0];
-                        const roundWhenPoweredUp: Shared.IRoundInfo = roundCalculator.calculateRound(
-                            blockWhenPoweredUp.height,
+                        const powerUpEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(
+                            stakeObject.timestamps.powerUp,
                         );
-                        const nextRoundAfterPowerUp: Shared.IRoundInfo = roundCalculator.calculateRound(
-                            roundWhenPoweredUp.roundHeight + roundWhenPoweredUp.maxDelegates,
-                        );
-                        const powerUpEffectiveFrom: number =
-                            roundCalculator.calculateRound(
-                                nextRoundAfterPowerUp.roundHeight + nextRoundAfterPowerUp.maxDelegates,
-                            ).roundHeight - 1;
                         if (lastBlock.data.height >= powerUpEffectiveFrom) {
                             stakeObject.status = "active";
                             addPower = stakeObject.power;
                         }
                     }
-
-                    // Stake is not yet released, so store it in redis. If stakeObject.active we can skip storing it in powerUp.
-                    ExpireHelper.storeExpiry(
-                        stakeObject,
-                        staker,
-                        transaction.id,
-                        roundBlock.height,
-                        stakeObject.status === "active",
-                    );
                 }
+
+                // Store stake in in-mem sqlite db
+                ExpireHelper.storeExpiry(
+                    stakeObject,
+                    staker,
+                    transaction.id,
+                    roundBlock.height,
+                    stakeObject.status === "active",
+                );
+
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;
                 if (!addPower.isZero()) {
@@ -305,16 +293,20 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
         }
         const stakes = staker.getAttribute<StakeInterfaces.IStakeArray>("stakes", {});
 
-        // If the stake is active we need to deduct the stakePower
-        if (stakes[transaction.id].status === "active") {
-            const stake = stakes[transaction.id];
+        // If the stake is active or grace we need to deduct the stakePower or amount
+        const stake = stakes[transaction.id];
+        if (["active", "grace"].includes(stake.status)) {
             const stakePower = staker.getAttribute("stakePower", Utils.BigNumber.ZERO);
             staker.setAttribute("stakePower", stakePower.minus(stake.power));
             // If active + after a powerUp period and the sender has voted we update the delegate voteBalance too
             if (Managers.configManager.getMilestone().powerUp && staker.hasVoted()) {
                 const delegate: State.IWallet = walletManager.findByPublicKey(staker.getAttribute("vote"));
                 let voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-                voteBalance = voteBalance.minus(stake.power);
+                if (stake.status === "active") {
+                    voteBalance = voteBalance.minus(stake.power);
+                } else if (stake.status === "grace") {
+                    voteBalance = voteBalance.minus(stake.amount);
+                }
                 delegate.setAttribute("delegate.voteBalance", voteBalance);
                 walletManager.reindex(delegate);
             }

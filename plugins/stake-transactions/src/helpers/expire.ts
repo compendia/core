@@ -17,7 +17,7 @@ export class ExpireHelper {
             const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                 "transaction-pool",
             );
-            app.resolvePlugin("logger").info(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
+            app.resolvePlugin("logger").debug(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
             let delegate: State.IWallet;
             let poolDelegate: State.IWallet;
             if (wallet.hasVoted()) {
@@ -90,9 +90,9 @@ export class ExpireHelper {
             }
         }
 
-        // If the stake is somehow still unreleased, don't remove it from db
+        // If the stake is somehow still unreleased, don't set it to released
         if (!(block.timestamp <= stake.timestamps.redeemable)) {
-            this.removeExpiry(stakeKey);
+            this.setReleased(stakeKey);
         }
     }
 
@@ -122,18 +122,23 @@ export class ExpireHelper {
     public static removeExpiry(stakeKey: string): void {
         // Write to SQLite in-mem db
         const deleteStatement = database.prepare(`DELETE FROM stakes WHERE key = :key`);
-
         deleteStatement.run({ key: stakeKey });
+    }
+
+    public static setReleased(stakeKey: string): void {
+        // Write to SQLite in-mem db
+        const updateStatement = database.prepare(`UPDATE stakes SET status = 2 WHERE key = :key`);
+        updateStatement.run({ key: stakeKey });
     }
 
     public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {
         const lastTime = block.timestamp;
         const expirations: IStakeDbItem[] = database
-            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime}`)
+            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime} AND status = 1`)
             .all();
 
         if (expirations.length > 0) {
-            app.resolvePlugin("logger").info("Processing stake expirations.");
+            app.resolvePlugin("logger").debug("Processing stake expirations.");
 
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
@@ -155,7 +160,7 @@ export class ExpireHelper {
                     ) {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete expiration from db in this case
-                        app.resolvePlugin("logger").info(
+                        app.resolvePlugin("logger").debug(
                             `Unknown or already processed ${expiration.key} of wallet ${wallet.address}. Deleted from storage.`,
                         );
                         this.removeExpiry(expiration.key);

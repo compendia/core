@@ -17,7 +17,7 @@ class VotePower {
         const graceEnd = Number(created) + Number(milestone.graceEnd || 0);
         const powerUp = Number(graceEnd) + Number(milestone.powerUp || 0);
         const redeemable = powerUp + s.duration;
-        const timestamps: Interfaces.IStakeTimestamps = { created, graceEnd, powerUp, redeemable };
+        const timestamps: Interfaces.IStakeTimestamps = { created, graceEnd, powerUp, redeemable, redeemAt: undefined };
         const status = milestone.graceEnd ? "grace" : "active";
         const o: Interfaces.IStakeObject = {
             id,

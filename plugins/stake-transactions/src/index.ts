@@ -4,7 +4,7 @@ interface IStakeDbItem {
     address: string;
     powerup: number;
     redeemable: number;
-    status: 0; // 0: Either grace or powering, 1: powered up
+    status: 0; // 0: Either grace or powering, 1: powered up, 2: released, 3: redeeming
 }
 
 const database: BetterSqlite3.Database = new BetterSqlite3(":memory:");
@@ -16,8 +16,9 @@ const initDb = () => {
         "key" VARCHAR(64) PRIMARY KEY,
         "address" VARCHAR(34) NOT NULL,
         "powerup" INT NOT NULL,
+        "redeem_at" INT,
         "redeemable" INT NOT NULL,
-        "STATUS" INT NOT NULL
+        "status" INT NOT NULL 
     );
     `);
 };

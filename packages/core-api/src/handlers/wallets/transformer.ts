@@ -62,6 +62,11 @@ export const transformWallet = (wallet: State.IWallet) => {
                 },
                 senderPublicKey: stake.senderPublicKey,
             };
+
+            // If stake is redeeming, include redeemAt timestamp
+            if (stake.timestamps.redeemAt) {
+                unixStakes[key].timestamps.redeemAt = formatTimestamp(stake.timestamps.redeemAt).unix;
+            }
         }
 
         // Get graced balance

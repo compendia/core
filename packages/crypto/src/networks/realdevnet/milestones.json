@@ -44,6 +44,7 @@
         "minimumStake": 10000000000,
         "graceEnd": 300,
         "powerUp": 600,
+        "redeemTime": 86400,
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
