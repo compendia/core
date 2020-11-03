@@ -79,7 +79,15 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
                 if (roundBlock.timestamp >= stake.timestamps.redeemAt) {
                     const redeemedEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(redeemTime);
                     if (lastBlock.data.height >= redeemedEffectiveFrom) {
-                        RedeemHelper.redeem(wallet, stake.id, walletManager);
+                        const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
+                        // Set status
+                        stake.status = "redeemed";
+                        // Remove from wallet stakePower
+                        wallet.setAttribute("stakePower", stakePower.minus(stake.power));
+                        // Add to balance
+                        wallet.balance = wallet.balance.plus(stake.amount);
+
+                        // Remove pending redeem from cron job queue since the stake is already redeemed
                         RedeemHelper.removeRedeem(stake.id);
                     }
                 }

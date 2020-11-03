@@ -516,18 +516,9 @@ export class WalletManager implements State.IWalletManager {
                         voteBalance = voteBalance.plus(stake.amount);
                     }
                 }
-                // else handle stake redeem revert (if status is "redeemed" then it's handled in stakeRedeem revertForSender)
-                else if (transaction.type === 1) {
-                    if (stake.status === "redeeming") {
-                        voteBalance = revert
-                            ? voteBalance.plus(sPower).minus(stake.amount)
-                            : voteBalance.minus(sPower).plus(stake.amount);
-                    }
-                    // handle revert logic for already redeemed stakes (apply logic is handled in redeeming cron logic)
-                    else if (stake.status === "redeemed" && revert) {
-                        voteBalance = voteBalance.plus(stake.power).minus(stake.amount);
-                    }
-                }
+
+                // Stake Redeem apply/revert happens in the redeem helper and revertForRecipient
+
                 delegate.setAttribute("delegate.voteBalance", voteBalance);
             }
 
