@@ -76,11 +76,16 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
 
                 let addPower: Utils.BigNumber = Utils.BigNumber.ZERO;
                 if (roundBlock.timestamp >= stakeObject.timestamps.redeemable) {
-                    // released
-                    stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
-                    stakeObject.status = "released";
-                    addPower = stakeObject.power;
-                    ExpireHelper.setReleased(transaction.id);
+                    const releaseEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(
+                        stakeObject.timestamps.redeemable,
+                    );
+                    if (lastBlock.data.height >= releaseEffectiveFrom) {
+                        // released
+                        stakeObject.power = Utils.BigNumber.make(stakeObject.power).dividedBy(2);
+                        stakeObject.status = "released";
+                        addPower = stakeObject.power;
+                        ExpireHelper.setReleased(transaction.id);
+                    }
                 } else {
                     // Else if not released, check if powerUp is configured in the most recent round
                     const txRoundHeight = roundCalculator.calculateRound(transaction.blockHeight).roundHeight;

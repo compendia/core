@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.10.7"]
+            "minimumVersions": ["^2.11.1"]
         },
         "reward": 390000000,
         "topReward": 484000000,
@@ -15,7 +15,7 @@
             "maxPayload": 6300000,
             "acceptExpiredTransactionTimestamps": false
         },
-        "epoch": "2020-08-28T11:30:00.000Z",
+        "epoch": "2020-11-04T19:00:00.000Z",
         "vendorFieldLength": 0,
         "multiPaymentLimit": 128,
         "staticFeesOnly": true,
@@ -44,7 +44,7 @@
         "minimumStake": 10000000000,
         "graceEnd": 300,
         "powerUp": 600,
-        "redeemTime": 86400,
+        "redeemTime": 900,
         "ipfs": {
             "maxFileSize": {
                 "description": 30000,
