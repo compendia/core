@@ -15,7 +15,7 @@
             "maxPayload": 6300000,
             "acceptExpiredTransactionTimestamps": false
         },
-        "epoch": "2020-11-04T19:00:00.000Z",
+        "epoch": "2020-11-04T20:55:00.000Z",
         "vendorFieldLength": 0,
         "multiPaymentLimit": 128,
         "staticFeesOnly": true,
