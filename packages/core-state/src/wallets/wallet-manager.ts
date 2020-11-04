@@ -517,7 +517,7 @@ export class WalletManager implements State.IWalletManager {
                     }
                 }
 
-                // Stake Redeem apply/revert happens in the redeem helper and revertForRecipient
+                // Redeem voteBalance update logic happens in the redeem helper and revertForRecipient
 
                 delegate.setAttribute("delegate.voteBalance", voteBalance);
             }
