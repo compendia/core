@@ -142,7 +142,7 @@ export class StakeCancelTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public emitEvents(transaction: Interfaces.ITransaction, emitter: EventEmitter.EventEmitter): void {
-        emitter.emit("stake.redeemed", transaction.data);
+        emitter.emit("stake.canceled", transaction.data);
     }
 
     public async applyToSender(
