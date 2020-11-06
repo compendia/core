@@ -6,14 +6,15 @@ import { database, IStakeDbItem } from "../index";
 
 export class ExpireHelper {
     public static async expireStake(
-        wallet: State.IWallet,
+        address: string,
         stakeKey: string,
         block: Interfaces.IBlockData,
         walletManager: State.IWalletManager,
     ): Promise<void | Utils.BigNumber> {
+        const wallet: State.IWallet = walletManager.findByAddress(address);
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
-        if (stake.status === "active" && block.timestamp > stake.timestamps.redeemable) {
+        if (stake.status === "active" && block.timestamp >= stake.timestamps.redeemable) {
             app.resolvePlugin("logger").debug(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
             let delegate: State.IWallet;
             if (wallet.hasVoted()) {
@@ -120,7 +121,7 @@ export class ExpireHelper {
 
             for (const expiration of expirations) {
                 if (expiration && expiration.address) {
-                    const wallet = walletManager.findByAddress(expiration.address);
+                    const wallet: State.IWallet = walletManager.findByAddress(expiration.address);
 
                     if (
                         wallet.hasAttribute("stakes") &&
@@ -128,14 +129,14 @@ export class ExpireHelper {
                         wallet.getAttribute("stakes")[expiration.key].status === "active"
                     ) {
                         // Redeem in primary walletManager
-                        const res = await this.expireStake(wallet, expiration.key, block, walletManager);
+                        const res = await this.expireStake(wallet.address, expiration.key, block, walletManager);
 
                         // Redeem in pool walletManager
                         const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                             "transaction-pool",
                         );
                         const poolWalletManager: State.IWalletManager = poolService.walletManager;
-                        await this.expireStake(wallet, expiration.key, block, poolWalletManager);
+                        await this.expireStake(wallet.address, expiration.key, block, poolWalletManager);
 
                         if (res && this.emitter !== undefined) {
                             this.emitter.emit("stake.released", {

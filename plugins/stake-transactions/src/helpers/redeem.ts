@@ -7,7 +7,8 @@ import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-c
 import { database, IStakeDbItem } from "../index";
 
 export class RedeemHelper {
-    public static redeem(wallet: State.IWallet, stakeKey: string, walletManager: State.IWalletManager): void {
+    public static redeem(address: string, stakeKey: string, walletManager: State.IWalletManager): void {
+        const wallet: State.IWallet = walletManager.findByAddress(address);
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
         const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
@@ -80,18 +81,13 @@ export class RedeemHelper {
                         app.resolvePlugin("logger").debug(`Redeem Stake ${stake.key} of wallet ${wallet.address}.`);
 
                         // Power up in db wallet
-                        this.redeem(wallet, stake.key, walletManager);
+                        this.redeem(wallet.address, stake.key, walletManager);
 
                         // Power up in pool wallet
                         const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                             "transaction-pool",
                         );
-                        const poolWalletManager: State.IWalletManager = poolService.walletManager;
-                        this.redeem(
-                            poolWalletManager.findByAddress(wallet.address),
-                            stake.key,
-                            poolService.walletManager,
-                        );
+                        this.redeem(wallet.address, stake.key, poolService.walletManager);
 
                         const stakeObj = wallet.getAttribute("stakes")[stake.key];
                         if (this.emitter !== undefined) {
