@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.11.2] - 2020-11-12
+
+### Added
+
+-   Stake Redeem delays (fdf148c, @deanpress)
+
+### Changes
+
+-   Add unit tests for stake redeem revert logic (e3bee1f, @deanpress)
+-   New public testnet ("realdevnet") epoch time (6ae51a6, @deanpress)
+
+### Fixed
+
+-   Emit correct event on Stake Cancel (6a97ed09, @deanpress)
+-   Revert logic on stake redeem (5c329a5, @deanpress)
+-   voteBalance logic on stake redeem (80c21f2, @deanpress)
+-   Revert logic on stake create with "grace" status (fb7cfea, @deanpress)
+
+### Changed
+
 ## [2.10.19] - 2020-10-26
 
 ### Changed
