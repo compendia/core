@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 -   Stake Redeem delays (fdf148c, @deanpress)
 
-### Changes
+### Changed
 
 -   Add unit tests for stake redeem revert logic (e3bee1f, @deanpress)
 -   New public testnet ("realdevnet") epoch time (6ae51a6, @deanpress)
@@ -22,8 +22,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   Revert logic on stake redeem (5c329a5, @deanpress)
 -   voteBalance logic on stake redeem (80c21f2, @deanpress)
 -   Revert logic on stake create with "grace" status (fb7cfea, @deanpress)
-
-### Changed
 
 ## [2.10.19] - 2020-10-26
 
