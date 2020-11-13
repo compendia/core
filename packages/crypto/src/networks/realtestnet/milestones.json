@@ -42,6 +42,7 @@
         },
         "graceEnd": 60,
         "powerUp": 60,
+        "redeemTime": 60,
         "minimumStake": 1000000000000,
         "ipfs": {
             "maxFileSize": {
@@ -55,26 +56,14 @@
     },
     {
         "height": 3,
-        "aip11": true
+        "aip11": true,
+        "idFullSha256": true,
+        "vendorFieldLength": 0
     },
     {
         "height": 32,
         "stakeLevels": {
             "31557600": 100
-        }
-    },
-    {
-        "height": 14800,
-        "vendorFieldLength": 0
-    },
-    {
-        "height": 75600,
-        "reward": 200000000
-    },
-    {
-        "height": 1000000000,
-        "block": {
-            "idFullSha256": true
         }
     }
 ]

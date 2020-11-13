@@ -6,19 +6,28 @@ import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { database, IStakeDbItem } from "../index";
 
-export class PowerUpHelper {
-    public static powerUp(address: string, stakeKey: string, walletManager: State.IWalletManager): void {
+export class RedeemHelper {
+    public static redeem(address: string, stakeKey: string, walletManager: State.IWalletManager): void {
         const wallet: State.IWallet = walletManager.findByAddress(address);
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
         const stakePower: Utils.BigNumber = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
-        stakes[stakeKey].status = "active";
+
+        // Set status
+        stakes[stakeKey].status = "redeemed";
+
+        // Save stake
         wallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
-        wallet.setAttribute("stakePower", stakePower.plus(stake.power));
+        // Remove from wallet stakePower
+        wallet.setAttribute("stakePower", stakePower.minus(stake.power));
+        // Add to balance
+        wallet.balance = wallet.balance.plus(stake.amount);
+
         if (wallet.hasVoted()) {
             const delegate: State.IWallet = walletManager.findByPublicKey(wallet.getAttribute("vote"));
+            // Update delegate voteBalance
             const voteBalance: Utils.BigNumber = delegate.getAttribute("delegate.voteBalance", Utils.BigNumber.ZERO);
-            const newVoteBalance: Utils.BigNumber = voteBalance.minus(stake.amount).plus(stake.power);
+            const newVoteBalance: Utils.BigNumber = voteBalance.plus(stake.amount).minus(stake.power);
             delegate.setAttribute("delegate.voteBalance", newVoteBalance);
             walletManager.reindex(delegate);
         }
@@ -26,13 +35,22 @@ export class PowerUpHelper {
         walletManager.reindex(wallet);
     }
 
-    public static removePowerUp(stakeKey: string): void {
-        const updateStatement = database.prepare(`UPDATE stakes SET status = 1 WHERE key = :key`);
+    public static removeRedeem(stakeKey: string): void {
+        const deleteStatement = database.prepare(`DELETE FROM stakes WHERE key = :key`);
+        deleteStatement.run({ key: stakeKey });
+    }
 
+    public static setRedeeming(stakeKey: string, redeemAt: number): void {
+        const updateStatement = database.prepare(`UPDATE stakes SET status = 3, redeem_at = :time WHERE key = :key`);
+        updateStatement.run({ key: stakeKey, time: Number(redeemAt.toFixed(0)) });
+    }
+
+    public static revertRedeeming(stakeKey: string): void {
+        const updateStatement = database.prepare(`UPDATE stakes SET status = 2, redeem_at = NULL WHERE key = :key`);
         updateStatement.run({ key: stakeKey });
     }
 
-    public static async processPowerUps(
+    public static async processRedeems(
         currentBlock: Interfaces.IBlockData,
         walletManager: State.IWalletManager,
     ): Promise<void> {
@@ -46,10 +64,11 @@ export class PowerUpHelper {
         }
         const lastTime = block.timestamp;
         const stakes: IStakeDbItem[] = database
-            .prepare(`SELECT * FROM stakes WHERE powerup <= ${lastTime} AND status = 0`)
+            .prepare(`SELECT * FROM stakes WHERE status = 3 AND redeem_at <= ${lastTime}`)
             .all();
+
         if (stakes.length > 0) {
-            app.resolvePlugin("logger").debug("Processing stake power-ups.");
+            app.resolvePlugin("logger").debug("Processing stake redeems.");
 
             for (const stake of stakes) {
                 if (stake && stake.address) {
@@ -57,30 +76,31 @@ export class PowerUpHelper {
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[stake.key] !== undefined &&
-                        wallet.getAttribute("stakes")[stake.key].status === "grace"
+                        wallet.getAttribute("stakes")[stake.key].status === "redeeming"
                     ) {
-                        app.resolvePlugin("logger").debug(`Power-up Stake ${stake.key} of wallet ${wallet.address}.`);
+                        app.resolvePlugin("logger").debug(`Redeem Stake ${stake.key} of wallet ${wallet.address}.`);
 
                         // Power up in db wallet
-                        this.powerUp(wallet.address, stake.key, walletManager);
+                        this.redeem(wallet.address, stake.key, walletManager);
 
                         // Power up in pool wallet
                         const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
                             "transaction-pool",
                         );
-                        this.powerUp(wallet.address, stake.key, poolService.walletManager);
+                        this.redeem(wallet.address, stake.key, poolService.walletManager);
 
                         const stakeObj = wallet.getAttribute("stakes")[stake.key];
                         if (this.emitter !== undefined) {
-                            this.emitter.emit("stake.powerup", { stake: stakeObj, block });
+                            this.emitter.emit("stake.redeemed", { stake: stakeObj, block });
                         }
 
-                        // Remove queued power-up from in mem db
-                        this.removePowerUp(stake.key);
+                        // Remove queued redeem from in-mem db
+                        this.removeRedeem(stake.key);
                     } else {
-                        // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
+                        // If stake isn't found then the chain state has reverted to a point before its stakeCreate,
+                        // or the stake was already redeemed.
                         // Delete stake from db in this case
-                        this.removePowerUp(stake.key);
+                        this.removeRedeem(stake.key);
                     }
                 }
             }

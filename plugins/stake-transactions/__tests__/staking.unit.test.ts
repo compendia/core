@@ -32,7 +32,7 @@ import {
     StakeCreateTransactionHandler,
     StakeRedeemTransactionHandler,
 } from "../src/handlers";
-import { PowerUpHelper } from "../src/helpers";
+import { ExpireHelper, PowerUpHelper, RedeemHelper } from "../src/helpers";
 
 // import { ExpireHelper } from '../src/helpers';
 
@@ -56,7 +56,7 @@ beforeAll(async () => {
 const ARKTOSHI = Constants.ARKTOSHI;
 let stakeAmount;
 let voterKeys;
-let voter;
+let voter: State.IWallet;
 let initialBalance;
 let stakeCreateHandler;
 let stakeRedeemHandler;
@@ -95,7 +95,7 @@ describe("Stake Redeem Transactions", () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
         const stakeTransaction = stakeBuilder
             .stakeAsset(7889400, stakeAmount)
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -115,7 +115,7 @@ describe("Stake Redeem Transactions", () => {
         const redeemBuilder = new StakeBuilders.StakeRedeemBuilder();
         const stakeRedeemTransaction = redeemBuilder
             .stakeAsset(stakeTransaction.id)
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret");
 
         await expect(
@@ -127,12 +127,149 @@ describe("Stake Redeem Transactions", () => {
         const redeemBuilder = new StakeBuilders.StakeRedeemBuilder();
         const stakeRedeemTransaction = redeemBuilder
             .stakeAsset("3637383930363738393036373839303637383930363738393036373839301234")
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret");
 
         await expect(
             stakeRedeemHandler.throwIfCannotBeApplied(stakeRedeemTransaction.build(), voter, walletManager),
         ).rejects.toThrowError(StakeNotFoundError);
+    });
+
+    it('should only update vote balances after reverting a stake redeem with "redeemed" status', async () => {
+        const delegateKeys = Identities.Keys.fromPassphrase("delegate");
+        const delegateWallet = walletManager.findByPublicKey(delegateKeys.publicKey);
+        delegateWallet.setAttribute("delegate.username", "unittest");
+        delegateWallet.balance = Utils.BigNumber.make(5000);
+        delegateWallet.setAttribute("vote", delegateWallet.publicKey);
+        delegateWallet.setAttribute<Utils.BigNumber>("delegate.voteBalance", delegateWallet.balance);
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(delegateWallet.balance);
+
+        const voteTransaction = Transactions.BuilderFactory.vote()
+            .votesAsset([`+${delegateKeys.publicKey}`])
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(voteTransaction);
+
+        const store = app.resolvePlugin<State.IStateService>("state").getStore();
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: { timestamp: 1000 },
+        });
+
+        jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(1000);
+
+        const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
+        const stakeTransaction = stakeBuilder
+            .stakeAsset(7889400, stakeAmount)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(stakeTransaction);
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable + 1000,
+            },
+        });
+
+        jest.spyOn(Crypto.Slots, "getTime").mockReturnValue(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable + 1000,
+        );
+
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount.times(configManager.getMilestone().stakeLevels["7889400"]).dividedBy(10),
+        );
+
+        walletManager.reindex(delegateWallet);
+
+        const voterStakePower = Utils.BigNumber.make(50000).times(1e8);
+        expect(voter.getAttribute("stakePower")).toEqual(voterStakePower);
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voterStakePower),
+        );
+
+        // const stakes = voter.getAttribute("stakes");
+
+        // Release the stake
+        const halvedVoterStakePower = voterStakePower.div(2).toFixed();
+        ExpireHelper.expireStake(voter.address, stakeTransaction.id, store.getLastBlock().data, walletManager);
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(halvedVoterStakePower),
+        );
+        expect(voter.getAttribute("stakes")[stakeTransaction.id].status).toEqual("released");
+
+        // voter.setAttribute("stakes", stakes);
+        // voter.setAttribute("stakePower", Utils.BigNumber.make(halvedVoterStakePower));
+
+        const redeemBuilder = new StakeBuilders.StakeRedeemBuilder();
+        const stakeRedeemTransaction = redeemBuilder
+            .stakeAsset(stakeTransaction.id)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(stakeRedeemTransaction);
+        walletManager.reindex(voter);
+        expect(voter.getAttribute("stakes")[stakeTransaction.id].status).toEqual("redeeming");
+        expect(voter.getAttribute("stakePower")).toEqual(Utils.BigNumber.make(halvedVoterStakePower));
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(halvedVoterStakePower),
+        );
+
+        await walletManager.revertTransaction(stakeRedeemTransaction);
+        walletManager.reindex(voter);
+
+        // Stake is reverted to "released". Should still be halved stakePower.
+        expect(voter.getAttribute("stakes")[stakeTransaction.id].status).toEqual("released");
+        expect(voter.getAttribute("stakePower")).toEqual(Utils.BigNumber.make(halvedVoterStakePower));
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(halvedVoterStakePower),
+        );
+
+        // oldBalance is balance - stake
+        const oldBalance = voter.balance;
+
+        // Apply again so we can revert at "redeemed" stage
+        await walletManager.applyTransaction(stakeRedeemTransaction);
+        walletManager.reindex(voter);
+
+        // Stake is now redeeming
+        expect(voter.getAttribute("stakes")[stakeTransaction.id].status).toEqual("redeeming");
+
+        // Cron job redeems the stake
+        RedeemHelper.redeem(voter.address, stakeTransaction.id, walletManager);
+
+        // Stake is "redeemed".
+        // Stake power should be 0 and power should be balance only (no more stakePower)
+        expect(voter.getAttribute("stakes")[stakeTransaction.id].status).toEqual("redeemed");
+        expect(voter.balance).toEqual(oldBalance.plus(stakeAmount));
+        expect(voter.getAttribute("stakePower")).toEqual(Utils.BigNumber.ZERO);
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(delegateWallet.balance.plus(voter.balance));
+
+        await walletManager.revertTransaction(stakeRedeemTransaction);
+        walletManager.reindex(voter);
+
+        // Redeem reverted. Stake should be "released".
+        // stakePower should be released stake power again.
+        // Balance should be back to oldBalance.
+        // Delegate voteBalance should be back to oldBalance plus halved stake power.
+        expect(voter.getAttribute("stakes")[stakeTransaction.id].status).toEqual("released");
+        expect(voter.balance).toEqual(oldBalance);
+        expect(voter.getAttribute("stakePower")).toEqual(Utils.BigNumber.make(halvedVoterStakePower));
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(halvedVoterStakePower),
+        );
     });
 });
 
@@ -143,7 +280,7 @@ describe("Stake Create Transactions", () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
         const stakeTransaction = stakeBuilder
             .stakeAsset(7889400, stakeAmount)
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -156,7 +293,7 @@ describe("Stake Create Transactions", () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
         const tx = stakeBuilder
             .stakeAsset(7889400, Utils.BigNumber.ONE.times(1e8))
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
         await expect(stakeCreateHandler.throwIfCannotBeApplied(tx, voter, walletManager)).rejects.toThrowError(
@@ -177,7 +314,7 @@ describe("Stake Create Transactions", () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
         const stakeTransaction = stakeBuilder
             .stakeAsset(7889400, stakeAmount)
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -202,7 +339,7 @@ describe("Stake Create Transactions", () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
         const stakeTransaction = stakeBuilder
             .stakeAsset(15778800, stakeAmount)
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -226,7 +363,7 @@ describe("Stake Power-up", () => {
 
         const voteTransaction = Transactions.BuilderFactory.vote()
             .votesAsset([`+${delegateKeys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -238,7 +375,7 @@ describe("Stake Power-up", () => {
         const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
         const stakeTransaction = stakeBuilder
             .stakeAsset(15778800, stakeAmount)
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
         await walletManager.applyTransaction(stakeTransaction).catch(error => {
@@ -255,7 +392,7 @@ describe("Stake Power-up", () => {
 
         expect(voter.getAttribute("stakePower")).toBeFalsy();
 
-        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower")).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
@@ -318,7 +455,7 @@ describe("Stake Power-up", () => {
             },
         });
 
-        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["7889400"]).dividedBy(10),
@@ -366,7 +503,7 @@ describe("Stake Power-up", () => {
 
         const unvoteTransaction = Transactions.BuilderFactory.vote()
             .votesAsset([`-${delegateKeys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -385,7 +522,7 @@ describe("Stake Power-up", () => {
 
         jest.spyOn(app, "resolve").mockReturnValue([
             {
-                publicKey: voter.publicKey,
+                publicKey: voter.address,
                 stakeKey: 1234567890,
                 redeemableTimestamp: 1242457290,
             },
@@ -461,7 +598,7 @@ describe("Stake Power-up", () => {
 
         const unvoteTransaction = Transactions.BuilderFactory.vote()
             .votesAsset([`-${delegateKeys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -487,7 +624,7 @@ describe("Stake Power-up", () => {
 
         const vote2Transaction = Transactions.BuilderFactory.vote()
             .votesAsset([`+${delegate2Keys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -573,7 +710,7 @@ describe("Stake Cancel Transactions", () => {
             expect(error).toBeInstanceOf(StakeGraceEndedError);
         }
 
-        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
 
         expect(voter.balance).toEqual(voterBalanceAfterVote.minus(stakeTransaction.data.asset.stakeCreate.amount));
 
@@ -652,7 +789,7 @@ describe("Stake Cancel Transactions", () => {
             expect(error).toBeInstanceOf(WalletNotStakerError);
         }
 
-        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
 
         expect(voter.balance).toEqual(voterBalanceAfterVote);
 
@@ -750,7 +887,7 @@ describe("Stake Send Power-up", () => {
 
         const voteTransaction = Transactions.BuilderFactory.vote()
             .votesAsset([`+${delegateKeys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -821,7 +958,7 @@ describe("Stake Send Power-up", () => {
 
         expect(voter.getAttribute("stakePower")).toBeFalsy();
 
-        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower")).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
@@ -927,7 +1064,7 @@ describe("Stake Send Power-up", () => {
             },
         });
 
-        PowerUpHelper.powerUp(voter, stakeTransaction.id, walletManager);
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
 
         expect(voter.getAttribute("stakePower", Utils.BigNumber.ZERO)).toEqual(
             stakeAmount.times(configManager.getMilestone().stakeLevels["7889400"]).dividedBy(10),
@@ -966,7 +1103,7 @@ describe("Stake Send Power-up", () => {
 
         const unvoteTransaction = Transactions.BuilderFactory.vote()
             .votesAsset([`-${delegateKeys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -979,7 +1116,7 @@ describe("Stake Send Power-up", () => {
 
         jest.spyOn(app, "resolve").mockReturnValue([
             {
-                publicKey: voter.publicKey,
+                publicKey: voter.address,
                 stakeKey: 1234567890,
                 redeemableTimestamp: 1242457290,
             },
@@ -1071,7 +1208,7 @@ describe("Stake Send Power-up", () => {
 
         const unvoteTransaction = Transactions.BuilderFactory.vote()
             .votesAsset([`-${delegateKeys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 
@@ -1091,7 +1228,7 @@ describe("Stake Send Power-up", () => {
 
         const vote2Transaction = Transactions.BuilderFactory.vote()
             .votesAsset([`+${delegate2Keys.publicKey}`])
-            .nonce(voter.nonce.plus(1))
+            .nonce(voter.nonce.plus(1).toString())
             .sign("secret")
             .build();
 

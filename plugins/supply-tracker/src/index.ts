@@ -451,7 +451,7 @@ export const plugin: Container.IPluginDescriptor = {
         });
 
         // On stake release
-        emitter.on("stake.released", async stakeObj => {
+        emitter.on("stake.redeemed", async stakeObj => {
             q(async () => {
                 const walletManager = app.resolvePlugin("database").walletManager;
                 const sender = walletManager.findByAddress(stakeObj.address);

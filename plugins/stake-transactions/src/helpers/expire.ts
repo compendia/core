@@ -1,40 +1,30 @@
 import { app } from "@arkecosystem/core-container";
-import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
+import { EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Interfaces, Utils } from "@arkecosystem/crypto";
 import { Interfaces as StakeInterfaces } from "@nosplatform/stake-transactions-crypto";
 import { database, IStakeDbItem } from "../index";
 
 export class ExpireHelper {
     public static async expireStake(
-        wallet: State.IWallet,
+        address: string,
         stakeKey: string,
         block: Interfaces.IBlockData,
-    ): Promise<void> {
+        walletManager: State.IWalletManager,
+    ): Promise<void | Utils.BigNumber> {
+        const wallet: State.IWallet = walletManager.findByAddress(address);
         const stakes: StakeInterfaces.IStakeArray = wallet.getAttribute("stakes", {});
         const stake: StakeInterfaces.IStakeObject = stakes[stakeKey];
-        if (stake.status === "active" && block.timestamp > stake.timestamps.redeemable) {
-            const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-            const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
-                "transaction-pool",
-            );
-            app.resolvePlugin("logger").info(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
+        if (stake.status === "active" && block.timestamp >= stake.timestamps.redeemable) {
+            app.resolvePlugin("logger").debug(`Stake released: ${stakeKey} of wallet ${wallet.address}.`);
             let delegate: State.IWallet;
-            let poolDelegate: State.IWallet;
             if (wallet.hasVoted()) {
-                delegate = databaseService.walletManager.findByPublicKey(wallet.getAttribute("vote"));
-                poolDelegate = poolService.walletManager.findByPublicKey(wallet.getAttribute("vote"));
+                delegate = walletManager.findByPublicKey(wallet.getAttribute("vote"));
             }
             // First deduct previous stakePower from from delegate voteBalance
             if (delegate) {
                 delegate.setAttribute(
                     "delegate.voteBalance",
                     delegate
-                        .getAttribute("delegate.voteBalance")
-                        .minus(wallet.getAttribute("stakePower", Utils.BigNumber.ZERO)),
-                );
-                poolDelegate.setAttribute(
-                    "delegate.voteBalance",
-                    poolDelegate
                         .getAttribute("delegate.voteBalance")
                         .minus(wallet.getAttribute("stakePower", Utils.BigNumber.ZERO)),
                 );
@@ -59,40 +49,26 @@ export class ExpireHelper {
             wallet.setAttribute("stakePower", newWalletStakePower);
             wallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
-            const poolWallet = poolService.walletManager.findByAddress(wallet.address);
-            poolWallet.setAttribute("stakePower", newWalletStakePower);
-            poolWallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
-
             // Update delegate voteBalance
             if (delegate) {
                 delegate.setAttribute(
                     "delegate.voteBalance",
                     delegate.getAttribute("delegate.voteBalance").plus(wallet.getAttribute("stakePower")),
                 );
-                poolDelegate.setAttribute(
-                    "delegate.voteBalance",
-                    poolDelegate.getAttribute("delegate.voteBalance").plus(wallet.getAttribute("stakePower")),
-                );
             }
 
-            const walletManager1 = databaseService.walletManager;
-            const walletManager2 = poolService.walletManager;
-            walletManager1.reindex(wallet);
-            walletManager2.reindex(poolWallet);
+            walletManager.reindex(wallet);
 
             if (delegate) {
-                walletManager1.reindex(delegate);
-                walletManager2.reindex(poolDelegate);
+                walletManager.reindex(delegate);
             }
 
-            if (this.emitter !== undefined) {
-                this.emitter.emit("stake.released", { address: wallet.address, stakeKey, block, prevStakePower });
-            }
+            return prevStakePower;
         }
 
-        // If the stake is somehow still unreleased, don't remove it from db
+        // If the stake is somehow still unreleased, don't set it to released
         if (!(block.timestamp <= stake.timestamps.redeemable)) {
-            this.removeExpiry(stakeKey);
+            this.setReleased(stakeKey);
         }
     }
 
@@ -122,30 +98,54 @@ export class ExpireHelper {
     public static removeExpiry(stakeKey: string): void {
         // Write to SQLite in-mem db
         const deleteStatement = database.prepare(`DELETE FROM stakes WHERE key = :key`);
-
         deleteStatement.run({ key: stakeKey });
     }
 
-    public static async processExpirations(block: Interfaces.IBlockData): Promise<void> {
+    public static setReleased(stakeKey: string): void {
+        // Write to SQLite in-mem db
+        const updateStatement = database.prepare(`UPDATE stakes SET status = 2 WHERE key = :key`);
+        updateStatement.run({ key: stakeKey });
+    }
+
+    public static async processExpirations(
+        block: Interfaces.IBlockData,
+        walletManager: State.IWalletManager,
+    ): Promise<void> {
         const lastTime = block.timestamp;
         const expirations: IStakeDbItem[] = database
-            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime}`)
+            .prepare(`SELECT * FROM stakes WHERE redeemable <= ${lastTime} AND status = 1`)
             .all();
 
         if (expirations.length > 0) {
-            app.resolvePlugin("logger").info("Processing stake expirations.");
-
-            const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+            app.resolvePlugin("logger").debug("Processing stake expirations.");
 
             for (const expiration of expirations) {
                 if (expiration && expiration.address) {
-                    const wallet = databaseService.walletManager.findByAddress(expiration.address);
+                    const wallet: State.IWallet = walletManager.findByAddress(expiration.address);
+
                     if (
                         wallet.hasAttribute("stakes") &&
                         wallet.getAttribute("stakes")[expiration.key] !== undefined &&
                         wallet.getAttribute("stakes")[expiration.key].status === "active"
                     ) {
-                        await this.expireStake(wallet, expiration.key, block);
+                        // Redeem in primary walletManager
+                        const res = await this.expireStake(wallet.address, expiration.key, block, walletManager);
+
+                        // Redeem in pool walletManager
+                        const poolService: TransactionPool.IConnection = app.resolvePlugin<TransactionPool.IConnection>(
+                            "transaction-pool",
+                        );
+                        const poolWalletManager: State.IWalletManager = poolService.walletManager;
+                        await this.expireStake(wallet.address, expiration.key, block, poolWalletManager);
+
+                        if (res && this.emitter !== undefined) {
+                            this.emitter.emit("stake.released", {
+                                address: wallet.address,
+                                stakeKey: expiration.key,
+                                block,
+                                res,
+                            });
+                        }
 
                         // If stake doesn't exist or is already redeemed or canceled
                     } else if (
@@ -155,7 +155,7 @@ export class ExpireHelper {
                     ) {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete expiration from db in this case
-                        app.resolvePlugin("logger").info(
+                        app.resolvePlugin("logger").debug(
                             `Unknown or already processed ${expiration.key} of wallet ${wallet.address}. Deleted from storage.`,
                         );
                         this.removeExpiry(expiration.key);

@@ -21,12 +21,13 @@ export interface IStakeTimestamps {
     graceEnd: number;
     powerUp: number;
     redeemable: number;
+    redeemAt: number | undefined;
 }
 
 export interface IStakeObject {
     id: string;
     senderPublicKey?: string;
-    status: "grace" | "canceled" | "active" | "released" | "redeemed";
+    status: "grace" | "canceled" | "active" | "released" | "redeemed" | "redeeming";
     timestamps: IStakeTimestamps;
     duration: number;
     amount: Utils.BigNumber;
