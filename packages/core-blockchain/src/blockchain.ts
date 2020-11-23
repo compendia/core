@@ -473,12 +473,7 @@ export class Blockchain implements blockchain.IBlockchain {
             lastProcessResult === BlockProcessorResult.Accepted ||
             lastProcessResult === BlockProcessorResult.DiscardedButCanBeBroadcasted
         ) {
-            // broadcast last processed block
-            const blocktime: number = config.getMilestone(lastProcessedBlock.data.height).blocktime;
-
-            if (this.state.started && Crypto.Slots.getSlotNumber() * blocktime <= lastProcessedBlock.data.timestamp) {
-                this.p2p.getMonitor().broadcastBlock(lastProcessedBlock);
-            }
+            this.p2p.getMonitor().broadcastBlock(lastProcessedBlock);
         } else if (forkBlock) {
             this.forkBlock(forkBlock);
         }
