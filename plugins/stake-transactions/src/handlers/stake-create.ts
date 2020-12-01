@@ -105,13 +105,7 @@ export class StakeCreateTransactionHandler extends Handlers.TransactionHandler {
                 }
 
                 // Store stake in in-mem sqlite db
-                ExpireHelper.storeExpiry(
-                    stakeObject,
-                    staker,
-                    transaction.id,
-                    roundBlock.height,
-                    stakeObject.status === "active",
-                );
+                ExpireHelper.storeExpiry(stakeObject, staker, transaction.id, stakeObject.status === "active");
 
                 wallet.balance = newBalance;
                 stakes[transaction.id] = stakeObject;

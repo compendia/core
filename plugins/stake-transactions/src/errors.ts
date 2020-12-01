@@ -55,6 +55,12 @@ export class StakeAlreadyRedeemedError extends Errors.TransactionError {
     }
 }
 
+export class StakeNotActiveError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake is no longer active.`);
+    }
+}
+
 export class StakeNotYetRedeemableError extends Errors.TransactionError {
     constructor() {
         super(`Stake not yet redeemable.`);

@@ -76,7 +76,6 @@ export class ExpireHelper {
         stake: StakeInterfaces.IStakeObject,
         wallet: State.IWallet,
         stakeKey: string,
-        blockHeight?: number,
         skipPowerUp?: boolean,
     ): void {
         // Write to SQLite in-mem db
