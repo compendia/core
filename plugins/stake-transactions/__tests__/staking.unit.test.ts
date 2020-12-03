@@ -12,9 +12,6 @@ import { configManager } from "@arkecosystem/crypto/dist/managers";
 import { Builders as StakeBuilders } from "@nosplatform/stake-transactions-crypto/src";
 import { database, initDb } from "@nosplatform/stake-transactions/src";
 
-// import {
-//     DatabaseConnectionStub
-// } from '../../../__tests__/unit/core-database/__fixtures__/database-connection-stub';
 import { Staking } from "@nosplatform/core-helpers";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import {
@@ -65,14 +62,9 @@ let stakeCreateHandler;
 let stakeRedeemHandler;
 let stakeExtendHandler;
 // let stakeCancelHandler;
-// let databaseService: Database.IDatabaseService;
 let walletManager: State.IWalletManager;
 
 beforeEach(() => {
-    // databaseService = {
-    //     connection: new DatabaseConnectionStub(),
-    // } as Database.IDatabaseService;
-
     walletManager = new WalletManager();
     stakeAmount = Utils.BigNumber.make(10_000 * ARKTOSHI);
     voterKeys = Identities.Keys.fromPassphrase("secret");
@@ -1412,6 +1404,11 @@ describe("Stake Extensions", () => {
             },
         });
 
+        expirations = database.prepare(`SELECT * FROM stakes WHERE key = '${stakeTransaction.id}'`).all();
+        expect(expirations[0].redeemable).toEqual(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable,
+        );
+
         ExpireHelper.expireStake(voter.address, stakeTransaction.id, store.getLastBlock().data, walletManager);
 
         expect(voter.getAttribute("stakePower")).toEqual(
@@ -1470,7 +1467,7 @@ describe("Stake Extensions", () => {
         );
     });
 
-    it("should throw if extend duration is less than existing duration,", async () => {
+    it("should throw if extend duration is less than existing duration", async () => {
         const delegateKeys = Identities.Keys.fromPassphrase("delegate");
         const delegateWallet = walletManager.findByPublicKey(delegateKeys.publicKey);
         delegateWallet.setAttribute("delegate.username", "unittest");
