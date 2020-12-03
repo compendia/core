@@ -79,6 +79,12 @@ export class StakeGraceEndedError extends Errors.TransactionError {
     }
 }
 
+export class StakeExtendDurationTooLowError extends Errors.TransactionError {
+    constructor() {
+        super(`New duration should be equal to or greater than existing duration.`);
+    }
+}
+
 export class StakeAlreadyCanceledError extends Errors.TransactionError {
     constructor() {
         super(`Stake already canceled.`);

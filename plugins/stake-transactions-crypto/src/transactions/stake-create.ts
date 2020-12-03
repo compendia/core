@@ -17,7 +17,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
             $id: "stakeCreate",
             required: ["asset", "typeGroup"],
             properties: {
-                type: { transactionType: StakeTransactionType.StakeExtend },
+                type: { transactionType: StakeTransactionType.StakeCreate },
                 typeGroup: { const: StakeTransactionGroup },
                 amount: { bignumber: { minimum: 0, maximum: 0 } },
                 fee: { bignumber: { minimum: 0, maximum: 0 } },

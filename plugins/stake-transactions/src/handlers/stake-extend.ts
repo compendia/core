@@ -1,7 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
-import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
     Enums,
@@ -9,7 +8,13 @@ import {
     Transactions as StakeTransactions,
 } from "@nosplatform/stake-transactions-crypto";
 
-import { StakeDurationError, StakeNotActiveError, StakeNotFoundError, WalletHasNoStakeError } from "../errors";
+import {
+    StakeDurationError,
+    StakeExtendDurationTooLowError,
+    StakeNotActiveError,
+    StakeNotFoundError,
+    WalletHasNoStakeError,
+} from "../errors";
 import { ExpireHelper, VotePower } from "../helpers";
 import { BlockHelper } from "../helpers/block";
 import { StakeCancelTransactionHandler } from "./stake-cancel";
@@ -132,6 +137,10 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
 
         if (stakes[txId].status !== "active" && stakes[txId].status !== "released") {
             throw new StakeNotActiveError();
+        }
+
+        if (data.asset.stakeExtend.duration < stakes[txId].duration) {
+            throw new StakeExtendDurationTooLowError();
         }
 
         return super.throwIfCannotBeApplied(transaction, wallet, databaseWalletManager);

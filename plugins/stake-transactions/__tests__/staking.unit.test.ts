@@ -20,6 +20,7 @@ import { WalletManager } from "../../../packages/core-state/src/wallets";
 import {
     LessThanMinimumStakeError,
     NotEnoughBalanceError,
+    StakeExtendDurationTooLowError,
     StakeGraceEndedError,
     StakeNotFoundError,
     StakeNotIntegerError,
@@ -30,6 +31,7 @@ import {
 import {
     StakeCancelTransactionHandler,
     StakeCreateTransactionHandler,
+    StakeExtendTransactionHandler,
     StakeRedeemTransactionHandler,
 } from "../src/handlers";
 import { ExpireHelper, PowerUpHelper, RedeemHelper } from "../src/helpers";
@@ -51,6 +53,7 @@ beforeAll(async () => {
     Handlers.Registry.registerTransactionHandler(StakeCreateTransactionHandler);
     Handlers.Registry.registerTransactionHandler(StakeRedeemTransactionHandler);
     Handlers.Registry.registerTransactionHandler(StakeCancelTransactionHandler);
+    Handlers.Registry.registerTransactionHandler(StakeExtendTransactionHandler);
 });
 
 const ARKTOSHI = Constants.ARKTOSHI;
@@ -60,6 +63,7 @@ let voter: State.IWallet;
 let initialBalance;
 let stakeCreateHandler;
 let stakeRedeemHandler;
+let stakeExtendHandler;
 // let stakeCancelHandler;
 // let databaseService: Database.IDatabaseService;
 let walletManager: State.IWalletManager;
@@ -78,7 +82,10 @@ beforeEach(() => {
     // voter.nonce = Utils.BigNumber.ZERO;
     stakeCreateHandler = new StakeCreateTransactionHandler();
     stakeRedeemHandler = new StakeRedeemTransactionHandler();
+    stakeExtendHandler = new StakeExtendTransactionHandler();
     // stakeCancelHandler = new StakeCancelTransactionHandler();
+
+    database.prepare("DELETE FROM stakes").run();
 });
 
 describe("Stake Redeem Transactions", () => {
@@ -1241,6 +1248,302 @@ describe("Stake Send Power-up", () => {
                 .minus(voteTransaction.data.fee)
                 .minus(unvoteTransaction.data.fee)
                 .minus(vote2Transaction.data.fee),
+        );
+    });
+});
+
+describe("Stake Extensions", () => {
+    it("should vote then update vote balance after 6m stake after power-up and again after 1-year extension", async () => {
+        const delegateKeys = Identities.Keys.fromPassphrase("delegate");
+        const delegateWallet = walletManager.findByPublicKey(delegateKeys.publicKey);
+        delegateWallet.setAttribute("delegate.username", "unittest");
+        delegateWallet.balance = Utils.BigNumber.make(5000);
+        delegateWallet.setAttribute("vote", delegateWallet.publicKey);
+        delegateWallet.setAttribute<Utils.BigNumber>("delegate.voteBalance", delegateWallet.balance);
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(delegateWallet.balance);
+
+        const voteTransaction = Transactions.BuilderFactory.vote()
+            .votesAsset([`+${delegateKeys.publicKey}`])
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(voteTransaction);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(
+            delegateWallet.balance.plus(voter.balance),
+        );
+        const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
+        const stakeTransaction = stakeBuilder
+            .stakeAsset(15778800, stakeAmount)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+        await walletManager.applyTransaction(stakeTransaction).catch(error => {
+            fail(error);
+        });
+
+        const store = app.resolvePlugin<State.IStateService>("state").getStore();
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.powerUp,
+            },
+        });
+
+        expect(voter.getAttribute("stakePower")).toBeFalsy();
+
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
+        );
+
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        let expirations: any;
+        expirations = database.prepare(`SELECT * FROM stakes WHERE key = '${stakeTransaction.id}'`).all();
+        expect(expirations[0].redeemable).toEqual(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable,
+        );
+
+        const oldRedeemable = expirations[0].redeemable;
+
+        // Extend Stake
+        const extendBuilder = new StakeBuilders.StakeExtendBuilder();
+        const extendTransaction = extendBuilder
+            .stakeAsset(stakeTransaction.id, 31557600)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(extendTransaction).catch(error => {
+            fail(error);
+        });
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount.times(configManager.getMilestone().stakeLevels["31557600"]).dividedBy(10),
+        );
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        expirations = database.prepare(`SELECT * FROM stakes WHERE key = '${stakeTransaction.id}'`).all();
+
+        expect(expirations[0].redeemable).toEqual(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable,
+        );
+
+        expect(Number(expirations[0].redeemable) - Number(oldRedeemable)).toEqual(15778800);
+    });
+
+    it("should halve power after 6m stake then power up again after 6m extension", async () => {
+        const delegateKeys = Identities.Keys.fromPassphrase("delegate");
+        const delegateWallet = walletManager.findByPublicKey(delegateKeys.publicKey);
+        delegateWallet.setAttribute("delegate.username", "unittest");
+        delegateWallet.balance = Utils.BigNumber.make(5000);
+        delegateWallet.setAttribute("vote", delegateWallet.publicKey);
+        delegateWallet.setAttribute<Utils.BigNumber>("delegate.voteBalance", delegateWallet.balance);
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(delegateWallet.balance);
+
+        const voteTransaction = Transactions.BuilderFactory.vote()
+            .votesAsset([`+${delegateKeys.publicKey}`])
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(voteTransaction);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(
+            delegateWallet.balance.plus(voter.balance),
+        );
+        const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
+        const stakeTransaction = stakeBuilder
+            .stakeAsset(15778800, stakeAmount)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+        await walletManager.applyTransaction(stakeTransaction).catch(error => {
+            fail(error);
+        });
+
+        const store = app.resolvePlugin<State.IStateService>("state").getStore();
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.powerUp,
+            },
+        });
+
+        expect(voter.getAttribute("stakePower")).toBeFalsy();
+
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
+
+        let expirations: any;
+        expirations = database.prepare(`SELECT * FROM stakes WHERE key = '${stakeTransaction.id}'`).all();
+        expect(expirations[0].redeemable).toEqual(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable,
+        );
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
+        );
+
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable + 10,
+            },
+        });
+
+        ExpireHelper.expireStake(voter.address, stakeTransaction.id, store.getLastBlock().data, walletManager);
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount
+                .times(configManager.getMilestone().stakeLevels["15778800"])
+                .dividedBy(10)
+                .dividedBy(2),
+        );
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        // Extend Stake
+        const extendBuilder = new StakeBuilders.StakeExtendBuilder();
+        const extendTransaction = extendBuilder
+            .stakeAsset(stakeTransaction.id, 15778800)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(extendTransaction).catch(error => {
+            fail(error);
+        });
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
+        );
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable + 10,
+            },
+        });
+
+        ExpireHelper.expireStake(voter.address, stakeTransaction.id, store.getLastBlock().data, walletManager);
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount
+                .times(configManager.getMilestone().stakeLevels["15778800"])
+                .dividedBy(10)
+                .dividedBy(2),
+        );
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        expirations = database.prepare(`SELECT * FROM stakes WHERE key = '${stakeTransaction.id}'`).all();
+        expect(expirations[0].redeemable).toEqual(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable,
+        );
+    });
+
+    it("should throw if extend duration is less than existing duration,", async () => {
+        const delegateKeys = Identities.Keys.fromPassphrase("delegate");
+        const delegateWallet = walletManager.findByPublicKey(delegateKeys.publicKey);
+        delegateWallet.setAttribute("delegate.username", "unittest");
+        delegateWallet.balance = Utils.BigNumber.make(5000);
+        delegateWallet.setAttribute("vote", delegateWallet.publicKey);
+        delegateWallet.setAttribute<Utils.BigNumber>("delegate.voteBalance", delegateWallet.balance);
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(delegateWallet.balance);
+
+        const store = app.resolvePlugin<State.IStateService>("state").getStore();
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: { timestamp: 1234567890 },
+        });
+
+        const voteTransaction = Transactions.BuilderFactory.vote()
+            .votesAsset([`+${delegateKeys.publicKey}`])
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+
+        await walletManager.applyTransaction(voteTransaction);
+
+        expect(delegateWallet.getAttribute<Utils.BigNumber>("delegate.voteBalance")).toEqual(
+            delegateWallet.balance.plus(voter.balance),
+        );
+        const stakeBuilder = new StakeBuilders.StakeCreateBuilder();
+        const stakeTransaction = stakeBuilder
+            .stakeAsset(15778800, stakeAmount)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret")
+            .build();
+        await walletManager.applyTransaction(stakeTransaction).catch(error => {
+            fail(error);
+        });
+
+        jest.spyOn(store, "getLastBlock").mockReturnValue({
+            // @ts-ignore
+            data: {
+                timestamp: voter.getAttribute("stakes")[stakeTransaction.id].timestamps.powerUp,
+            },
+        });
+
+        expect(voter.getAttribute("stakePower")).toBeFalsy();
+
+        PowerUpHelper.powerUp(voter.address, stakeTransaction.id, walletManager);
+
+        expect(voter.getAttribute("stakePower")).toEqual(
+            stakeAmount.times(configManager.getMilestone().stakeLevels["15778800"]).dividedBy(10),
+        );
+
+        walletManager.reindex(delegateWallet);
+
+        expect(delegateWallet.getAttribute("delegate").voteBalance).toEqual(
+            delegateWallet.balance.plus(voter.balance).plus(voter.getAttribute("stakePower")),
+        );
+
+        // Extend Stake
+        const extendBuilder = new StakeBuilders.StakeExtendBuilder();
+        const extendTransaction = extendBuilder
+            .stakeAsset(stakeTransaction.id, 120)
+            .nonce(voter.nonce.plus(1).toString())
+            .sign("secret");
+
+        await expect(
+            stakeExtendHandler.throwIfCannotBeApplied(extendTransaction.build(), voter, walletManager),
+        ).rejects.toThrowError(StakeExtendDurationTooLowError);
+
+        const expirations = database.prepare(`SELECT * FROM stakes WHERE key = '${stakeTransaction.id}'`).all();
+        expect(expirations[0].redeemable).toEqual(
+            voter.getAttribute("stakes")[stakeTransaction.id].timestamps.redeemable,
         );
     });
 });
