@@ -58,18 +58,18 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 const stakes = wallet.getAttribute("stakes", {});
                 const stake: StakeInterfaces.IStakeObject = stakes[txId];
 
-                // Get wallet stakePower and deduct current stake's power
+                // Get wallet stakePower and deduct current stake's power from it
                 let stakePower = wallet.getAttribute("stakePower", Utils.BigNumber.ZERO);
                 stakePower = stakePower.minus(stake.power);
 
-                // Remove from expiry since the extended stake will have a new expiration
+                // Remove from expiry db since the extended stake will have a new expiration
                 ExpireHelper.removeExpiry(stake.id);
 
                 // Update stake duration
                 const newDuration = transaction.asset.stakeExtend.duration;
                 stake.duration = newDuration;
 
-                // Update timestamps
+                // Update timestamps and status
                 const extendBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
                     transaction.blockHeight - 1,
                 );
@@ -78,24 +78,30 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 stake.timestamps.redeemAt = undefined;
                 stake.status = "active";
 
-                // Update power
+                // Update extended stake object's power
                 const multiplier: number = Managers.configManager.getMilestone().stakeLevels[newDuration];
                 const amount = Utils.BigNumber.make(stake.amount);
                 const sPower: Utils.BigNumber = amount.times(multiplier).dividedBy(10);
                 stake.power = sPower;
+
+                // Add the extended stake object's power to wallet stakePower
+                stakePower = stakePower.plus(stake.power);
 
                 // Add stake back to db
                 // Skip powerUp queue because the stake is always already active here since we're at a point where an extension can be made (and reverted)
                 ExpireHelper.storeExpiry(stake, wallet, stake.id, true);
 
                 // Set stake to "released" if the redeemable time has surpassed the last round's time.
-                // Add to "released" db for cron.
                 const releaseEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(stake.timestamps.redeemable);
                 if (lastBlock.data.height >= releaseEffectiveFrom) {
+                    // Remove stake object's power from wallet stakePower
                     stakePower = stakePower.minus(stake.power);
+                    // Halve the stake power and update status
                     stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
                     stake.status = "released";
+                    // Re-add the released stake's power to the wallet stakePower
                     stakePower = stakePower.plus(stake.power);
+                    // Set "released" (2) status in in-mem db
                     ExpireHelper.setReleased(transaction.id);
                 }
                 stakes[txId] = stake;
@@ -360,6 +366,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
         const stateService = app.resolvePlugin<State.IStateService>("state");
         const lastBlock: Interfaces.IBlock = stateService.getStore().getLastBlock();
         if (lastBlock.data.height >= releaseEffectiveFrom) {
+            // Deduct wallet stakePower and re-add it when the stake's power is halved
             stakePower = stakePower.minus(stake.power);
             stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
             stake.status = "released";
