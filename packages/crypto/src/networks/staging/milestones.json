@@ -36,13 +36,15 @@
         },
         "balancePower": 1,
         "stakeLevels": {
+            "300": 40,
             "7889400": 50,
             "15778800": 75,
             "31557600": 120
         },
+        "redeemTime": 600,
         "minimumStake": 10000000000,
-        "graceEnd": 3600,
-        "powerUp": 3600,
+        "graceEnd": 600,
+        "powerUp": 600,
         "transferStake": true,
         "ipfs": {
             "maxFileSize": {
@@ -56,13 +58,6 @@
         "aip11": true,
         "block": {
             "idFullSha256": true
-        }
-    },
-    {
-        "height": 600,
-        "minimumStake": 500000000000,
-        "stakeLevels": {
-            "31557600": 100
         }
     },
     {
