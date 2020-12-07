@@ -30,6 +30,7 @@
                 "delegateResignation": 1000000000,
                 "stakeCreate": 0,
                 "stakeRedeem": 0,
+                "stakeExtensions": 0,
                 "stakeCancel": 500000000,
                 "setFile": 100000000
             }
