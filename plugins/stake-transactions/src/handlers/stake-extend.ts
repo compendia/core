@@ -108,7 +108,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                         // Re-add the released stake's power to the wallet stakePower
                         stakePower = stakePower.plus(stake.power);
                         // Set "released" (2) status in in-mem db
-                        ExpireHelper.setReleased(transaction.id);
+                        ExpireHelper.setReleased(stake.id);
                     }
                 }
                 stakes[txId] = stake;
@@ -378,7 +378,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
             stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
             stake.status = "released";
             stakePower = stakePower.plus(stake.power);
-            ExpireHelper.setReleased(transaction.id);
+            ExpireHelper.setReleased(stake.id);
         }
 
         // If sender has voted we should update the delegate voteBalance
