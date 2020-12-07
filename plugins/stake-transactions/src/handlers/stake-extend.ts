@@ -201,7 +201,9 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
         const originalPower = stake.power;
 
         // Remove from stake db since the stake will have a new redeem time
-        ExpireHelper.removeExpiry(stake.id);
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            ExpireHelper.removeExpiry(stake.id);
+        }
 
         const lastBlock: Interfaces.IBlock = app
             .resolvePlugin<State.IStateService>("state")
@@ -235,7 +237,9 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
 
         // Add to expiration queue db with new attributes
         // Skip powerUp queue since stake can only be extended if active (or released)
-        ExpireHelper.storeExpiry(stake, sender, stake.id, true);
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            ExpireHelper.storeExpiry(stake, sender, stake.id, true);
+        }
 
         sender.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
 
@@ -262,7 +266,9 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
         const stakes = sender.getAttribute("stakes", {});
 
         // Remove the stake from ExpireHelper db
-        ExpireHelper.removeExpiry(stakeId);
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            ExpireHelper.removeExpiry(stakeId);
+        }
 
         /*
          * Rebuild the stake's state by iterating through its create tx + extensions
@@ -365,7 +371,9 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
 
         // Add stake back to db
         // Skip powerUp queue because the stake is always already active here since we're at a point where an extension can be made (and reverted)
-        ExpireHelper.storeExpiry(stake, sender, stake.id, true);
+        if (walletManager.constructor.name !== "TempWalletManager") {
+            ExpireHelper.storeExpiry(stake, sender, stake.id, true);
+        }
 
         // Set stake to "released" if the redeemable time has surpassed the last round's time.
         // Add to "released" db for cron.
@@ -383,7 +391,9 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
                 stake.status = "released";
                 stakePower = stakePower.plus(stake.power);
-                ExpireHelper.setReleased(stake.id);
+                if (walletManager.constructor.name !== "TempWalletManager") {
+                    ExpireHelper.setReleased(stake.id);
+                }
             }
         }
 
