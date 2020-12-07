@@ -258,8 +258,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
     ): Promise<void> {
         await super.revertForSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
-        const t = transaction.data;
-        const stakeId = t.asset.stakeExtend.id;
+        const stakeId = transaction.data.asset.stakeExtend.id;
         const stakes = sender.getAttribute("stakes", {});
 
         // Remove the stake from ExpireHelper db
@@ -284,7 +283,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
             dbStakeCreateTransaction.asset.stakeCreate,
             stakeId,
             dbStakeCreateTransaction.senderPublicKey,
-            blockFromCreateTx.timestamp,
+            blockFromCreateTx.height,
         );
 
         // Find all stake extensions of this wallet
@@ -344,7 +343,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 );
 
                 const multiplier: number = Managers.configManager.getMilestone(blockFromExtendTx.height).stakeLevels[
-                    t.asset.stakeExtend.duration
+                    transaction.data.asset.stakeExtend.duration
                 ];
 
                 const amount = Utils.BigNumber.make(stake.amount);
@@ -352,11 +351,12 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 stake.power = sPower;
                 stakePower = stakePower.plus(stake.power);
 
+                const blockBeforeExtendTx: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+                    blockFromExtendTx.height - 1,
+                );
+
                 // Update timestamps and stake status
-                const newRedeemable =
-                    transaction.timestamp -
-                    Managers.configManager.getMilestone(blockFromExtendTx.height).blockTime +
-                    t.asset.stakeExtend.duration;
+                const newRedeemable = blockBeforeExtendTx.timestamp + transaction.data.asset.stakeExtend.duration;
                 stake.timestamps.redeemable = newRedeemable;
                 stake.timestamps.redeemAt = undefined;
                 stake.status = "active";
@@ -369,16 +369,22 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
 
         // Set stake to "released" if the redeemable time has surpassed the last round's time.
         // Add to "released" db for cron.
-        const releaseEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(stake.timestamps.redeemable);
         const stateService = app.resolvePlugin<State.IStateService>("state");
         const lastBlock: Interfaces.IBlock = stateService.getStore().getLastBlock();
-        if (lastBlock.data.height >= releaseEffectiveFrom) {
-            // Deduct wallet stakePower and re-add it when the stake's power is halved
-            stakePower = stakePower.minus(stake.power);
-            stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
-            stake.status = "released";
-            stakePower = stakePower.plus(stake.power);
-            ExpireHelper.setReleased(stake.id);
+        const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
+        const roundBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+            roundHeight,
+        );
+        if (roundBlock.timestamp >= stake.timestamps.redeemable) {
+            const releaseEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(stake.timestamps.redeemable);
+            if (lastBlock.data.height >= releaseEffectiveFrom) {
+                // Deduct wallet stakePower and re-add it when the stake's power is halved
+                stakePower = stakePower.minus(stake.power);
+                stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
+                stake.status = "released";
+                stakePower = stakePower.plus(stake.power);
+                ExpireHelper.setReleased(stake.id);
+            }
         }
 
         // If sender has voted we should update the delegate voteBalance
