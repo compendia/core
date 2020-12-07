@@ -35,7 +35,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public async isActivated(): Promise<boolean> {
-        return true;
+        return Managers.configManager.getMilestone().stakeExtensions;
     }
 
     public dynamicFee(context: TransactionInterfaces.IDynamicFeeContext): Utils.BigNumber {
