@@ -78,7 +78,7 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 const extendBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
                     transaction.blockHeight - 1,
                 );
-                const newRedeemable = extendBlock.timestamp + transaction.asset.stakeExtend.duration;
+                const newRedeemable = extendBlock.timestamp + stake.duration;
                 stake.timestamps.redeemable = newRedeemable;
                 stake.timestamps.redeemAt = undefined;
                 stake.status = "active";
