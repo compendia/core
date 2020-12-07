@@ -1,6 +1,7 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
+import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
     Enums,
@@ -48,6 +49,10 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
         databaseService.options.estimateTotalCount = true;
         const stateService = app.resolvePlugin<State.IStateService>("state");
         const lastBlock: Interfaces.IBlock = stateService.getStore().getLastBlock();
+        const roundHeight: number = roundCalculator.calculateRound(lastBlock.data.height).roundHeight;
+        const roundBlock: Interfaces.IBlockData = await databaseService.blocksBusinessRepository.findByHeight(
+            roundHeight,
+        );
 
         while (reader.hasNext()) {
             const transactions = await reader.read();
@@ -92,17 +97,19 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
                 ExpireHelper.storeExpiry(stake, wallet, stake.id, true);
 
                 // Set stake to "released" if the redeemable time has surpassed the last round's time.
-                const releaseEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(stake.timestamps.redeemable);
-                if (lastBlock.data.height >= releaseEffectiveFrom) {
-                    // Remove stake object's power from wallet stakePower
-                    stakePower = stakePower.minus(stake.power);
-                    // Halve the stake power and update status
-                    stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
-                    stake.status = "released";
-                    // Re-add the released stake's power to the wallet stakePower
-                    stakePower = stakePower.plus(stake.power);
-                    // Set "released" (2) status in in-mem db
-                    ExpireHelper.setReleased(transaction.id);
+                if (roundBlock.timestamp >= stake.timestamps.redeemable) {
+                    const releaseEffectiveFrom = await BlockHelper.getEffectiveBlockHeight(stake.timestamps.redeemable);
+                    if (lastBlock.data.height >= releaseEffectiveFrom) {
+                        // Remove stake object's power from wallet stakePower
+                        stakePower = stakePower.minus(stake.power);
+                        // Halve the stake power and update status
+                        stake.power = Utils.BigNumber.make(stake.power).dividedBy(2);
+                        stake.status = "released";
+                        // Re-add the released stake's power to the wallet stakePower
+                        stakePower = stakePower.plus(stake.power);
+                        // Set "released" (2) status in in-mem db
+                        ExpireHelper.setReleased(transaction.id);
+                    }
                 }
                 stakes[txId] = stake;
                 wallet.setAttribute("stakes", JSON.parse(JSON.stringify(stakes)));
