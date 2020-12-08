@@ -40,6 +40,7 @@
             "15778800": 75,
             "31557600": 100
         },
+        "stakeExtensions": true,
         "graceEnd": 60,
         "powerUp": 60,
         "redeemTime": 60,
