@@ -2,7 +2,7 @@
     {
         "height": 1,
         "p2p": {
-            "minimumVersions": ["^2.11.3"]
+            "minimumVersions": ["^2.11.9"]
         },
         "reward": 390000000,
         "topReward": 484000000,
@@ -61,7 +61,7 @@
         }
     },
     {
-        "height": 470000,
+        "height": 490000,
         "stakeExtensions": true
     }
 ]

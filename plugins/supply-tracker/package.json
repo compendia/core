@@ -22,7 +22,7 @@
         "@arkecosystem/core-container": "^2.7.13",
         "@arkecosystem/core-transactions": "^2.7.13",
         "@arkecosystem/crypto": "^2.7.13",
-        "@nosplatform/stake-transactions": "^0.3.0-alpha",
+        "@nosplatform/stake-transactions": "^0.3.0",
         "@nosplatform/storage": "^0.0.3",
         "bytebuffer": "^5.0.1"
     },
