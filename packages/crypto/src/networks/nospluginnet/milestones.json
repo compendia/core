@@ -28,9 +28,11 @@
                 "setFile": 0,
                 "stakeCreate": 0,
                 "stakeRedeem": 0,
+                "stakeExtend": 0,
                 "stakeCancel": 10000000
             }
         },
+        "stakeExtensions": true,
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256,
         "balancePower": 1,

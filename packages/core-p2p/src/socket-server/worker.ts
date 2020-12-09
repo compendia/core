@@ -209,6 +209,25 @@ export class Worker extends SCWorker {
                     ) {
                         return true;
                     }
+                } else if (object.event === "p2p.peer.getCommonBlocks") {
+                    if (
+                        typeof object.data.data === "object" &&
+                        object.data.data.ids &&
+                        Array.isArray(object.data.data.ids) &&
+                        object.data.data.ids.length >= schema.properties.ids.minItems &&
+                        object.data.data.ids.length <= schema.properties.ids.maxItems
+                    ) {
+                        for (const id of object.data.data.ids) {
+                            if (
+                                typeof id !== "string" ||
+                                !(/^[0-9]{1,20}$/.test(id) || /^[0-9a-f]{16}$/i.test(id) || /^[0-9a-f]{64}$/i.test(id))
+                            ) {
+                                return true;
+                            }
+                        }
+                    } else {
+                        return true;
+                    }
                 } else if (schema && !ajv.validate(schema, object.data.data)) {
                     return true;
                 }
@@ -291,16 +310,21 @@ export class Worker extends SCWorker {
         }
     }
 
+    private terminateSetErrorAndDestroy(socket) {
+        socket.terminate();
+        this.setErrorForIpAndDestroy(socket);
+    }
+
     private async handleEmit(req, next): Promise<void> {
         if (req.event.length > 128) {
-            req.socket.terminate();
+            this.terminateSetErrorAndDestroy(req.socket);
             return;
         }
         const rateLimitedEndpoints = this.getRateLimitedEndpoints();
         const useLocalRateLimiter: boolean = !rateLimitedEndpoints[req.event];
         if (useLocalRateLimiter) {
             if (await this.rateLimiter.hasExceededRateLimit(req.socket.remoteAddress, req.event)) {
-                req.socket.terminate();
+                this.terminateSetErrorAndDestroy(req.socket);
                 return;
             }
         } else {
@@ -314,14 +338,14 @@ export class Worker extends SCWorker {
                 },
             );
             if (data.exceededLimitOnEndpoint) {
-                req.socket.terminate();
+                this.terminateSetErrorAndDestroy(req.socket);
                 return;
             }
         }
 
         // ensure basic format of incoming data, req.data must be as { data, headers }
         if (typeof req.data !== "object" || typeof req.data.data !== "object" || typeof req.data.headers !== "object") {
-            req.socket.terminate();
+            this.terminateSetErrorAndDestroy(req.socket);
             return;
         }
 
@@ -329,7 +353,7 @@ export class Worker extends SCWorker {
             const [prefix, version, handler] = req.event.split(".");
 
             if (prefix !== "p2p") {
-                req.socket.terminate();
+                this.terminateSetErrorAndDestroy(req.socket);
                 return;
             }
 
@@ -346,14 +370,13 @@ export class Worker extends SCWorker {
                 });
 
                 if (!data.authorized) {
-                    req.socket.terminate();
-                    this.setErrorForIpAndDestroy(req.socket);
+                    this.terminateSetErrorAndDestroy(req.socket);
                     return;
                 }
             } else if (version === "peer") {
                 const requestSchema = requestSchemas.peer[handler];
                 if (handler !== "postTransactions" && requestSchema && !ajv.validate(requestSchema, req.data.data)) {
-                    req.socket.terminate();
+                    this.terminateSetErrorAndDestroy(req.socket);
                     return;
                 }
 
@@ -364,7 +387,7 @@ export class Worker extends SCWorker {
                     this.log(`Failed to accept new peer ${req.socket.remoteAddress}: ${ex.message}`, "debug");
                 });
             } else {
-                req.socket.terminate();
+                this.terminateSetErrorAndDestroy(req.socket);
                 return;
             }
 
@@ -375,7 +398,7 @@ export class Worker extends SCWorker {
         } catch (e) {
             this.log(e.message, "error");
 
-            req.socket.terminate();
+            this.terminateSetErrorAndDestroy(req.socket);
             return;
         }
         await delay(1);

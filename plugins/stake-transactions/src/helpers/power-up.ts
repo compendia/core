@@ -24,6 +24,7 @@ export class PowerUpHelper {
         }
 
         walletManager.reindex(wallet);
+        this.removePowerUp(stakeKey);
     }
 
     public static removePowerUp(stakeKey: string): void {
@@ -74,9 +75,6 @@ export class PowerUpHelper {
                         if (this.emitter !== undefined) {
                             this.emitter.emit("stake.powerup", { stake: stakeObj, block });
                         }
-
-                        // Remove queued power-up from in mem db
-                        this.removePowerUp(stake.key);
                     } else {
                         // If stake isn't found then the chain state has reverted to a point before its stakeCreate, or the stake was already halved.
                         // Delete stake from db in this case

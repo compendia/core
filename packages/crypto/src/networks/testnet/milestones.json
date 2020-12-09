@@ -38,6 +38,7 @@
             "15778800": 85,
             "31557600": 110
         },
+        "stakeExtensions": true,
         "minimumStake": 1000000000000,
         "vendorFieldLength": 64,
         "multiPaymentLimit": 256
