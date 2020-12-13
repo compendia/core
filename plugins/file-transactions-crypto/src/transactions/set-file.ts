@@ -13,7 +13,7 @@ export class SetFileTransaction extends Transactions.Transaction {
 
     public static getSchema(): Transactions.schemas.TransactionSchema {
         return schemas.extend(schemas.transactionBaseSchema, {
-            $id: "dpofIpfs",
+            $id: "dposIpfs",
             required: ["asset", "typeGroup"],
             properties: {
                 type: { transactionType: FileTransactionType.SetFile },
