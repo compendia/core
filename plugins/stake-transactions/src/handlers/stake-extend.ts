@@ -38,11 +38,6 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
         return Managers.configManager.getMilestone().stakeExtensions === true;
     }
 
-    public dynamicFee(context: TransactionInterfaces.IDynamicFeeContext): Utils.BigNumber {
-        // override dynamicFee calculation as this is a zero-fee transaction
-        return Utils.BigNumber.ZERO;
-    }
-
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
         const reader: TransactionReader = await TransactionReader.create(connection, this.getConstructor());
         const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
