@@ -32,7 +32,8 @@
         "@nosplatform/file-transactions-crypto": "^0.0.10",
         "ipfs": "^0.52.2",
         "multihashes": "^0.4.19",
-        "multibase": "^0.7.0"
+        "multibase": "^0.7.0",
+        "ajv": "6.12.6"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",
