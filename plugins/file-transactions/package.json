@@ -30,7 +30,7 @@
         "@arkecosystem/core-transactions": "^2.7.13",
         "@arkecosystem/crypto": "^2.7.13",
         "@nosplatform/file-transactions-crypto": "^0.0.10",
-        "ipfs": "^0.49.0",
+        "ipfs": "^0.52.2",
         "multihashes": "^0.4.19",
         "multibase": "^0.7.0"
     },
