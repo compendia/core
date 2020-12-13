@@ -94,13 +94,11 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         }
 
         if (SetFileHelper.isSchemaTransaction(transaction.data.asset.fileKey)) {
-            const dbWalletManager: State.IWalletManager = app.resolvePlugin<Database.IDatabaseService>("database")
-                .walletManager;
-            const dbSchema: State.IWallet = dbWalletManager.findByIndex(
+            const schemaWallet: State.IWallet = walletManager.findByIndex(
                 FileIndex.Schemas,
                 SetFileHelper.getKey(transaction.data.asset.fileKey),
             );
-            if (dbSchema) {
+            if (schemaWallet) {
                 throw new SchemaAlreadyExists();
             }
         }
@@ -239,6 +237,11 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             sender.setAttribute(`files.${transaction.data.asset.fileKey}`, previousIpfsHash);
         } else {
             sender.forgetAttribute(`files.${transaction.data.asset.fileKey}`);
+        }
+
+        // Forget schema index if the reverted transaction is a schema
+        if (String(transaction.data.asset.fileKey).startsWith("schema.")) {
+            walletManager.forgetByIndex(FileIndex.Schemas, sender.publicKey);
         }
 
         walletManager.reindex(sender);

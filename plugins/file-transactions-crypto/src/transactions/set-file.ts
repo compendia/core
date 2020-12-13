@@ -33,14 +33,18 @@ export class SetFileTransaction extends Transactions.Transaction {
                                     transform: ["toLowerCase"],
                                 },
                                 {
-                                    // schema.some_name_123
-                                    // db.some_name_123
-                                    pattern: "^(schema|db(.doc)?)(.)([a-z0-9]+(([_]?[a-z0-9])*))$",
-                                },
-                                {
-                                    // Generic single words without prefix (e.g. "logo" and "description")
-                                    // Also validated on consensus level to see if it matches a file milestone key
-                                    pattern: "^[a-z]+([_][a-z]+)*[a-z]*$",
+                                    anyOf: [
+                                        {
+                                            // schema.some_name_123
+                                            // db.some_name_123
+                                            pattern: "^(schema|db(.doc)?)(.)([a-z0-9]+(([_]?[a-z0-9])*))$",
+                                        },
+                                        {
+                                            // Generic single words without prefix (e.g. "logo" and "description")
+                                            // Also validated on consensus level to see if it matches a file milestone key
+                                            pattern: "^[a-z]+([_][a-z]+)*[a-z]*$",
+                                        },
+                                    ],
                                 },
                             ],
                             // Regex tests: https://regexr.com/57319
