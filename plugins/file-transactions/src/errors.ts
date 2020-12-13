@@ -19,6 +19,12 @@ export class SenderNotDelegate extends Errors.TransactionError {
     }
 }
 
+export class SchemaAlreadyExists extends Errors.TransactionError {
+    constructor() {
+        super(`Failed to apply transaction: Schema already exists.`);
+    }
+}
+
 export class InvalidMultiHash extends Errors.TransactionError {
     constructor() {
         super(`Failed to apply transaction: Invalid Multihash.`);

@@ -35,7 +35,7 @@ export class SetFileTransaction extends Transactions.Transaction {
                                 {
                                     // schema.some_name_123
                                     // db.some_name_123
-                                    pattern: "^(schema|db)(.)([a-z0-9]+(([_]?[a-z0-9])*))$",
+                                    pattern: "^(schema|db(.doc)?)(.)([a-z0-9]+(([_]?[a-z0-9])*))$",
                                 },
                                 {
                                     // Generic single words without prefix (e.g. "logo" and "description")
