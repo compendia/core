@@ -655,7 +655,7 @@ describe("API 2.0 - Transactions", () => {
                 "100": {
                     stakeCancel: "0",
                     stakeCreate: "0",
-                    stakeExtend: "0",
+                    stakeExtend: "100000000",
                     stakeRedeem: "0",
                 },
                 "101": {

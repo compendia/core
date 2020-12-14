@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.12.11] - 2020-12-14
+
+### Fixed
+
+-   Reject long form signature lengths (8f8976de, @alessiodf)
+-   Validate payload call id for all requests (4565eba2, @alessiodf)
+-   Check client-side graceful disconnection payload (c6d74215, @alessiodf)
+-   Ensure asset recipientId and amount are strings (29eaf104, @alessiodf)
+-   Validate incoming message json (ae8dcd73, @alessiodf)
+-   Count props in p2p.peer.postTransactions payload (021d18aa, @alessiodf)
+-   Reset maxPayload on ws message (f1bf1956, @air1one)
+-   Reduce getBlocksTimeout to 30 sec (93701759, @air1one)
+-   Limit peers returned by getPeers (4c79c455, @air1one)
+-   TrustProxy option based on env (fff3ecb0, @air1one)
+
 ## [2.12.0] - 2020-12-08
 
 ### Added
