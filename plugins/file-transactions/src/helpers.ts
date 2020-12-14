@@ -6,4 +6,8 @@ export class SetFileHelper {
     public static isSchemaTransaction(key: string): boolean {
         return key.startsWith("schema.");
     }
+
+    public static isDocTransaction(key: string): boolean {
+        return key.startsWith("db.doc.");
+    }
 }

@@ -12,6 +12,7 @@ import {
     InvalidMultiHash,
     IpfsHashAlreadyExists,
     SchemaAlreadyExists,
+    SchemaNotFound,
     SenderNotDelegate,
 } from "../errors";
 import { SetFileHelper } from "../helpers";
@@ -100,6 +101,15 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             );
             if (schemaWallet) {
                 throw new SchemaAlreadyExists();
+            }
+        } else if (SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
+            const schemaWallet: State.IWallet = walletManager.findByIndex(
+                FileIndex.Schemas,
+                // Omit db. + doc. by doing getKey twice
+                SetFileHelper.getKey(SetFileHelper.getKey(transaction.data.asset.fileKey)),
+            );
+            if (!schemaWallet) {
+                throw new SchemaNotFound();
             }
         }
 

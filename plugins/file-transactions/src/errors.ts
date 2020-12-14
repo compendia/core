@@ -25,6 +25,12 @@ export class SchemaAlreadyExists extends Errors.TransactionError {
     }
 }
 
+export class SchemaNotFound extends Errors.TransactionError {
+    constructor() {
+        super(`Failed to apply transaction: Schema not found.`);
+    }
+}
+
 export class InvalidMultiHash extends Errors.TransactionError {
     constructor() {
         super(`Failed to apply transaction: Invalid Multihash.`);

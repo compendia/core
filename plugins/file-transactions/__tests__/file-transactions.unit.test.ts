@@ -6,7 +6,7 @@ import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Identities, Managers, Utils } from "@arkecosystem/crypto";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Builders as FileTransactionBuilders } from "../../file-transactions-crypto/src";
-import { FileKeyInvalid, InvalidMultiHash, SchemaAlreadyExists } from "../src/errors";
+import { FileKeyInvalid, InvalidMultiHash, SchemaAlreadyExists, SchemaNotFound } from "../src/errors";
 import { SetFileTransactionHandler } from "../src/handlers";
 import { FileIndex, schemaIndexer } from "../src/wallet-manager";
 
@@ -145,7 +145,7 @@ describe("File Transactions", () => {
         }
     });
 
-    it("should pass if posting db.doc.apps", async () => {
+    it("should pass if posting db.doc.apps after schema registration", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
             .ipfsAsset("db.doc.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
@@ -161,6 +161,42 @@ describe("File Transactions", () => {
 
         try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+            fail("Should have failed");
+        } catch (error) {
+            expect(error).toBeInstanceOf(SchemaNotFound);
+        }
+
+        const schemaBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const schemaTransaction = schemaBuilder
+            .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("0")
+            .sign(secret);
+
+        try {
+            schemaTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(schemaTransaction.build(), voter, walletManager);
+        } catch (error) {
+            fail(error);
+        }
+
+        await walletManager.applyTransaction(schemaTransaction.build());
+
+        walletManager.reindex(voter);
+
+        const ipfsTransaction2 = txBuilder
+            .ipfsAsset("db.doc.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("0")
+            .sign(secret);
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction2.build(), voter, walletManager);
         } catch (error) {
             fail("Should have passed, instead got " + error);
         }
