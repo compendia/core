@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.12.11] - 2020-12-14
 
-### Changed
-
--   Match entity schema name with delegate username (4e85a744, @air1one)
-
 ### Fixed
 
 -   Reject long form signature lengths (8f8976de, @alessiodf)
