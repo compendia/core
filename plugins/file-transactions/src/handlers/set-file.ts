@@ -3,6 +3,8 @@ import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces"
 import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import { Enums, Transactions as FileTransactions } from "@nosplatform/file-transactions-crypto";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
 // const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
 import got from "got";
 import * as multibase from "multibase";
@@ -205,6 +207,37 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                     type: "ERR_FILE_SIZE",
                     message: `${stat.CumulativeSize} bytes is greater than allowed max file size of ${maxFileSize}.`,
                 };
+            }
+
+            // If schema, validate JSON schema format
+            if (SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
+                // Download the schema file
+                try {
+                    const url = `${options.gateway}/ipfs/${data.asset.ipfsHash}`;
+                    const res = await got.get(url);
+                    if (!res.body) {
+                        // Couldn't resolve body
+                        return {
+                            type: "ERR_RESOLVE_STAT",
+                            message: `"${statUrl}" could not be resolved`,
+                        };
+                    } else {
+                        // Try to parse the schema with AJV.
+                        const json = JSON.parse(res.body);
+                        const ajv = new Ajv();
+                        // @ts-ignore
+                        addFormats(ajv);
+                        const schema = ajv.compile(json);
+                        if (!schema) {
+                            throw new Error();
+                        }
+                    }
+                } catch (error) {
+                    return {
+                        type: "ERR_BODY_FORMAT",
+                        message: `The file does not resolve to a valid JSON Schema format.`,
+                    };
+                }
             }
         }
 
