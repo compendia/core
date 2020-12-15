@@ -70,5 +70,9 @@
         "reward": 390000000,
         "topReward": 484000000,
         "topDelegates": 5
+    },
+    {
+        "height": 1710000,
+        "stakeExtensions": true
     }
 ]
