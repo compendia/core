@@ -21,6 +21,7 @@ export class StakeCreateTransaction extends Transactions.Transaction {
                 typeGroup: { const: StakeTransactionGroup },
                 amount: { bignumber: { minimum: 0, maximum: 0 } },
                 fee: { bignumber: { minimum: 0, maximum: 0 } },
+                recipientId: { $ref: "address" },
                 asset: {
                     type: "object",
                     required: ["stakeCreate"],
