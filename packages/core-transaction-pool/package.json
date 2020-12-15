@@ -52,7 +52,7 @@
         "@types/random-seed": "^0.3.3",
         "bip39": "^3.0.2",
         "lodash.clonedeep": "^4.5.0",
-        "random-seed": "^0.3.0"
+        "random-seed": "^0.4.0"
     },
     "engines": {
         "node": ">=10.x"
