@@ -55,6 +55,12 @@ export class StakeAlreadyRedeemedError extends Errors.TransactionError {
     }
 }
 
+export class StakeNotActiveError extends Errors.TransactionError {
+    constructor() {
+        super(`Stake is no longer active.`);
+    }
+}
+
 export class StakeNotYetRedeemableError extends Errors.TransactionError {
     constructor() {
         super(`Stake not yet redeemable.`);
@@ -70,6 +76,12 @@ export class StakeDurationError extends Errors.TransactionError {
 export class StakeGraceEndedError extends Errors.TransactionError {
     constructor() {
         super(`Stake grace period has ended.`);
+    }
+}
+
+export class StakeExtendDurationTooLowError extends Errors.TransactionError {
+    constructor() {
+        super(`New duration should be equal to or greater than existing duration.`);
     }
 }
 

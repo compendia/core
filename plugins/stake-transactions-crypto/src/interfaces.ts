@@ -14,6 +14,11 @@ export interface IStakeCancelAsset {
     id: string;
 }
 
+export interface IStakeExtendAsset {
+    id: string;
+    duration: number;
+}
+
 export type StakeLevel = "3m" | "6m" | "1y" | "2y";
 
 export interface IStakeTimestamps {

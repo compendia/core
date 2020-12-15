@@ -20,6 +20,7 @@ import { BlockHelper } from "../helpers/block";
 import { RedeemHelper } from "../helpers/redeem";
 import { StakeCancelTransactionHandler } from "./stake-cancel";
 import { StakeCreateTransactionHandler } from "./stake-create";
+import { StakeExtendTransactionHandler } from "./stake-extend";
 
 export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     public getConstructor(): Transactions.TransactionConstructor {
@@ -27,7 +28,7 @@ export class StakeRedeemTransactionHandler extends Handlers.TransactionHandler {
     }
 
     public dependencies(): ReadonlyArray<Handlers.TransactionHandlerConstructor> {
-        return [StakeCreateTransactionHandler, StakeCancelTransactionHandler];
+        return [StakeCreateTransactionHandler, StakeCancelTransactionHandler, StakeExtendTransactionHandler];
     }
 
     public walletAttributes(): ReadonlyArray<string> {

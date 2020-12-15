@@ -6032,6 +6032,11 @@ backo2@1.0.2:
   resolved "https://registry.yarnpkg.com/backo2/-/backo2-1.0.2.tgz#31ab1ac8b129363463e35b3ebb69f4dfcfba7947"
   integrity sha1-MasayLEpNjRj41s+u2n038+6eUc=
 
+backslash@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/backslash/-/backslash-0.2.0.tgz#6c3c1fce7e7e714ccfc10fd74f0f73410677375f"
+  integrity sha1-bDwfzn5+cUzPwQ/XTw9zQQZ3N18=
+
 balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
@@ -12810,6 +12815,13 @@ json-text-sequence@~0.1.0:
   integrity sha1-py8hfcSvxGKf/1/rME3BvVGi89I=
   dependencies:
     delimit-stream "0.1.0"
+
+json-validator-duplicated-keys@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/json-validator-duplicated-keys/-/json-validator-duplicated-keys-1.0.1.tgz#cfb24a0013c70a652d69110eceff99fefaf625ce"
+  integrity sha512-rFGhwW21QNCoLCwDeuqN2TtEyiXWmT+huJwBjXk6NAAEvrowkGyiiOKJjlW5v7Th1/WEqFTkS0lzPdQOrPuaNQ==
+  dependencies:
+    backslash "^0.2.0"
 
 json5@2.x, json5@^2.1.0:
   version "2.1.1"

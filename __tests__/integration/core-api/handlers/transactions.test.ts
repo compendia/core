@@ -200,6 +200,7 @@ describe("API 2.0 - Transactions", () => {
                     StakeCreate: 0,
                     StakeRedeem: 1,
                     StakeCancel: 2,
+                    StakeExtend: 3,
                 },
                 101: {
                     SetFile: 0,
@@ -654,6 +655,7 @@ describe("API 2.0 - Transactions", () => {
                 "100": {
                     stakeCancel: "0",
                     stakeCreate: "0",
+                    stakeExtend: "100000000",
                     stakeRedeem: "0",
                 },
                 "101": {

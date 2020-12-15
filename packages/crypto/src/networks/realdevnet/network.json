@@ -11,8 +11,8 @@
     "slip44": 1,
     "aip20": 0,
     "client": {
-        "token": "NOS",
-        "symbol": "◎",
-        "explorer": "https://explorer.nos.dev"
+        "token": "TBIND",
+        "symbol": "Tß",
+        "explorer": "https://testnet.bindscan.io"
     }
 }

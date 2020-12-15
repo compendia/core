@@ -533,6 +533,21 @@ describe("Block", () => {
             expect(blockInvalidR.verification.errors).toEqual(["Failed to verify block signature"]);
         });
 
+        it("should fail to verify a block with long form signature", () => {
+            const block = BlockFactory.fromData(dummyBlock);
+
+            expect(block.verification.verified).toBeTrue();
+            expect(block.verification.errors).toEqual([]);
+
+            const dummyBlockLongSig2 = JSON.parse(JSON.stringify(dummyBlock));
+            dummyBlockLongSig2.blockSignature =
+                "30820045022100c92d7d0c3ea2ba72576f6494a81fc498d0420286896f806a7ead443d0b5d89720220501610f0d5498d028fd27676ea2597a5cb80cf5896e77fe2fa61623d31ff290c0239111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+            const blockLongFormSig2 = BlockFactory.fromData(dummyBlockLongSig2);
+
+            expect(blockLongFormSig2.verification.verified).toBeFalse();
+            expect(blockLongFormSig2.verification.errors).toEqual(["Failed to verify block signature"]);
+        });
+
         it("should construct the block (header only)", () => {
             const block = BlockFactory.fromHex(dummyBlock2.serialized);
             const actual = block.toJson();
