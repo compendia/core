@@ -48,7 +48,7 @@ export class StakeExtendTransaction extends Transactions.Transaction {
         });
     }
 
-    protected static defaultStaticFee: Utils.BigNumber = Utils.BigNumber.ZERO;
+    protected static defaultStaticFee: Utils.BigNumber = Utils.BigNumber.make("100000000");
 
     public serialize(options?: Interfaces.ISerializeOptions): ByteBuffer {
         // @ts-ignore

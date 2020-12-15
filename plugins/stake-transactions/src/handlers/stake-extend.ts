@@ -1,6 +1,6 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, EventEmitter, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
+import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
 import { roundCalculator } from "@arkecosystem/core-utils";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
 import {
@@ -36,11 +36,6 @@ export class StakeExtendTransactionHandler extends Handlers.TransactionHandler {
 
     public async isActivated(): Promise<boolean> {
         return Managers.configManager.getMilestone().stakeExtensions === true;
-    }
-
-    public dynamicFee(context: TransactionInterfaces.IDynamicFeeContext): Utils.BigNumber {
-        // override dynamicFee calculation as this is a zero-fee transaction
-        return Utils.BigNumber.ZERO;
     }
 
     public async bootstrap(connection: Database.IConnection, walletManager: State.IWalletManager): Promise<void> {
