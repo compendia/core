@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.12.13] - 2020-12-19
+
+### Fixed
+
+-   Mainnet milestones for stake extensions (@deanpress)
+
+## [2.12.12] - 2020-12-14
+
+### Fixed
+
+-   Reverted recipientId removal from stakeCreate crypto logic (@deanpress)
+
 ## [2.12.11] - 2020-12-14
 
 ### Fixed
