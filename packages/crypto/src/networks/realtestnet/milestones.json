@@ -50,7 +50,7 @@
                 "description": 30000,
                 "logo": 300000,
                 "db.doc.*": 500000,
-                "schema.*": 500000
+                "schema.*": 1000000
             }
         },
         "vestedWalletPublicKey": ""

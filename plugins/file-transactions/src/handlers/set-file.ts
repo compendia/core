@@ -137,15 +137,13 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         }
 
         if (SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
+            const schemaKey = SetFileHelper.getKey(data.asset.fileKey);
             const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>("database");
-            const dbSchema: State.IWallet = databaseService.walletManager.findByIndex(
-                FileIndex.Schemas,
-                SetFileHelper.getKey(data.asset.fileKey),
-            );
+            const dbSchema: State.IWallet = databaseService.walletManager.findByIndex(FileIndex.Schemas, schemaKey);
             if (dbSchema) {
                 return {
                     type: "ERR_SCHEMA_EXISTS",
-                    message: `Schema "${dbSchema}" already exists.`,
+                    message: `Schema "${schemaKey}" already exists.`,
                 };
             }
         }

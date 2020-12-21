@@ -76,3 +76,5 @@ export const walletIteratees = [
     "vote",
     "voteBalance",
 ];
+
+export const schemaInteratees = ["schema"];

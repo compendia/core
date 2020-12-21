@@ -45,6 +45,10 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
                 searchContext = this.searchEntities(params);
                 break;
             }
+            case Database.SearchScope.Schemas: {
+                searchContext = this.searchSchemas(params);
+                break;
+            }
         }
 
         return searchEntries(params, searchContext.query, searchContext.entries, searchContext.defaultOrder);
@@ -245,6 +249,43 @@ export class WalletsBusinessRepository implements Database.IWalletsBusinessRepos
                     delete entity.resigned;
 
                     acc.push(entity);
+                }
+
+                return acc;
+            }, []);
+
+        return {
+            query,
+            entries,
+            defaultOrder: ["id", "asc"],
+        };
+    }
+
+    private searchSchemas(params: Database.IParameters = {}): ISearchContext<any> {
+        const query: Record<string, string[]> = {
+            exact: ["publicKey"],
+            like: ["id"],
+        };
+
+        const entries: any[] = this.databaseServiceProvider()
+            .walletManager.getIndex("schemas")
+            .entries()
+            .reduce((acc: any, [id, wallet]) => {
+                const schemas = wallet.getAttribute("files.schema", {});
+                const delegate = wallet.getAttribute("delegate", {});
+                if (schemas && schemas[id]) {
+                    const schema: any = {
+                        id,
+                        ipfs: schemas[id],
+                        address: wallet.address,
+                        publicKey: wallet.publicKey,
+                    };
+
+                    if (delegate && (delegate as any).username) {
+                        schema.username = (delegate as any).username;
+                    }
+
+                    acc.push(schema);
                 }
 
                 return acc;

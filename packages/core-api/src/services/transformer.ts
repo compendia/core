@@ -4,6 +4,7 @@ import { transformEntity } from "../handlers/entities/transformer";
 import { transformLock } from "../handlers/locks/transformer";
 import { transformPeer } from "../handlers/peers/transformer";
 import { transformRoundDelegate } from "../handlers/rounds/transformer";
+import { transformSchema } from "../handlers/schemas/transformer";
 import { transformFeeStatistics } from "../handlers/shared/transformers/fee-statistics";
 import { transformPorts } from "../handlers/shared/transformers/ports";
 import { transformTransaction } from "../handlers/transactions/transformer";
@@ -21,6 +22,7 @@ class Transformer {
         transaction: transformTransaction,
         wallet: transformWallet,
         lock: transformLock,
+        schema: transformSchema,
     };
 
     public toResource(data, transformer, transform: boolean = true): object {

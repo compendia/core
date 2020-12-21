@@ -43,9 +43,16 @@ export const plugin: Container.IPluginDescriptor = {
                     // Get all ipfs hashes from all delegates and store it in newIpfsHashes[]
                     let i = 0;
                     for (const hash of delegateIpfs) {
-                        newIpfsHashes.push(hash);
-                        ipfsIndex[hash] = fileKeys[i];
-                        i++;
+                        if (typeof hash === "object") {
+                            for (const subHash of Object.values(hash)) {
+                                newIpfsHashes.push(subHash);
+                                ipfsIndex[subHash as string] = fileKeys[i];
+                            }
+                        } else {
+                            newIpfsHashes.push(hash);
+                            ipfsIndex[hash] = fileKeys[i];
+                            i++;
+                        }
                     }
                 }
             }
@@ -55,10 +62,10 @@ export const plugin: Container.IPluginDescriptor = {
                 if (hash && !ipfsHashes.includes(hash)) {
                     try {
                         let fileSizeKey = ipfsIndex[hash];
-                        if (String(fileSizeKey).startsWith("db.")) {
-                            fileSizeKey = "db";
-                        } else if (String(fileSizeKey).startsWith("schema.")) {
-                            fileSizeKey = "schema";
+                        if (String(fileSizeKey).startsWith("db")) {
+                            fileSizeKey = "db.doc.*";
+                        } else if (String(fileSizeKey).startsWith("schema")) {
+                            fileSizeKey = "schema.*";
                         }
 
                         // Only pin files that aren't databases
@@ -67,7 +74,7 @@ export const plugin: Container.IPluginDescriptor = {
                             const stat = JSON.parse(res.body);
 
                             const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileSizeKey];
-                            if (stat && stat.CumulativeSize <= maxFileSize && newIpfsHashes.includes(hash)) {
+                            if (stat && stat.CumulativeSize <= maxFileSize) {
                                 await ipfs.pin.add(hash);
                                 container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
                             } else {
