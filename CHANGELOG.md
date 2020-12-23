@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.12.14] - 2020-12-23
+
+### Fixed
+
+-   Don't enforce 0 fee in stake extensions schema (@deanpress)
+
 ## [2.12.13] - 2020-12-19
 
 ### Fixed
