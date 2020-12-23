@@ -20,7 +20,7 @@ export class StakeExtendTransaction extends Transactions.Transaction {
                 type: { transactionType: StakeTransactionType.StakeExtend },
                 typeGroup: { const: StakeTransactionGroup },
                 amount: { bignumber: { minimum: 0, maximum: 0 } },
-                fee: { bignumber: { minimum: 0, maximum: 0 } },
+                fee: { bignumber: { minimum: 0 } },
                 recipientId: { $ref: "address" },
                 asset: {
                     type: "object",

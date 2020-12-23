@@ -27,6 +27,7 @@
                 "setFile": 10000000,
                 "stakeCreate": 0,
                 "stakeCancel": 10000000,
+                "stakeExtend": 10000000,
                 "stakeRedeem": 0
             }
         },
