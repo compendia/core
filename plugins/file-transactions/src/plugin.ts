@@ -7,6 +7,7 @@ import { Interfaces, Managers } from "@arkecosystem/crypto";
 import got from "got";
 import IPFS from "ipfs";
 import path from "path";
+import { initDb } from "./database";
 import { FileIndex, schemaIndexer } from "./wallet-manager";
 
 import { defaults } from "./defaults";
@@ -19,6 +20,7 @@ export const plugin: Container.IPluginDescriptor = {
     defaults,
     alias: "file-transactions",
     async register(container: Container.IContainer, options) {
+        initDb();
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Module File Transactions");
 
         // Register schema indexer
@@ -45,14 +47,16 @@ export const plugin: Container.IPluginDescriptor = {
                     for (const hash of delegateIpfs) {
                         if (typeof hash === "object") {
                             for (const subHash of Object.values(hash)) {
-                                newIpfsHashes.push(subHash);
-                                ipfsIndex[subHash as string] = fileKeys[i];
+                                if (typeof subHash === "string") {
+                                    newIpfsHashes.push(subHash);
+                                    ipfsIndex[subHash as string] = fileKeys[i];
+                                }
                             }
                         } else {
                             newIpfsHashes.push(hash);
                             ipfsIndex[hash] = fileKeys[i];
-                            i++;
                         }
+                        i++;
                     }
                 }
             }
@@ -69,7 +73,7 @@ export const plugin: Container.IPluginDescriptor = {
                         }
 
                         // Only pin files that aren't databases
-                        if (fileSizeKey !== "db") {
+                        if (fileSizeKey !== "db.doc.*") {
                             const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
                             const stat = JSON.parse(res.body);
 
