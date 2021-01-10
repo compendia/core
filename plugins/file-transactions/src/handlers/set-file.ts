@@ -263,7 +263,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             // Validate db.doc database upload
             if (SetFileHelper.isDocTransaction(data.asset.fileKey)) {
                 const url = `${options.gateway}/api/v0/dag/get?arg=${data.asset.ipfsHash}`;
-                const res = await got.post(url);
+                const res = await got.post(url, { timeout: 10000 });
                 if (!res.body) {
                     // Couldn't resolve body
                     return {
@@ -465,15 +465,22 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         transaction: Interfaces.ITransactionData | Database.IBootstrapTransaction,
         wallet: State.IWallet,
     ): void {
-        const dbItem: IDatabaseItem = { schema, hash: transaction.asset.ipfsHash, owner: wallet.address };
+        const dbItem: IDatabaseItem = {
+            schema,
+            hash: transaction.asset.ipfsHash,
+            owner: { address: wallet.address, username: wallet.getAttribute("delegate.username") },
+        };
         const insertStatement = database.prepare(
-            `INSERT OR IGNORE INTO databases ` + "(id, schema, hash, owner) VALUES " + "(:id, :schema, :hash, :owner);",
+            `INSERT OR IGNORE INTO databases ` +
+                "(id, schema, hash, owner_address, owner_username) VALUES " +
+                "(:id, :schema, :hash, :ownerAddress, :ownerUsername);",
         );
         insertStatement.run({
             id: transaction.id,
             schema,
             hash: dbItem.hash,
-            owner: dbItem.owner,
+            ownerAddress: dbItem.owner.address,
+            ownerUsername: dbItem.owner.username,
         });
     }
 
@@ -482,18 +489,22 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         transaction: Interfaces.ITransactionData | Database.IBootstrapTransaction,
         wallet: State.IWallet,
     ): void {
-        const dbItem: IDatabaseItem = { schema, hash: transaction.asset.ipfsHash, owner: wallet.address };
+        const dbItem: IDatabaseItem = {
+            schema,
+            hash: transaction.asset.ipfsHash,
+            owner: { address: wallet.address, username: wallet.getAttribute("delegate.username") },
+        };
         const updateStatement = database.prepare(`
             UPDATE databases
             SET hash = "${transaction.asset.ipfsHash}", 
             id = "${transaction.id}" 
-            WHERE OWNER = :owner AND schema = :schema
+            WHERE owner_address = :ownerAddress AND schema = :schema
         `);
         updateStatement.run({
             id: transaction.id,
             schema: dbItem.schema,
             hash: dbItem.hash,
-            owner: dbItem.owner,
+            ownerAddress: dbItem.owner.address,
         });
     }
 

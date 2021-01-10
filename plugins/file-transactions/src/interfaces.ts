@@ -1,5 +1,8 @@
 export interface IDatabaseItem {
     schema: string;
     hash: string;
-    owner: string;
+    owner: {
+        address: string;
+        username: string;
+    };
 }

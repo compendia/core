@@ -10,10 +10,12 @@ import path from "path";
 import { initDb } from "./database";
 import { FileIndex, schemaIndexer } from "./wallet-manager";
 
+import { startServer } from "./api";
 import { defaults } from "./defaults";
 import { SetFileTransactionHandler } from "./handlers";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+let server: any;
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
@@ -163,8 +165,11 @@ export const plugin: Container.IPluginDescriptor = {
                 await loadIpfsHashes(delegateWallets);
             }
         });
+
+        server = await startServer({ host: options.apiHost, port: options.apiPort, cors: options.cors });
     },
     async deregister(container: Container.IContainer, options) {
+        await server.stop();
         container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering File Transactions");
         Handlers.Registry.deregisterTransactionHandler(SetFileTransactionHandler);
     },

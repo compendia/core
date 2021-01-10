@@ -10,7 +10,8 @@ const initDb = () => {
         "id" VARCHAR(64) PRIMARY KEY,
         "schema" VARCHAR(64) NOT NULL,
         "hash" VARCHAR(64) NOT NULL,
-        "owner" VARCHAR(34) NOT NULL,
+        "owner_address" VARCHAR(34) NOT NULL,
+        "owner_username" VARCHAR(64)
     );
     `);
 };
