@@ -20,20 +20,33 @@ export const startServer = async config => {
         path: "/api/v1/databases/{schema}",
         async handler(request, h) {
             const schema: string = String(request.params.schema);
-            const databases: any = database.prepare(`SELECT * FROM databases WHERE schema = :schema`).all({ schema });
+            const page = (Number(request.params.page) || 1) - 1;
+            const databases: any = database
+                .prepare(`SELECT * FROM databases WHERE schema = :schema LIMIT 100 OFFSET ${page * 100}`)
+                .all({ schema });
+            const allDbs: any = database
+                .prepare(`SELECT COUNT(*) FROM databases WHERE schema = :schema`)
+                .get({ schema });
+
             if (databases.length) {
                 const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
                 const walletManager = databaseService.walletManager;
                 for (const db of databases) {
                     const wallet = walletManager.findByAddress(db.owner_address);
-                    databases[databases.indexOf(db)].votes = wallet.getAttribute("delegate.voteBalance", 0);
+                    databases[databases.indexOf(db)].owner = {
+                        username: db.owner_username,
+                        address: db.owner_address,
+                        votes: wallet.getAttribute("delegate.voteBalance", "0"),
+                    };
+                    databases[databases.indexOf(db)].owner_address = undefined;
+                    databases[databases.indexOf(db)].owner_username = undefined;
                 }
 
                 const results = databases.sort((a, b) =>
                     Utils.BigNumber.make(a.voteBalance).isGreaterThan(b.voteBalance) ? -1 : 1,
                 );
 
-                return { meta: { totalCount: databases.length }, data: results };
+                return { results, totalCount: allDbs["COUNT(*)"], meta: { count: databases.length, limit: 100, page } };
             } else {
                 return notFound();
             }
@@ -46,8 +59,9 @@ export const startServer = async config => {
         path: "/api/v1/databases/search/{schema}",
         async handler(request, h) {
             const schema: string = String(request.params.schema);
+            const page = (Number(request.params.page) || 1) - 1;
             const databases: any = database
-                .prepare(`SELECT * FROM databases WHERE schema LIKE ?`)
+                .prepare(`SELECT * FROM databases WHERE schema LIKE ? LIMIT 100 OFFSET ${page * 100}`)
                 .all("%" + schema + "%");
             if (databases.length) {
                 const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
@@ -61,7 +75,7 @@ export const startServer = async config => {
                     Utils.BigNumber.make(a.voteBalance).isGreaterThan(b.voteBalance) ? -1 : 1,
                 );
 
-                return { meta: { totalCount: databases.length }, data: results };
+                return { results, totalCount: databases.length, meta: { count: databases.length, limit: 100, page } };
             } else {
                 return notFound();
             }
