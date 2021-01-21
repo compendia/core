@@ -3,36 +3,42 @@ import { Errors } from "@arkecosystem/core-transactions";
 
 export class IpfsHashAlreadyExists extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: this IPFS hash is already registered.`);
+        super(`This IPFS hash is already registered.`);
     }
 }
 
 export class FileKeyInvalid extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: Invalid IPFS Key.`);
+        super(`Invalid IPFS Key.`);
     }
 }
 
 export class SenderNotDelegate extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: Sender must be a delegate.`);
+        super(`Sender must be a delegate.`);
+    }
+}
+
+export class SchemaFeeMismatch extends Errors.TransactionError {
+    constructor() {
+        super(`Transaction fee does not match schema registration fee.`);
     }
 }
 
 export class SchemaAlreadyExists extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: Schema already exists.`);
+        super(`Schema already exists.`);
     }
 }
 
 export class SchemaNotFound extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: Schema not found.`);
+        super(`Schema not found.`);
     }
 }
 
 export class InvalidMultiHash extends Errors.TransactionError {
     constructor() {
-        super(`Failed to apply transaction: Invalid Multihash.`);
+        super(`Invalid Multihash.`);
     }
 }

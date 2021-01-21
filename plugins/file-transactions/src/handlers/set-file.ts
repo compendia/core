@@ -14,6 +14,7 @@ import {
     InvalidMultiHash,
     IpfsHashAlreadyExists,
     SchemaAlreadyExists,
+    SchemaFeeMismatch,
     SchemaNotFound,
     SenderNotDelegate,
 } from "../errors";
@@ -116,6 +117,19 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             );
             if (schemaWallet) {
                 throw new SchemaAlreadyExists();
+            }
+
+            // Throw if specialFee doesn't match
+            // Overwrite tx staticFee if schema registration
+            if (
+                Managers.configManager.getMilestone().fees.specialFees &&
+                Managers.configManager.getMilestone().fees.specialFees.setFile
+            ) {
+                const schemaRegistrationFee =
+                    Managers.configManager.getMilestone().fees.specialFees.setFile.schemaRegistration || undefined;
+                if (schemaRegistrationFee && !transaction.data.fee.isEqualTo(schemaRegistrationFee)) {
+                    throw new SchemaFeeMismatch();
+                }
             }
         } else if (SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
             const schemaWallet: State.IWallet = walletManager.findByIndex(

@@ -80,22 +80,27 @@ export const dynamicFeeMatcher = async (transaction: Interfaces.ITransaction): P
         // Apply special static fee logic for schema registrations.
 
         // First check if we have a schemaRegistration fee milestone
-        const schemaRegistrationFee =
-            Managers.configManager.getMilestone().fees.specialFees.setFile.schemaRegistration || undefined;
-        const isSetFileTransaction: boolean =
-            transaction.typeGroup === Enums.FileTransactionGroup &&
-            transaction.type === Enums.FileTransactionType.SetFile;
-        if (schemaRegistrationFee && isSetFileTransaction) {
-            // Check if the current transaction is a schema transaction
-            const isSchemaTransaction: boolean =
-                isSetFileTransaction &&
-                transaction.data.asset.fileKey &&
-                String(transaction.data.asset.fileKey).startsWith("schema.") &&
-                schemaRegistrationFee;
+        if (
+            Managers.configManager.getMilestone().fees.specialFees &&
+            Managers.configManager.getMilestone().fees.specialFees.setFile
+        ) {
+            const schemaRegistrationFee =
+                Managers.configManager.getMilestone().fees.specialFees.setFile.schemaRegistration || undefined;
+            const isSetFileTransaction: boolean =
+                transaction.typeGroup === Enums.FileTransactionGroup &&
+                transaction.type === Enums.FileTransactionType.SetFile;
+            if (schemaRegistrationFee && isSetFileTransaction) {
+                // Check if the current transaction is a schema transaction
+                const isSchemaTransaction: boolean =
+                    isSetFileTransaction &&
+                    transaction.data.asset.fileKey &&
+                    String(transaction.data.asset.fileKey).startsWith("schema.") &&
+                    schemaRegistrationFee;
 
-            if (isSchemaTransaction && schemaRegistrationFee) {
-                // Overwrite the staticFee with the specialFee if it's a schema registration
-                staticFee = Utils.BigNumber.make(schemaRegistrationFee);
+                if (isSchemaTransaction && schemaRegistrationFee) {
+                    // Overwrite the staticFee with the specialFee if it's a schema registration
+                    staticFee = Utils.BigNumber.make(schemaRegistrationFee);
+                }
             }
         }
 
