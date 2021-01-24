@@ -19,6 +19,7 @@ import {
     UnsupportedMultiSignatureTransactionError,
 } from "../errors";
 import { IDynamicFeeContext, ITransactionHandler } from "../interfaces";
+import { isSpecialFeeTransaction, specialFee } from "../utils";
 
 export type TransactionHandlerConstructor = new () => TransactionHandler;
 
@@ -151,9 +152,11 @@ export abstract class TransactionHandler implements ITransactionHandler {
             throw new ColdWalletError();
         }
 
+        // Check if staticFees are enforced or this is a specialFee transaction
         if (
-            Managers.configManager.getMilestone().staticFeesOnly &&
-            !transaction.data.fee.isEqualTo(transaction.staticFee)
+            (Managers.configManager.getMilestone().staticFeesOnly &&
+                !transaction.data.fee.isEqualTo(transaction.staticFee)) ||
+            (isSpecialFeeTransaction(transaction.data) && !specialFee(transaction.data).isEqualTo(transaction.data.fee))
         ) {
             throw new StaticFeeMismatchError();
         }

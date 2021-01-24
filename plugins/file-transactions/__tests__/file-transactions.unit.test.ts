@@ -3,16 +3,11 @@ import "./mocks/core-container";
 
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
+import { StaticFeeMismatchError } from "@arkecosystem/core-transactions/dist/errors";
 import { Constants, Identities, Managers, Utils } from "@arkecosystem/crypto";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Builders as FileTransactionBuilders } from "../../file-transactions-crypto/src";
-import {
-    FileKeyInvalid,
-    InvalidMultiHash,
-    SchemaAlreadyExists,
-    SchemaFeeMismatch,
-    SchemaNotFound,
-} from "../src/errors";
+import { FileKeyInvalid, InvalidMultiHash, SchemaAlreadyExists, SchemaNotFound } from "../src/errors";
 import { SetFileTransactionHandler } from "../src/handlers";
 import { FileIndex, schemaIndexer } from "../src/wallet-manager";
 
@@ -278,7 +273,7 @@ describe("File Transactions", () => {
         try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
         } catch (error) {
-            expect(error).toBeInstanceOf(SchemaFeeMismatch);
+            expect(error).toBeInstanceOf(StaticFeeMismatchError);
         }
     });
 

@@ -1,8 +1,8 @@
 import { app } from "@arkecosystem/core-container";
 import { Database, State, TransactionPool } from "@arkecosystem/core-interfaces";
-import { Handlers, Interfaces as TransactionInterfaces, TransactionReader } from "@arkecosystem/core-transactions";
+import { Handlers, TransactionReader } from "@arkecosystem/core-transactions";
 import { Interfaces, Managers, Transactions, Utils } from "@arkecosystem/crypto";
-import { Enums, Transactions as FileTransactions } from "@nosplatform/file-transactions-crypto";
+import { Enums, Helpers, Transactions as FileTransactions } from "@nosplatform/file-transactions-crypto";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import got from "got";
@@ -14,11 +14,9 @@ import {
     InvalidMultiHash,
     IpfsHashAlreadyExists,
     SchemaAlreadyExists,
-    SchemaFeeMismatch,
     SchemaNotFound,
     SenderNotDelegate,
 } from "../errors";
-import { SetFileHelper } from "../helpers";
 import { IDatabaseItem } from "../interfaces";
 import { FileIndex } from "../wallet-manager";
 
@@ -50,8 +48,10 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                 const ipfsHash = transaction.asset.ipfsHash;
 
                 // Store or update db docstore
-                if (SetFileHelper.isDocTransaction(transaction.asset.fileKey)) {
-                    const schema = SetFileHelper.getKey(SetFileHelper.getKey(transaction.asset.fileKey));
+                if (Helpers.SetFileHelper.isDocTransaction(transaction.asset.fileKey)) {
+                    const schema = Helpers.SetFileHelper.getKey(
+                        Helpers.SetFileHelper.getKey(transaction.asset.fileKey),
+                    );
                     if (wallet.getAttribute(`files.${transaction.asset.fileKey}`)) {
                         this.updateDbItem(schema, transaction, wallet);
                     } else {
@@ -64,11 +64,6 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                 walletManager.reindex(wallet);
             }
         }
-    }
-
-    public dynamicFee(context: TransactionInterfaces.IDynamicFeeContext): Utils.BigNumber {
-        // override dynamicFee calculation as this is a zero-fee transaction
-        return Utils.BigNumber.ZERO;
     }
 
     public async isActivated(): Promise<boolean> {
@@ -102,7 +97,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             throw new FileKeyInvalid();
         }
 
-        if (!SetFileHelper.isDocTransaction(transaction.data.asset.fileKey) && !this.isMultihash(ipfsHash)) {
+        if (!Helpers.SetFileHelper.isDocTransaction(transaction.data.asset.fileKey) && !this.isMultihash(ipfsHash)) {
             throw new InvalidMultiHash();
         }
 
@@ -110,32 +105,19 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             throw new IpfsHashAlreadyExists();
         }
 
-        if (SetFileHelper.isSchemaTransaction(transaction.data.asset.fileKey)) {
+        if (Helpers.SetFileHelper.isSchemaTransaction(transaction.data.asset.fileKey)) {
             const schemaWallet: State.IWallet = walletManager.findByIndex(
                 FileIndex.Schemas,
-                SetFileHelper.getKey(transaction.data.asset.fileKey),
+                Helpers.SetFileHelper.getKey(transaction.data.asset.fileKey),
             );
             if (schemaWallet) {
                 throw new SchemaAlreadyExists();
             }
-
-            // Throw if specialFee doesn't match
-            // Overwrite tx staticFee if schema registration
-            if (
-                Managers.configManager.getMilestone().fees.specialFees &&
-                Managers.configManager.getMilestone().fees.specialFees.setFile
-            ) {
-                const schemaRegistrationFee =
-                    Managers.configManager.getMilestone().fees.specialFees.setFile.schemaRegistration || undefined;
-                if (schemaRegistrationFee && !transaction.data.fee.isEqualTo(schemaRegistrationFee)) {
-                    throw new SchemaFeeMismatch();
-                }
-            }
-        } else if (SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
+        } else if (Helpers.SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
             const schemaWallet: State.IWallet = walletManager.findByIndex(
                 FileIndex.Schemas,
                 // Omit db. + doc. by doing getKey twice
-                SetFileHelper.getKey(SetFileHelper.getKey(transaction.data.asset.fileKey)),
+                Helpers.SetFileHelper.getKey(Helpers.SetFileHelper.getKey(transaction.data.asset.fileKey)),
             );
             if (!schemaWallet) {
                 throw new SchemaNotFound();
@@ -168,8 +150,8 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             }
 
             // Check if schema name already exists
-            if (SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
-                const schemaKey = SetFileHelper.getKey(data.asset.fileKey);
+            if (Helpers.SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
+                const schemaKey = Helpers.SetFileHelper.getKey(data.asset.fileKey);
                 const databaseService: Database.IDatabaseService = app.resolvePlugin<Database.IDatabaseService>(
                     "database",
                 );
@@ -243,7 +225,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                 }
 
                 // If schema, validate JSON schema format
-                if (SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
+                if (Helpers.SetFileHelper.isSchemaTransaction(data.asset.fileKey)) {
                     // Download the schema file
                     try {
                         const url = `${options.gateway}/ipfs/${data.asset.ipfsHash}`;
@@ -275,7 +257,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
             }
 
             // Validate db.doc database upload
-            if (SetFileHelper.isDocTransaction(data.asset.fileKey)) {
+            if (Helpers.SetFileHelper.isDocTransaction(data.asset.fileKey)) {
                 const url = `${options.gateway}/api/v0/dag/get?arg=${data.asset.ipfsHash}`;
                 const res = await got.post(url, { timeout: 10000 });
                 if (!res.body) {
@@ -287,7 +269,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                 } else {
                     // Try to parse the dag data
                     const json = JSON.parse(res.body);
-                    const dbKey = SetFileHelper.getKey(SetFileHelper.getKey(data.asset.fileKey));
+                    const dbKey = Helpers.SetFileHelper.getKey(Helpers.SetFileHelper.getKey(data.asset.fileKey));
                     // Ensure ipfs file key is same as database name
                     if (!json.name || json.name !== dbKey) {
                         return {
@@ -327,9 +309,9 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
         await super.applyToSender(transaction, walletManager);
         const sender: State.IWallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
 
-        if (SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
+        if (Helpers.SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
             // Store database item
-            const schema = SetFileHelper.getKey(SetFileHelper.getKey(transaction.data.asset.fileKey));
+            const schema = Helpers.SetFileHelper.getKey(Helpers.SetFileHelper.getKey(transaction.data.asset.fileKey));
 
             // If the db already exists, update it. Else store it.
             if (sender.getAttribute(`files.${transaction.data.asset.fileKey}`)) {
@@ -373,7 +355,7 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
 
         // If database: revert to previous db item
         // Find all db seTfile of this wallet
-        if (SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
+        if (Helpers.SetFileHelper.isDocTransaction(transaction.data.asset.fileKey)) {
             const dbEntryTransactions = await connection.transactionsRepository.search({
                 parameters: [
                     {
@@ -411,7 +393,9 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                     }
                     // Only handle the current fileKey (schema)
                     if (dbTx.asset.fileKey === transaction.data.asset.fileKey) {
-                        const schema = SetFileHelper.getKey(SetFileHelper.getKey(transaction.data.asset.fileKey));
+                        const schema = Helpers.SetFileHelper.getKey(
+                            Helpers.SetFileHelper.getKey(transaction.data.asset.fileKey),
+                        );
                         const wallet = walletManager.findByPublicKey(transaction.data.senderPublicKey);
                         this.updateDbItem(schema, transaction.data, wallet);
                     }
