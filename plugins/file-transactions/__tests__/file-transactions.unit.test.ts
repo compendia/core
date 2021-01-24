@@ -6,7 +6,13 @@ import { Handlers } from "@arkecosystem/core-transactions";
 import { Constants, Identities, Managers, Utils } from "@arkecosystem/crypto";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Builders as FileTransactionBuilders } from "../../file-transactions-crypto/src";
-import { FileKeyInvalid, InvalidMultiHash, SchemaAlreadyExists, SchemaNotFound } from "../src/errors";
+import {
+    FileKeyInvalid,
+    InvalidMultiHash,
+    SchemaAlreadyExists,
+    SchemaFeeMismatch,
+    SchemaNotFound,
+} from "../src/errors";
 import { SetFileTransactionHandler } from "../src/handlers";
 import { FileIndex, schemaIndexer } from "../src/wallet-manager";
 
@@ -170,7 +176,7 @@ describe("File Transactions", () => {
         const schemaTransaction = schemaBuilder
             .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
-            .fee("0")
+            .fee("25000000000")
             .sign(secret);
 
         try {
@@ -223,7 +229,7 @@ describe("File Transactions", () => {
         const ipfsTransaction = txBuilder
             .ipfsAsset("schema.json.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
-            .fee("0")
+            .fee("25000000000")
             .sign(secret);
 
         try {
@@ -239,7 +245,7 @@ describe("File Transactions", () => {
         const ipfsTransaction = txBuilder
             .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
-            .fee("0")
+            .fee("25000000000")
             .sign(secret);
 
         try {
@@ -255,12 +261,33 @@ describe("File Transactions", () => {
         }
     });
 
+    it("should fail if posting schema.apps with fee less than specialFee", async () => {
+        const txBuilder = new FileTransactionBuilders.SetFileBuilder();
+        const ipfsTransaction = txBuilder
+            .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
+            .nonce(voter.nonce.plus(1))
+            .fee("100000000")
+            .sign(secret);
+
+        try {
+            ipfsTransaction.build();
+        } catch (error) {
+            fail(error);
+        }
+
+        try {
+            await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
+        } catch (error) {
+            expect(error).toBeInstanceOf(SchemaFeeMismatch);
+        }
+    });
+
     it("should fail if registering existing schema", async () => {
         const txBuilder = new FileTransactionBuilders.SetFileBuilder();
         const ipfsTransaction = txBuilder
             .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce(voter.nonce.plus(1))
-            .fee("0")
+            .fee("25000000000")
             .sign(secret);
 
         try {
@@ -282,7 +309,7 @@ describe("File Transactions", () => {
         const ipfsTransaction2 = txBuilder
             .ipfsAsset("schema.apps", "QmdYwXXtzoyXWWGbAidxg2sd9gBE9k1JrYAKGf2mdKMFc5")
             .nonce("1")
-            .fee("0")
+            .fee("25000000000")
             .sign(secret2);
 
         try {
