@@ -14,6 +14,7 @@ import {
     LegacyMultiSignatureRegistrationError,
     MissingMultiSignatureOnSenderError,
     SenderWalletMismatchError,
+    SpecialFeeMismatchError,
     StaticFeeMismatchError,
     UnexpectedSecondSignatureError,
     UnsupportedMultiSignatureTransactionError,
@@ -154,11 +155,17 @@ export abstract class TransactionHandler implements ITransactionHandler {
 
         // Check if staticFees are enforced or this is a specialFee transaction
         if (
-            (Managers.configManager.getMilestone().staticFeesOnly &&
-                !transaction.data.fee.isEqualTo(transaction.staticFee)) ||
-            (isSpecialFeeTransaction(transaction.data) && !specialFee(transaction.data).isEqualTo(transaction.data.fee))
+            Managers.configManager.getMilestone().staticFeesOnly &&
+            !transaction.data.fee.isEqualTo(transaction.staticFee)
         ) {
             throw new StaticFeeMismatchError();
+        }
+
+        if (
+            isSpecialFeeTransaction(transaction.data) &&
+            !specialFee(transaction.data).isEqualTo(transaction.data.fee)
+        ) {
+            throw new SpecialFeeMismatchError();
         }
 
         return this.performGenericWalletChecks(transaction, sender, walletManager);

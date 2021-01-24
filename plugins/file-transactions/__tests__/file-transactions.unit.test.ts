@@ -3,7 +3,7 @@ import "./mocks/core-container";
 
 import { State } from "@arkecosystem/core-interfaces";
 import { Handlers } from "@arkecosystem/core-transactions";
-import { StaticFeeMismatchError } from "@arkecosystem/core-transactions/dist/errors";
+import { SpecialFeeMismatchError } from "@arkecosystem/core-transactions/dist/errors";
 import { Constants, Identities, Managers, Utils } from "@arkecosystem/crypto";
 import { WalletManager } from "../../../packages/core-state/src/wallets";
 import { Builders as FileTransactionBuilders } from "../../file-transactions-crypto/src";
@@ -273,7 +273,7 @@ describe("File Transactions", () => {
         try {
             await setFileHandler.throwIfCannotBeApplied(ipfsTransaction.build(), voter, walletManager);
         } catch (error) {
-            expect(error).toBeInstanceOf(StaticFeeMismatchError);
+            expect(error).toBeInstanceOf(SpecialFeeMismatchError);
         }
     });
 

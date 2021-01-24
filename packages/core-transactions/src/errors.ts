@@ -250,3 +250,9 @@ export class StaticFeeMismatchError extends TransactionError {
         super(`Failed to apply transaction, because the transaction fee does not match the static fee.`);
     }
 }
+
+export class SpecialFeeMismatchError extends TransactionError {
+    constructor() {
+        super(`Failed to apply transaction, because the transaction fee does not match the special fee.`);
+    }
+}
