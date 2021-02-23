@@ -156,6 +156,7 @@ export abstract class TransactionHandler implements ITransactionHandler {
         // Check if staticFees are enforced or this is a specialFee transaction
         if (
             Managers.configManager.getMilestone().staticFeesOnly &&
+            !isSpecialFeeTransaction(transaction.data) &&
             !transaction.data.fee.isEqualTo(transaction.staticFee)
         ) {
             throw new StaticFeeMismatchError();

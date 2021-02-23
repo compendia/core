@@ -246,6 +246,18 @@ export class SetFileTransactionHandler extends Handlers.TransactionHandler {
                             if (!schema) {
                                 throw new Error();
                             }
+                            // Check for _primaryKey
+                            if (!json.properties._primaryKey || !json.properties._primaryKey.default) {
+                                return {
+                                    type: "ERR_PRIMARY_KEY",
+                                    message: `The schema does not contain a valid _primaryKey attribute.`,
+                                };
+                            } else if (!Object.keys(json.properties).includes(json.properties._primaryKey.default)) {
+                                return {
+                                    type: "ERR_PRIMARY_KEY",
+                                    message: `_primaryKey does not refer to an existing unique attribute.`,
+                                };
+                            }
                         }
                     } catch (error) {
                         return {

@@ -20,7 +20,8 @@ export const startServer = async config => {
         path: "/api/v1/databases/{schema}",
         async handler(request, h) {
             const schema: string = String(request.params.schema);
-            const page = (Number(request.params.page) || 1) - 1;
+            const virtualPage = Number(request.params.page) || 1;
+            const page = virtualPage - 1;
             const databases: any = database
                 .prepare(`SELECT * FROM databases WHERE schema = :schema LIMIT 100 OFFSET ${page * 100}`)
                 .all({ schema });
@@ -43,10 +44,14 @@ export const startServer = async config => {
                 }
 
                 const results = databases.sort((a, b) =>
-                    Utils.BigNumber.make(a.voteBalance).isGreaterThan(b.voteBalance) ? -1 : 1,
+                    Utils.BigNumber.make(a.voteBalance || 0).isGreaterThan(b.voteBalance || 0) ? -1 : 1,
                 );
 
-                return { results, totalCount: allDbs["COUNT(*)"], meta: { count: databases.length, limit: 100, page } };
+                return {
+                    results,
+                    totalCount: allDbs["COUNT(*)"],
+                    meta: { count: databases.length, limit: 100, page: virtualPage },
+                };
             } else {
                 return notFound();
             }
@@ -72,7 +77,7 @@ export const startServer = async config => {
                 }
 
                 const results = databases.sort((a, b) =>
-                    Utils.BigNumber.make(a.voteBalance).isGreaterThan(b.voteBalance) ? -1 : 1,
+                    Utils.BigNumber.make(a.voteBalance || 0).isGreaterThan(b.voteBalance || 0) ? -1 : 1,
                 );
 
                 return { results, totalCount: databases.length, meta: { count: databases.length, limit: 100, page } };
