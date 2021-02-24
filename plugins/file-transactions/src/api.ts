@@ -14,7 +14,7 @@ export const startServer = async config => {
         },
     });
 
-    // Get database by schema
+    // Get databases by schema
     server.route({
         method: "GET",
         path: "/api/v1/databases/{schema}",
@@ -51,6 +51,34 @@ export const startServer = async config => {
                     results,
                     totalCount: allDbs["COUNT(*)"],
                     meta: { count: databases.length, limit: 100, page: virtualPage },
+                };
+            } else {
+                return notFound();
+            }
+        },
+    });
+
+    // Get database by id
+    server.route({
+        method: "GET",
+        path: "/api/v1/database/{id}",
+        async handler(request, h) {
+            const id: string = String(request.params.id);
+            const db: any = database.prepare(`SELECT * FROM databases WHERE id = :id LIMIT 1`).get({ id });
+
+            if (Object.values(db).length) {
+                const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
+                const walletManager = databaseService.walletManager;
+                const wallet = walletManager.findByAddress(db.owner_address);
+                db.owner = {
+                    username: db.owner_username,
+                    address: db.owner_address,
+                    votes: wallet.getAttribute("delegate.voteBalance", "0"),
+                };
+                db.owner_address = undefined;
+                db.owner_username = undefined;
+                return {
+                    data: db,
                 };
             } else {
                 return notFound();
