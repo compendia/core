@@ -27,7 +27,7 @@
     "dependencies": {
         "@arkecosystem/core-interfaces": "^2.7.24",
         "@arkecosystem/crypto": "^2.7.24",
-        "@nosplatform/stake-transactions-crypto": "^0.4.0"
+        "@nosplatform/stake-transactions-crypto": "^0.5.0"
     },
     "devDependencies": {
         "@sindresorhus/tsconfig": "^0.5.0",
