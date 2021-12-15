@@ -24,6 +24,7 @@
         "@arkecosystem/core-interfaces": "^2.7.24",
         "@arkecosystem/core-utils": "^2.7.24",
         "@arkecosystem/crypto": "^2.7.24",
+        "@nosplatform/file-transactions-crypto": "^0.0.11",
         "bs58check": "^2.1.2"
     },
     "engines": {
