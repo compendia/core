@@ -33,6 +33,11 @@
                 "stakeExtend": 0,
                 "stakeCancel": 500000000,
                 "setFile": 100000000
+            },
+            "specialFees": {
+                "setFile": {
+                    "schemaRegistration": 25000000000
+                }
             }
         },
         "balancePower": 1,
