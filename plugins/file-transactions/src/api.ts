@@ -29,7 +29,7 @@ export const startServer = async config => {
                 .prepare(`SELECT COUNT(*) FROM databases WHERE schema = :schema`)
                 .get({ schema });
 
-            if (databases.length) {
+            if (databases && databases.length) {
                 const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
                 const walletManager = databaseService.walletManager;
                 for (const db of databases) {
@@ -66,7 +66,7 @@ export const startServer = async config => {
             const id: string = String(request.params.id);
             const db: any = database.prepare(`SELECT * FROM databases WHERE id = :id LIMIT 1`).get({ id });
 
-            if (Object.values(db).length) {
+            if (db && Object.values(db).length) {
                 const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
                 const walletManager = databaseService.walletManager;
                 const wallet = walletManager.findByAddress(db.owner_address);
@@ -96,7 +96,7 @@ export const startServer = async config => {
             const databases: any = database
                 .prepare(`SELECT * FROM databases WHERE schema LIKE ? LIMIT 100 OFFSET ${page * 100}`)
                 .all("%" + schema + "%");
-            if (databases.length) {
+            if (databases && databases.length) {
                 const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
                 const walletManager = databaseService.walletManager;
                 for (const db of databases) {

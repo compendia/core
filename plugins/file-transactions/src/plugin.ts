@@ -137,7 +137,13 @@ export const plugin: Container.IPluginDescriptor = {
                 repo: ipfsPath,
                 config: {
                     Addresses: {
-                        Swarm: [`/ip4/0.0.0.0/tcp/${options.port}`, `/ip4/127.0.0.1/tcp/${options.wsPort}/ws`],
+                        Swarm: [
+                            `/ip4/0.0.0.0/tcp/${options.port}`,
+                            `/ip4/127.0.0.1/tcp/${options.wsPort}/ws`,
+                            "/dns4/ws-star-signal-1.servep2p.com/tcp/443/wss/p2p-websocket-star",
+                            "/dns4/ws-star-signal-2.servep2p.com/tcp/443/wss/p2p-websocket-star",
+                            "/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star",
+                        ],
                     },
                 },
             });
