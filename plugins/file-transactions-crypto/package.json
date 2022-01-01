@@ -26,7 +26,6 @@
     },
     "dependencies": {
         "@arkecosystem/core-interfaces": "^2.7.24",
-        "@arkecosystem/core-transactions": "^2.7.24",
         "@arkecosystem/crypto": "^2.7.24"
     },
     "devDependencies": {
