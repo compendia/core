@@ -16,6 +16,9 @@ module.exports = {
         fileKeys: ["description", "logo"],
         port: process.env.CORE_IPFS_PORT || 6003,
         wsPort: process.env.CORE_IPFS_WS_PORT || 6004,
+        apiPort: process.env.CORE_DB_API_PORT || 6005,
+        apiHost: "0.0.0.0",
+        cors: true,
         gateway: process.env.CORE_IPFS_GATEWAY || "https://gateway.ipfs.io"
     },
     "@arkecosystem/core-database-postgres": {
@@ -46,6 +49,7 @@ module.exports = {
                 stakeCreate: 0,
                 stakeRedeem: 0,
                 stakeCancel: 100,
+                stakeExtend: 100,
                 setFile: 1000
             },
         },

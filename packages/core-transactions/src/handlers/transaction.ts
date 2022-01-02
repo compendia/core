@@ -14,11 +14,13 @@ import {
     LegacyMultiSignatureRegistrationError,
     MissingMultiSignatureOnSenderError,
     SenderWalletMismatchError,
+    SpecialFeeMismatchError,
     StaticFeeMismatchError,
     UnexpectedSecondSignatureError,
     UnsupportedMultiSignatureTransactionError,
 } from "../errors";
 import { IDynamicFeeContext, ITransactionHandler } from "../interfaces";
+import { isSpecialFeeTransaction, specialFee } from "../utils";
 
 export type TransactionHandlerConstructor = new () => TransactionHandler;
 
@@ -151,11 +153,20 @@ export abstract class TransactionHandler implements ITransactionHandler {
             throw new ColdWalletError();
         }
 
+        // Check if staticFees are enforced or this is a specialFee transaction
         if (
             Managers.configManager.getMilestone().staticFeesOnly &&
+            !isSpecialFeeTransaction(transaction.data) &&
             !transaction.data.fee.isEqualTo(transaction.staticFee)
         ) {
             throw new StaticFeeMismatchError();
+        }
+
+        if (
+            isSpecialFeeTransaction(transaction.data) &&
+            !specialFee(transaction.data).isEqualTo(transaction.data.fee)
+        ) {
+            throw new SpecialFeeMismatchError();
         }
 
         return this.performGenericWalletChecks(transaction, sender, walletManager);

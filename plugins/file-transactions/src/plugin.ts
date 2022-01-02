@@ -7,18 +7,32 @@ import { Interfaces, Managers } from "@arkecosystem/crypto";
 import got from "got";
 import IPFS from "ipfs";
 import path from "path";
+import { initDb } from "./database";
+import { FileIndex, schemaIndexer } from "./wallet-manager";
 
+import { startServer } from "./api";
 import { defaults } from "./defaults";
 import { SetFileTransactionHandler } from "./handlers";
 
 const emitter = app.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+let server: any;
 
 export const plugin: Container.IPluginDescriptor = {
     pkg: require("../package.json"),
     defaults,
     alias: "file-transactions",
     async register(container: Container.IContainer, options) {
+        initDb();
         container.resolvePlugin<Logger.ILogger>("logger").info("Registering Module File Transactions");
+
+        // Register schema indexer
+        container
+            .resolvePlugin<EventEmitter.EventEmitter>("event-emitter")
+            .once(ApplicationEvents.StateStarting, (database: Database.IDatabaseService) => {
+                const walletManager = database.walletManager;
+                walletManager.registerIndex(FileIndex.Schemas, schemaIndexer);
+            });
+
         Handlers.Registry.registerTransactionHandler(SetFileTransactionHandler);
         const ipfsHashes = [];
         let ipfs;
@@ -33,8 +47,17 @@ export const plugin: Container.IPluginDescriptor = {
                     // Get all ipfs hashes from all delegates and store it in newIpfsHashes[]
                     let i = 0;
                     for (const hash of delegateIpfs) {
-                        newIpfsHashes.push(hash);
-                        ipfsIndex[hash] = fileKeys[i];
+                        if (typeof hash === "object") {
+                            for (const subHash of Object.values(hash)) {
+                                if (typeof subHash === "string") {
+                                    newIpfsHashes.push(subHash);
+                                    ipfsIndex[subHash as string] = fileKeys[i];
+                                }
+                            }
+                        } else {
+                            newIpfsHashes.push(hash);
+                            ipfsIndex[hash] = fileKeys[i];
+                        }
                         i++;
                     }
                 }
@@ -45,19 +68,19 @@ export const plugin: Container.IPluginDescriptor = {
                 if (hash && !ipfsHashes.includes(hash)) {
                     try {
                         let fileSizeKey = ipfsIndex[hash];
-                        if (String(fileSizeKey).startsWith("db.")) {
-                            fileSizeKey = "db";
-                        } else if (String(fileSizeKey).startsWith("schema.")) {
-                            fileSizeKey = "schema";
+                        if (String(fileSizeKey).startsWith("db")) {
+                            fileSizeKey = "db.doc.*";
+                        } else if (String(fileSizeKey).startsWith("schema")) {
+                            fileSizeKey = "schema.*";
                         }
 
                         // Only pin files that aren't databases
-                        if (fileSizeKey !== "db") {
+                        if (fileSizeKey !== "db.doc.*") {
                             const res = await got.get(`${options.gateway}/api/v0/object/stat/${hash}`);
                             const stat = JSON.parse(res.body);
 
                             const maxFileSize = Managers.configManager.getMilestone().ipfs.maxFileSize[fileSizeKey];
-                            if (stat && stat.CumulativeSize <= maxFileSize && newIpfsHashes.includes(hash)) {
+                            if (stat && stat.CumulativeSize <= maxFileSize) {
                                 await ipfs.pin.add(hash);
                                 container.resolvePlugin<Logger.ILogger>("logger").info(`IPFS File added ${hash}`);
                             } else {
@@ -114,7 +137,13 @@ export const plugin: Container.IPluginDescriptor = {
                 repo: ipfsPath,
                 config: {
                     Addresses: {
-                        Swarm: [`/ip4/0.0.0.0/tcp/${options.port}`, `/ip4/127.0.0.1/tcp/${options.wsPort}/ws`],
+                        Swarm: [
+                            `/ip4/0.0.0.0/tcp/${options.port}`,
+                            `/ip4/127.0.0.1/tcp/${options.wsPort}/ws`,
+                            "/dns4/ws-star-signal-1.servep2p.com/tcp/443/wss/p2p-websocket-star",
+                            "/dns4/ws-star-signal-2.servep2p.com/tcp/443/wss/p2p-websocket-star",
+                            "/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star",
+                        ],
                     },
                 },
             });
@@ -142,8 +171,11 @@ export const plugin: Container.IPluginDescriptor = {
                 await loadIpfsHashes(delegateWallets);
             }
         });
+
+        server = await startServer({ host: options.apiHost, port: options.apiPort, cors: options.cors });
     },
     async deregister(container: Container.IContainer, options) {
+        await server.stop();
         container.resolvePlugin<Logger.ILogger>("logger").info("Deregistering File Transactions");
         Handlers.Registry.deregisterTransactionHandler(SetFileTransactionHandler);
     },

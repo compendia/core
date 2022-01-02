@@ -63,5 +63,24 @@
     {
         "height": 490000,
         "stakeExtensions": true
+    },
+    {
+        "height": 5870000,
+        "minimumVersions": ["^2.13.0"],
+        "ipfs": {
+            "maxFileSize": {
+                "description": 30000,
+                "logo": 300000,
+                "db.doc.*": 500000,
+                "schema.*": 1000000
+            }
+        },
+        "fees": {
+            "specialFees": {
+                "setFile": {
+                    "schemaRegistration": 1000000000
+                }
+            }
+        }
     }
 ]

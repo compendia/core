@@ -12,6 +12,7 @@
             "maxPayload": 2097152
         },
         "epoch": "2017-03-21T13:00:00.000Z",
+        "staticFeesOnly": true,
         "fees": {
             "staticFees": {
                 "transfer": 10000000,
@@ -29,6 +30,11 @@
                 "stakeCancel": 10000000,
                 "stakeExtend": 10000000,
                 "stakeRedeem": 0
+            },
+            "specialFees": {
+                "setFile": {
+                    "schemaRegistration": 25000000000
+                }
             }
         },
         "vendorFieldLength": 64,
@@ -50,8 +56,8 @@
             "maxFileSize": {
                 "description": 30000,
                 "logo": 300000,
-                "db.docs.*": 500000,
-                "schema.*": 500000
+                "db.doc.*": 500000,
+                "schema.*": 1000000
             }
         },
         "vestedWalletPublicKey": ""

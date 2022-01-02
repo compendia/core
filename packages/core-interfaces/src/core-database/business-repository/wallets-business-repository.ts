@@ -11,6 +11,7 @@ export enum SearchScope {
     Delegates,
     Locks,
     Entities,
+    Schemas,
 }
 
 export interface IWalletsBusinessRepository {

@@ -1,7 +1,7 @@
 {
     "name": "@nosplatform/file-transactions-crypto",
     "description": "Provides transaction crypto for the file-transactions plug-in",
-    "version": "0.0.10",
+    "version": "0.0.13",
     "author": "Dean van Dugteren <dean@nos.io>",
     "license": "MIT",
     "main": "dist/index.js",
@@ -26,7 +26,6 @@
     },
     "dependencies": {
         "@arkecosystem/core-interfaces": "^2.7.24",
-        "@arkecosystem/core-transactions": "^2.7.24",
         "@arkecosystem/crypto": "^2.7.24"
     },
     "devDependencies": {
@@ -43,7 +42,7 @@
         "tslint": "^5.12.0",
         "tslint-config-prettier": "^1.17.0",
         "typedoc": "^0.15.0",
-        "typescript": "^3.2.4"
+        "typescript": "^3.7.2"
     },
     "publishConfig": {
         "access": "public"

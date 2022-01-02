@@ -275,7 +275,11 @@ export const plugin: Container.IPluginDescriptor = {
                 ) {
                     // Handle mint multitransfer
                     let amount = Utils.BigNumber.ZERO;
-                    if (tx.type === Enums.TransactionType.MultiPayment) {
+                    if (
+                        tx.type === Enums.TransactionType.MultiPayment &&
+                        Identities.Address.fromPublicKey(tx.senderPublicKey) ===
+                            genesisBlock.transactions[0].recipientId
+                    ) {
                         amount = tx.asset.payments.reduce((a, p) => a.plus(p.amount), Utils.BigNumber.ZERO);
                         // Add coins to supply when sent from mint address
                         supply.value = Utils.BigNumber.make(supply.value)
