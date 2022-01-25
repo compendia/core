@@ -16,7 +16,7 @@ const index = async request => {
 };
 
 const show = async request => {
-    const schema = databaseService.wallets.search(Database.SearchScope.Schemas, {
+    const schema = databaseService.wallets.search(Database.SearchScope.ExactSchema, {
         id: request.params.id,
     }).rows[0];
 

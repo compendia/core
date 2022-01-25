@@ -12,6 +12,7 @@ export enum SearchScope {
     Locks,
     Entities,
     Schemas,
+    ExactSchema,
 }
 
 export interface IWalletsBusinessRepository {

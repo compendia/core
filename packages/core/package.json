@@ -1,6 +1,6 @@
 {
     "name": "@arkecosystem/core",
-    "version": "2.13.1",
+    "version": "2.13.2",
     "description": "Core of the ARK Blockchain",
     "license": "MIT",
     "contributors": [
@@ -36,7 +36,7 @@
         "prepack": "../../node_modules/.bin/oclif-dev manifest && npm shrinkwrap",
         "postpack": "rm -f oclif.manifest.json",
         "prepublishOnly": "yarn build",
-        "relay:devnet": "cross-env CORE_PATH_CONFIG=./bin/config/devnet yarn ark relay:run",
+        "relay:devnet": "cross-env CORE_PATH_CONFIG=./bin/config/realdevnet yarn ark relay:run",
         "relay:mainnet": "cross-env CORE_PATH_CONFIG=./bin/config/mainnet yarn ark relay:run",
         "relay:testnet": "cross-env CORE_PATH_CONFIG=./bin/config/testnet yarn ark relay:run --env=test",
         "start:devnet": "cross-env CORE_PATH_CONFIG=./bin/config/realdevnet yarn ark core:run",
